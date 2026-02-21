@@ -1,4 +1,4 @@
-import { renderVideoOnLambda, getRenderProgress } from '@remotion/lambda';
+import { renderMediaOnLambda, getRenderProgress } from '@remotion/lambda-client';
 
 const region = (process.env.REMOTION_LAMBDA_REGION as any) || 'us-east-1';
 const functionName = process.env.REMOTION_LAMBDA_FUNCTION_NAME || 'remotion-render-3-3-95';
@@ -10,13 +10,14 @@ export const triggerVideoRender = async (props: any) => {
             throw new Error('REMOTION_LAMBDA_SERVE_URL is not set');
         }
 
-        const { renderId, bucketName } = await renderVideoOnLambda({
+        const { renderId, bucketName } = await renderMediaOnLambda({
             region,
             functionName,
             serveUrl,
             composition: 'MainVideo',
             inputProps: props,
             codec: 'h264',
+            concurrency: 5, // Keep low to avoid AWS account concurrency limits
             downloadBehavior: {
                 type: 'download',
                 fileName: `video-${Date.now()}.mp4`,
