@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
     Film,
     Video,
+    CalendarDays,
     BookOpen,
     CreditCard,
     Settings,
@@ -21,6 +22,7 @@ import { usePlanLimits } from '@/hooks/use-plan-limits';
 const navItems = [
     { name: 'Series', href: '/dashboard', icon: Film },
     { name: 'Videos', href: '/dashboard/videos', icon: Video },
+    { name: 'Calendar', href: '/dashboard/calendar', icon: CalendarDays },
     { name: 'Guides', href: 'https://tubeguruji.com', icon: BookOpen },
     { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },

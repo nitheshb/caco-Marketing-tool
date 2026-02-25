@@ -8,6 +8,8 @@ import { UpgradeModal } from '@/components/dashboard/upgrade-modal';
 import {
     Youtube,
     Instagram,
+    Linkedin,
+    Facebook,
     Trash2,
     Link2,
     Unlink,
@@ -38,10 +40,10 @@ import {
 import { toast } from "sonner";
 import Image from "next/image";
 
-interface SocialAccount {
-    platform: 'youtube' | 'instagram' | 'tiktok';
-    connected: boolean;
-    name?: string;
+interface SocialConnection {
+    id: string;
+    platform: 'youtube' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook';
+    profile_name?: string;
 }
 
 function SettingsForm() {
@@ -84,13 +86,7 @@ function SettingsForm() {
         }
     }, [searchParams, pathname, router]);
 
-    // Placeholder states for social accounts
-    const [accounts, setAccounts] = useState<SocialAccount[]>([
-        { platform: 'youtube', connected: false },
-        { platform: 'instagram', connected: false },
-        { platform: 'tiktok', connected: false },
-    ]);
-
+    const [connections, setConnections] = useState<SocialConnection[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchConnections = async () => {
@@ -98,10 +94,7 @@ function SettingsForm() {
             const response = await fetch('/api/settings/social');
             if (response.ok) {
                 const data = await response.json();
-                setAccounts(prev => prev.map(acc => {
-                    const found = data.find((d: any) => d.platform === acc.platform);
-                    return found ? { ...acc, connected: true, name: found.profile_name } : { ...acc, connected: false, name: undefined };
-                }));
+                setConnections(data);
             }
         } catch (error) {
             console.error("Failed to fetch connections:", error);
@@ -125,6 +118,16 @@ function SettingsForm() {
             return;
         }
 
+        if (platform === 'linkedin') {
+            window.location.href = '/api/settings/social/connect/linkedin';
+            return;
+        }
+
+        if (platform === 'facebook') {
+            window.location.href = '/api/settings/social/connect/facebook';
+            return;
+        }
+
         if (platform === 'instagram') {
             window.location.href = '/api/settings/social/connect/instagram';
             return;
@@ -145,9 +148,7 @@ function SettingsForm() {
             });
 
             if (response.ok) {
-                setAccounts(prev => prev.map(acc =>
-                    acc.platform === platform ? { ...acc, connected: true, name } : acc
-                ));
+                fetchConnections();
                 toast.success(`Connected to ${platform}`);
             } else {
                 toast.error(`Failed to connect to ${platform}`);
@@ -157,18 +158,16 @@ function SettingsForm() {
         }
     };
 
-    const handleDisconnect = async (platform: string) => {
+    const handleDisconnect = async (id: string, platform: string) => {
         try {
             const response = await fetch('/api/settings/social', {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ platform })
+                body: JSON.stringify({ id })
             });
 
             if (response.ok) {
-                setAccounts(prev => prev.map(acc =>
-                    acc.platform === platform ? { ...acc, connected: false, name: undefined } : acc
-                ));
+                setConnections(prev => prev.filter(c => c.id !== id));
                 toast.success(`Disconnected from ${platform}`);
             } else {
                 toast.error(`Failed to disconnect from ${platform}`);
@@ -261,16 +260,40 @@ function SettingsForm() {
                         ))}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {/* YouTube */}
                         <SocialPlatformCard
                             platform="youtube"
                             Icon={Youtube}
                             color="text-red-600"
                             bgColor="bg-red-50"
-                            account={accounts.find(a => a.platform === 'youtube')}
+                            connections={connections.filter(c => c.platform === 'youtube')}
                             onConnect={() => handleConnect('youtube')}
-                            onDisconnect={() => handleDisconnect('youtube')}
+                            onDisconnect={(id: string) => handleDisconnect(id, 'youtube')}
+                        />
+
+                        {/* Facebook */}
+                        <SocialPlatformCard
+                            platform="facebook"
+                            Icon={Facebook}
+                            color="text-blue-700"
+                            bgColor="bg-blue-50"
+                            connections={connections.filter(c => c.platform === 'facebook')}
+                            onConnect={() => handleConnect('facebook')}
+                            onDisconnect={(id: string) => handleDisconnect(id, 'facebook')}
+                            allowCustomApp={true}
+                        />
+
+                        {/* LinkedIn */}
+                        <SocialPlatformCard
+                            platform="linkedin"
+                            Icon={Linkedin}
+                            color="text-blue-600"
+                            bgColor="bg-blue-50"
+                            connections={connections.filter(c => c.platform === 'linkedin')}
+                            onConnect={() => handleConnect('linkedin')}
+                            onDisconnect={(id: string) => handleDisconnect(id, 'linkedin')}
+                            allowCustomApp={true}
                         />
 
                         {/* Instagram */}
@@ -279,9 +302,9 @@ function SettingsForm() {
                             Icon={Instagram}
                             color="text-pink-600"
                             bgColor="bg-pink-50"
-                            account={accounts.find(a => a.platform === 'instagram')}
+                            connections={connections.filter(c => c.platform === 'instagram')}
                             onConnect={() => handleConnect('instagram')}
-                            onDisconnect={() => handleDisconnect('instagram')}
+                            onDisconnect={(id: string) => handleDisconnect(id, 'instagram')}
                         />
 
                         {/* TikTok (Custom Placeholder for now) */}
@@ -296,9 +319,9 @@ function SettingsForm() {
                             )}
                             color="text-zinc-900"
                             bgColor="bg-zinc-100"
-                            account={accounts.find(a => a.platform === 'tiktok')}
+                            connections={connections.filter(c => c.platform === 'tiktok')}
                             onConnect={() => handleConnect('tiktok')}
-                            onDisconnect={() => handleDisconnect('tiktok')}
+                            onDisconnect={(id: string) => handleDisconnect(id, 'tiktok')}
                         />
                     </div>
                 )}
@@ -368,7 +391,38 @@ function SettingsForm() {
     );
 }
 
-function SocialPlatformCard({ platform, Icon, color, bgColor, account, onConnect, onDisconnect }: any) {
+function SocialPlatformCard({ platform, Icon, color, bgColor, connections, onConnect, onDisconnect, allowCustomApp }: any) {
+    const isConnected = connections && connections.length > 0;
+    const [showCustomForm, setShowCustomForm] = useState(false);
+    const [clientId, setClientId] = useState('');
+    const [clientSecret, setClientSecret] = useState('');
+    const [isSavingCustom, setIsSavingCustom] = useState(false);
+
+    const handleCustomConnect = async () => {
+        if (!clientId || !clientSecret) {
+            toast.error("Client ID and Secret are required");
+            return;
+        }
+
+        setIsSavingCustom(true);
+        try {
+            const res = await fetch('/api/settings/social/integration', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ platform, clientId, clientSecret })
+            });
+
+            if (!res.ok) throw new Error("Failed to save credentials");
+
+            const data = await res.json();
+            // Redirect using the new integration ID
+            window.location.href = `/api/settings/social/connect/${platform}?integrationId=${data.id}`;
+        } catch (error) {
+            toast.error("Failed to start custom connection flow.");
+            setIsSavingCustom(false);
+        }
+    };
+
     return (
         <Card className="border-zinc-200/60 shadow-sm bg-white group hover:shadow-md transition-all duration-300">
             <CardContent className="pt-6">
@@ -384,34 +438,60 @@ function SocialPlatformCard({ platform, Icon, color, bgColor, account, onConnect
                             )}
                         </div>
                         <p className="text-[10px] uppercase font-black tracking-widest text-zinc-400 mt-1">
-                            {account?.connected ? "Connected" : "Disconnected"}
+                            {isConnected ? `${connections.length} Connected` : "Disconnected"}
                         </p>
                     </div>
-                    {account?.connected ? (
+
+                    {isConnected && (
                         <div className="w-full space-y-3">
-                            <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 text-[11px] font-medium text-zinc-600 truncate">
-                                {account.name}
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full rounded-xl border-rose-100 text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
-                                onClick={onDisconnect}
-                            >
-                                <Unlink className="mr-2 h-3.5 w-3.5" />
-                                Disconnect
-                            </Button>
+                            {connections.map((conn: any) => (
+                                <div key={conn.id} className="space-y-2 pb-2 border-b border-zinc-100 last:border-0 last:pb-0">
+                                    <div className="p-2.5 rounded-xl bg-zinc-50 border border-zinc-100 text-[11px] font-medium text-zinc-600 truncate">
+                                        {conn.profile_name || 'Account'}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full rounded-xl border-rose-100 text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors"
+                                        onClick={() => onDisconnect(conn.id)}
+                                    >
+                                        <Unlink className="mr-2 h-3.5 w-3.5" />
+                                        Disconnect
+                                    </Button>
+                                </div>
+                            ))}
                         </div>
-                    ) : (
+                    )}
+
+                    {(!isConnected || allowCustomApp) && !showCustomForm && (
                         <Button
-                            variant="default"
+                            variant={isConnected ? "outline" : "default"}
                             size="sm"
-                            className="w-full rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold transition-transform active:scale-95 shadow-sm"
-                            onClick={onConnect}
+                            className={isConnected ? "w-full rounded-xl" : "w-full rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold transition-transform active:scale-95 shadow-sm"}
+                            onClick={() => allowCustomApp ? setShowCustomForm(true) : onConnect()}
                         >
                             <ExternalLink className="mr-2 h-3.5 w-3.5" />
-                            Connect Account
+                            {isConnected ? "Add Another Account" : "Connect Account"}
                         </Button>
+                    )}
+
+                    {showCustomForm && (
+                        <div className="w-full space-y-3 bg-zinc-50 p-3 rounded-xl border border-zinc-200 text-left">
+                            <div className="space-y-1">
+                                <Label className="text-[10px] uppercase font-bold text-zinc-500">Client ID</Label>
+                                <Input value={clientId} onChange={e => setClientId(e.target.value)} className="h-8 text-xs font-mono" placeholder="Paste Client ID" />
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-[10px] uppercase font-bold text-zinc-500">Client Secret</Label>
+                                <Input type="password" value={clientSecret} onChange={e => setClientSecret(e.target.value)} className="h-8 text-xs font-mono" placeholder="Paste Secret" />
+                            </div>
+                            <div className="flex gap-2 pt-1">
+                                <Button size="sm" variant="ghost" className="flex-1 h-8 text-xs" onClick={() => setShowCustomForm(false)}>Cancel</Button>
+                                <Button size="sm" disabled={isSavingCustom} className="flex-1 h-8 text-xs bg-indigo-600 hover:bg-indigo-700" onClick={handleCustomConnect}>
+                                    {isSavingCustom ? <Loader2 className="h-3 w-3 animate-spin"/> : "Authorize"}
+                                </Button>
+                            </div>
+                        </div>
                     )}
                 </div>
             </CardContent>

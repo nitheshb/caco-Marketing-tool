@@ -1,0 +1,76 @@
+import { auth } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
+
+export async function PATCH(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { userId } = await auth();
+        if (!userId) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const { id } = await params;
+        const body = await req.json();
+
+        const allowedFields = ['title', 'description', 'media_url', 'type', 'platform', 'account_id', 'color', 'scheduled_at', 'end_at', 'status', 'video_id', 'series_id'];
+        const updates: Record<string, any> = {};
+        for (const key of allowedFields) {
+            if (body[key] !== undefined) {
+                updates[key] = body[key];
+            }
+        }
+
+        if (Object.keys(updates).length === 0) {
+            return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+        }
+
+        const { data, error } = await supabaseAdmin
+            .from('calendar_events')
+            .update(updates)
+            .eq('id', id)
+            .eq('user_id', userId)
+            .select()
+            .single();
+
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        return NextResponse.json(data);
+    } catch (error) {
+        console.error("[SCHEDULE_PATCH]", error);
+        return new NextResponse("Internal Error", { status: 500 });
+    }
+}
+
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { userId } = await auth();
+        if (!userId) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const { id } = await params;
+
+        const { error } = await supabaseAdmin
+            .from('calendar_events')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', userId);
+
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error("[SCHEDULE_DELETE]", error);
+        return new NextResponse("Internal Error", { status: 500 });
+    }
+}

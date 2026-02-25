@@ -1,6 +1,6 @@
 import { serve } from "inngest/next";
 import { inngest } from "@/inngest/client";
-import { helloWorld, generateVideo, scheduleDailyVideos } from "@/inngest/functions";
+import { helloWorld, generateVideo, scheduleDailyVideos, processScheduledPosts } from "@/inngest/functions";
 
 // Create an API route that serves the Inngest functions
 export const { GET, POST, PUT } = serve({
@@ -8,6 +8,7 @@ export const { GET, POST, PUT } = serve({
     functions: [
         helloWorld,
         generateVideo,
-        scheduleDailyVideos
+        scheduleDailyVideos,
+        processScheduledPosts
     ],
 });

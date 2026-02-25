@@ -12,7 +12,7 @@ export const PLAN_LIMITS = {
         maxSeries: 1,
         maxVideos: 2,
         canExecuteWorkflow: false,
-        allowedPlatforms: ['youtube', 'email'],
+        allowedPlatforms: ['youtube', 'linkedin', 'email'],
     },
     basic: {
         name: 'Basic',
@@ -28,7 +28,7 @@ export const PLAN_LIMITS = {
         maxSeries: Infinity,
         maxVideos: Infinity,
         canExecuteWorkflow: true,
-        allowedPlatforms: ['youtube', 'instagram', 'tiktok', 'email'],
+        allowedPlatforms: ['youtube', 'linkedin', 'instagram', 'tiktok', 'email'],
     }
 };
 

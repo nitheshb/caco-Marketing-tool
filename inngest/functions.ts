@@ -8,6 +8,8 @@ import { triggerVideoRender, pollRenderStatus } from "@/lib/remotion";
 import { createClerkClient } from "@clerk/nextjs/server";
 import { sendVideoReadyEmail } from "@/lib/plunk";
 import { publishToYouTube } from "@/lib/youtube-publish";
+import { publishToLinkedIn } from "@/lib/linkedin-publish";
+import { publishToFacebook } from "@/lib/facebook-publish";
 
 export const helloWorld = inngest.createFunction(
     { id: "hello-world" },
@@ -241,6 +243,33 @@ export const generateVideo = inngest.createFunction(
                 }
             }
 
+            if (platforms.includes('linkedin')) {
+                // Fetch ALL connected LinkedIn accounts for this user to publish to
+                const { data: linkedinConnections } = await supabaseAdmin
+                    .from('social_connections')
+                    .select('id, profile_name')
+                    .eq('user_id', series.user_id)
+                    .eq('platform', 'linkedin');
+
+                if (linkedinConnections && linkedinConnections.length > 0) {
+                    for (const conn of linkedinConnections) {
+                        console.log(`[PUBLISH] Triggering LinkedIn Post for ${finalVideoUrl} to account ${conn.profile_name}`);
+                        try {
+                            const lnResult = await publishToLinkedIn({
+                                text: `${scriptData.title}\n\n${scriptData.summary || `Daily ${series.series_name} video.`}\n\Watch here: ${finalVideoUrl}`,
+                                connectionId: conn.id // Pass specific connection ID for multi-account!
+                            });
+                            results.push(`linkedin-published:${conn.profile_name}:${lnResult.postId}`);
+                        } catch (err: any) {
+                            console.error(`LinkedIn Publish Error for ${conn.profile_name}:`, err);
+                            results.push(`linkedin-failed:${conn.profile_name}:${err.message}`);
+                        }
+                    }
+                } else {
+                    console.log(`[PUBLISH] No LinkedIn connections found for user ${series.user_id}`);
+                }
+            }
+
             if (platforms.includes('instagram')) {
                 console.log(`[PUBLISH] Triggering Instagram Post for ${finalVideoUrl}`);
                 // TODO: Integrate Facebook/Instagram Graph API
@@ -264,3 +293,97 @@ export const generateVideo = inngest.createFunction(
         };
     }
 );
+
+export const processScheduledPosts = inngest.createFunction(
+    { id: "process-scheduled-posts" },
+    { cron: "* * * * *" }, // Run every minute
+    async ({ step }) => {
+        // 1. Fetch all due scheduled posts
+        const duePosts = await step.run("fetch-due-posts", async () => {
+            const now = new Date().toISOString();
+            const { data, error } = await supabaseAdmin
+                .from('calendar_events')
+                .select('*, social_connections(profile_name)')
+                .eq('status', 'scheduled')
+                .eq('type', 'post')
+                .lte('scheduled_at', now);
+                
+            if (error) throw new Error(`Failed to fetch due posts: ${error.message}`);
+            return data;
+        });
+
+        if (!duePosts || duePosts.length === 0) {
+            return { processed: 0 };
+        }
+
+        const results = [];
+
+        // 2. Process each post independently
+        for (const post of duePosts) {
+            try {
+                // Publish based on platform
+                if (post.platform?.toLowerCase() === 'linkedin') {
+                    if (!post.account_id) throw new Error("Missing account_id for LinkedIn post");
+                    
+                    const textContent = `${post.title}${post.description ? `\n\n${post.description}` : ''}${post.media_url ? `\n\nWatch here: ${post.media_url}` : ''}`;
+                    
+                    await step.run(`publish-linkedin-${post.id}`, async () => {
+                        await publishToLinkedIn({
+                            text: textContent,
+                            connectionId: post.account_id
+                        });
+                    });
+                } else if (post.platform?.toLowerCase() === 'youtube') {
+                    if (!post.media_url) throw new Error("Media URL (video) is required for YouTube");
+                    
+                    await step.run(`publish-youtube-${post.id}`, async () => {
+                        await publishToYouTube({
+                            videoUrl: post.media_url,
+                            title: post.title,
+                            description: post.description || "",
+                            userId: post.user_id
+                        });
+                    });
+                } else if (post.platform?.toLowerCase() === 'facebook') {
+                    if (!post.account_id) throw new Error("Missing account_id for Facebook post");
+
+                    await step.run(`publish-facebook-${post.id}`, async () => {
+                        await publishToFacebook({
+                            connectionId: post.account_id,
+                            text: `${post.title}${post.description ? `\n\n${post.description}` : ''}`,
+                            mediaUrl: post.media_url
+                        });
+                    });
+                } else {
+                    // Placeholder for other platforms (Instagram, TikTok, etc)
+                    console.log(`[PUBLISH] Platform ${post.platform} not yet fully supported for auto-publish.`);
+                }
+
+                // 3. Mark as published
+                await step.run(`mark-published-${post.id}`, async () => {
+                    await supabaseAdmin
+                        .from('calendar_events')
+                        .update({ status: 'published' })
+                        .eq('id', post.id);
+                });
+                
+                results.push({ id: post.id, status: 'success' });
+            } catch (error: unknown) {
+                console.error(`Failed to process post ${post.id}:`, error);
+                const errorMessage = error instanceof Error ? error.message : "Unknown error";
+                
+                // Mark as failed
+                await step.run(`mark-failed-${post.id}`, async () => {
+                    await supabaseAdmin
+                        .from('calendar_events')
+                        .update({ status: 'error' })
+                        .eq('id', post.id);
+                });
+                results.push({ id: post.id, status: 'error', error: errorMessage });
+            }
+        }
+
+        return { processed: duePosts.length, results };
+    }
+);
+

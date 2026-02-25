@@ -64,13 +64,17 @@ export async function DELETE(req: Request) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        const { platform } = await req.json();
+        const { id } = await req.json();
+
+        if (!id) {
+            return new NextResponse("Connection ID required", { status: 400 });
+        }
 
         const { error } = await supabaseAdmin
             .from('social_connections')
             .delete()
             .eq('user_id', userId)
-            .eq('platform', platform);
+            .eq('id', id);
 
         if (error) {
             return NextResponse.json({ error: error.message }, { status: 500 });
