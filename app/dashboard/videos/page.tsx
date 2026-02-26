@@ -14,14 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-    DialogFooter,
-} from "@/components/ui/dialog";
+import { SlidePanel } from "@/components/ui/slide-panel";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -319,33 +312,35 @@ function MediaLibrary() {
                 {/* Ribbon / Toolbar */}
                 <div className="bg-[#f9f9f9] border-b border-zinc-200 flex items-center justify-between p-2 px-4 shrink-0">
                     <div className="flex items-center gap-1">
-                        <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
-                            <DialogTrigger asChild>
-                                <Button variant="ghost" className="h-9 px-3 gap-2 text-sm text-zinc-700 hover:bg-black/5">
-                                    <Folder className="w-4 h-4 text-amber-500 fill-amber-500/20" />
-                                    New folder
+                        <Button variant="ghost" className="h-9 px-3 gap-2 text-sm text-zinc-700 hover:bg-black/5" onClick={() => setIsCreateFolderOpen(true)}>
+                            <Folder className="w-4 h-4 text-amber-500 fill-amber-500/20" />
+                            New folder
+                        </Button>
+                        <SlidePanel
+                            open={isCreateFolderOpen}
+                            onClose={() => setIsCreateFolderOpen(false)}
+                            title="Create New Folder"
+                            size="sm"
+                            footer={
+                                <Button
+                                    className="w-full h-10"
+                                    disabled={isCreatingFolder || !newFolderName.trim()}
+                                    onClick={handleCreateFolder}
+                                >
+                                    {isCreatingFolder ? "Creating..." : "Create Folder"}
                                 </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle>Create New Folder</DialogTitle>
-                                </DialogHeader>
-                                <div className="py-4">
-                                    <Input 
-                                        placeholder="Folder name" 
-                                        value={newFolderName}
-                                        onChange={(e) => setNewFolderName(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-                                        autoFocus
-                                    />
-                                </div>
-                                <DialogFooter>
-                                    <Button disabled={isCreatingFolder || !newFolderName.trim()} onClick={handleCreateFolder}>
-                                        {isCreatingFolder ? "Creating..." : "Create"}
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                            }
+                        >
+                            <div className="p-6">
+                                <Input
+                                    placeholder="Folder name"
+                                    value={newFolderName}
+                                    onChange={(e) => setNewFolderName(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                                    autoFocus
+                                />
+                            </div>
+                        </SlidePanel>
 
                         <div className="w-px h-5 bg-zinc-300 mx-1"></div>
 
@@ -643,38 +638,58 @@ function MediaLibrary() {
 
             </div>
 
-            {/* Media Preview Dialog */}
-            <Dialog open={!!previewMedia} onOpenChange={(open) => !open && setPreviewMedia(null)}>
-                <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black/95 border-zinc-800">
-                    <DialogHeader className="absolute top-0 left-0 right-0 z-10 p-4 bg-gradient-to-b from-black/80 to-transparent border-none">
-                        <DialogTitle className="text-white flex items-center gap-2">
-                            {previewMedia && getFileIcon(previewMedia.type)}
-                            <span className="truncate">{previewMedia?.name}</span>
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="w-full h-[80vh] flex items-center justify-center relative bg-black">
-                        {previewMedia?.type?.startsWith('image/') ? (
+            {/* Media Preview Slide Panel */}
+            <SlidePanel
+                open={!!previewMedia}
+                onClose={() => setPreviewMedia(null)}
+                title={previewMedia?.name}
+                size="xl"
+                className="bg-zinc-950"
+            >
+                <div className="flex items-center justify-center h-full bg-zinc-950 p-4">
+                    {previewMedia?.type?.startsWith('image/') ? (
+                        <div className="relative w-full h-[70vh]">
                             <Image src={previewMedia.url} alt={previewMedia.name} fill className="object-contain" />
-                        ) : previewMedia?.type?.startsWith('video/') ? (
-                            <video src={previewMedia.url} controls autoPlay className="w-full h-full object-contain" />
-                        ) : previewMedia?.type?.startsWith('audio/') ? (
-                            <div className="flex flex-col items-center gap-6 w-full max-w-md p-8 bg-zinc-900 rounded-2xl">
-                                <Music className="w-24 h-24 text-indigo-500" />
-                                <audio src={previewMedia.url} controls autoPlay className="w-full" />
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center gap-4 text-white">
-                                <FileText className="w-24 h-24 text-zinc-500" />
-                                <p>No preview available for this file type.</p>
-                                <Button onClick={() => window.open(previewMedia?.url, '_blank')} variant="secondary">
-                                    Open in new tab
-                                </Button>
-                            </div>
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
+                        </div>
+                    ) : previewMedia?.type?.startsWith('video/') ? (
+                        <video src={previewMedia.url} controls autoPlay className="w-full max-h-[75vh] rounded-lg" />
+                    ) : previewMedia?.type?.startsWith('audio/') ? (
+                        <div className="flex flex-col items-center gap-6 w-full max-w-md p-8 bg-zinc-900 rounded-2xl">
+                            <Music className="w-24 h-24 text-indigo-500" />
+                            <audio src={previewMedia.url} controls autoPlay className="w-full" />
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center gap-4 text-white">
+                            <FileText className="w-24 h-24 text-zinc-500" />
+                            <p className="text-zinc-400">No preview available for this file type.</p>
+                            <Button onClick={() => window.open(previewMedia?.url, '_blank')} variant="secondary">
+                                Open in new tab
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </SlidePanel>
         </div>
+    );
+}
+
+// Video Play Slide Panel (replaces Dialog popup)
+function VideoPlayPanel({ videoUrl, title }: { videoUrl: string; title?: string }) {
+    const [open, setOpen] = useState(false);
+    return (
+        <>
+            <div
+                className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+            >
+                <PlayCircle className="w-10 h-10 text-white drop-shadow-md" />
+            </div>
+            <SlidePanel open={open} onClose={() => setOpen(false)} title={title || 'Video Preview'} size="xl" className="bg-zinc-950">
+                <div className="flex items-center justify-center h-full bg-zinc-950 p-4">
+                    <video src={videoUrl} controls autoPlay className="w-full max-h-[80vh] rounded-lg" />
+                </div>
+            </SlidePanel>
+        </>
     );
 }
 
@@ -688,16 +703,7 @@ function VideoExplorerItem({ video, onDelete }: { video: any; onDelete: (id: str
             <div className="aspect-video relative bg-zinc-100">
                  <Image src={thumbnail} alt="thumb" fill className="object-cover opacity-80" />
                  {isReady && video.video_url ? (
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                <PlayCircle className="w-10 h-10 text-white drop-shadow-md" />
-                            </div>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl p-0 border-0 bg-black">
-                             <video src={video.video_url} controls autoPlay className="w-full h-full" />
-                        </DialogContent>
-                    </Dialog>
+                    <VideoPlayPanel videoUrl={video.video_url} title={video.title} />
                  ) : (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                          <Loader2 className="w-6 h-6 animate-spin text-white" />

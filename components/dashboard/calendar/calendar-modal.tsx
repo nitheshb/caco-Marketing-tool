@@ -2,8 +2,9 @@
 
 import { useCalendar, CalendarEvent, SocialConnection } from './calendar-context';
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { SlidePanel } from '@/components/ui/slide-panel';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,6 @@ export function CalendarModal() {
     const [formEndTime, setFormEndTime] = useState('');
     const [formMediaUrl, setFormMediaUrl] = useState('');
     
-    // Video Library Selection States
     const [isVideoSelectorOpen, setIsVideoSelectorOpen] = useState(false);
     const [libraryVideos, setLibraryVideos] = useState<any[]>([]);
     const [isLoadingVideos, setIsLoadingVideos] = useState(false);
@@ -185,376 +185,317 @@ export function CalendarModal() {
         }
     };
 
+    const Footer = (
+        <div className="flex items-center justify-between">
+            {editingEvent && (
+                <Button
+                    variant="ghost"
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    className="h-10 px-4 text-red-500 hover:bg-red-50 hover:text-red-600 font-semibold gap-2"
+                >
+                    <Trash2 className="h-4 w-4" /> Delete
+                </Button>
+            )}
+            <div className="flex items-center gap-3 ml-auto">
+                <Button
+                    variant="outline"
+                    onClick={() => setIsCreateOpen(false)}
+                    className="h-10 px-5 font-semibold border-zinc-200"
+                >
+                    Cancel
+                </Button>
+                <Button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || !formTitle.trim() || !formDate || (formType === 'post' && !formAccountId)}
+                    className="h-10 px-6 font-bold bg-[#612bd3] hover:bg-[#7236f1] text-white disabled:opacity-50"
+                >
+                    {isSubmitting ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
+                    ) : editingEvent ? 'Save Changes' : (formType === 'post' ? 'Schedule Post' : 'Add to Calendar')}
+                </Button>
+            </div>
+        </div>
+    );
+
     return (
         <>
-            <Dialog open={isCreateOpen} onOpenChange={(open) => {
-                if (!open) {
-                    setIsCreateOpen(false);
-                }
-            }}>
-                <DialogContent className={cn("rounded-[12px] border border-[#212121] bg-[#0e0e0e] p-0 overflow-hidden text-zinc-900 shadow-2xl flex flex-col transition-all duration-300", formType === 'post' ? "min-w-7xl w-[95vw] h-[85vh]" : "max-w-xl w-[95vw] h-auto max-h-[85vh]")}>
-                    <DialogHeader className="px-6 py-4 border-b border-[#212121] bg-[#1a1919] flex-shrink-0">
-                        <DialogTitle className="text-lg font-black text-zinc-900 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <CalendarDays className="h-5 w-5 text-[#612bd3]" />
-                                {editingEvent ? 'Edit Item' : 'Create New'}
-                            </div>
-                            {editingEvent && (
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:bg-black hover:text-red-400 rounded-full transition-colors" onClick={() => setDeleteConfirmOpen(true)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            )}
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    <div className="flex-1 flex overflow-hidden">
-                        {/* Editor Column */}
-                        <div className={cn("p-6 overflow-y-auto no-scrollbar space-y-6", formType === 'post' ? "w-1/2 border-r border-[#212121]" : "w-full")}>
-                            
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-[#9c9c9c]">Type</label>
-                                <div className="grid grid-cols-4 gap-2">
-                                    {EVENT_TYPES.map(t => {
-                                        const Icon = t.icon;
-                                        const isSelected = formType === t.value;
-                                        return (
-                                            <button
-                                                key={t.value}
-                                                onClick={() => setFormType(t.value)}
-                                                className={cn(
-                                                    'flex flex-col items-center gap-1.5 rounded-xl p-3 border-2 transition-all text-center',
-                                                    isSelected
-                                                        ? 'border-[#612bd3] bg-[#291259] text-zinc-900'
-                                                        : 'border-[#212121] bg-[#1a1919] text-[#9c9c9c] hover:border-[#454444] hover:bg-[#201f1f]'
-                                                )}
-                                            >
-                                                <Icon className={cn('h-5 w-5', isSelected ? 'text-zinc-900' : 'text-[#9c9c9c]')} />
-                                                <span className="text-xs font-bold">{t.label}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {formType === 'post' && (
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-[#9c9c9c]">Select Connected Account</label>
-                                    {socialConnections.length === 0 ? (
-                                        <div className="text-sm text-[#9c9c9c] p-4 bg-[#1a1919] rounded-xl border border-[#212121]">
-                                            No social accounts connected. Connect an account in Settings first.
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-wrap gap-3">
-                                            {socialConnections.map(account => {
-                                                const isSelected = formAccountId === account.id;
-                                                return (
-                                                    <button
-                                                        key={account.id}
-                                                        onClick={() => setFormAccountId(account.id)}
-                                                        className={cn(
-                                                            "relative flex items-center justify-center p-1 rounded-full border-2 transition-all",
-                                                            isSelected ? "border-[#fc69ff] scale-105" : "border-transparent opacity-60 hover:opacity-100 hover:scale-105"
-                                                        )}
-                                                        title={account.profile_name}
-                                                    >
-                                                        {account.profile_image ? (
-                                                            <img src={account.profile_image} alt={account.profile_name} className="w-12 h-12 rounded-full object-cover bg-zinc-800" />
-                                                        ) : (
-                                                            <div className="w-12 h-12 rounded-full bg-[#1a1919] flex items-center justify-center">
-                                                                <PlatformIcon platform={account.platform} className="h-6 w-6" />
-                                                            </div>
-                                                        )}
-                                                        <div className="absolute -bottom-1 -right-1 bg-[#1a1919] rounded-full p-0.5 border border-[#212121]">
-                                                            <PlatformIcon platform={account.platform} className="h-3.5 w-3.5" />
-                                                        </div>
-                                                    </button>
-                                                )
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-[#9c9c9c]">Title *</label>
-                                <Input
-                                    placeholder={formType === 'post' ? 'e.g. Tips for growth...' : 'e.g. Team standup'}
-                                    value={formTitle}
-                                    onChange={(e) => setFormTitle(e.target.value)}
-                                    className="rounded-xl h-11 bg-[#1a1919] border-[#212121] text-zinc-900 placeholder:text-[#454444] focus-visible:ring-[#612bd3]"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-[#9c9c9c] flex items-center justify-between">
-                                    Description
-                                </label>
-                                <Textarea
-                                    placeholder="Add post caption or event details..."
-                                    value={formDescription}
-                                    onChange={(e) => setFormDescription(e.target.value)}
-                                    className="rounded-xl resize-none bg-[#1a1919] border-[#212121] text-zinc-900 placeholder:text-[#454444] focus-visible:ring-[#612bd3] min-h-[120px]"
-                                />
-                            </div>
-
-                            {formType === 'post' && (
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-sm font-bold text-[#9c9c9c]">Media URL (Optional)</label>
-                                        <Dialog open={isVideoSelectorOpen} onOpenChange={(open) => {
-                                            if (open && libraryVideos.length === 0) fetchLibraryVideos();
-                                            setIsVideoSelectorOpen(open);
-                                        }}>
-                                            <DialogTrigger asChild>
-                                                <Button type="button" variant="outline" size="sm" className="h-7 text-xs font-bold rounded-lg border-[#454444] text-[#9c9c9c] hover:bg-[#201f1f] hover:text-zinc-900 bg-[#1a1919]">
-                                                    <FileVideo className="h-3.5 w-3.5 mr-1.5" />
-                                                    Add from Library
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent className="max-w-4xl bg-[#0e0e0e] border-[#212121] text-zinc-900">
-                                                <DialogHeader>
-                                                    <DialogTitle className="text-xl font-black">Select Video from Library</DialogTitle>
-                                                </DialogHeader>
-                                                
-                                                {isLoadingVideos ? (
-                                                    <div className="flex h-64 items-center justify-center">
-                                                        <Loader2 className="h-8 w-8 animate-spin text-[#612bd3]" />
-                                                    </div>
-                                                ) : libraryVideos.length === 0 ? (
-                                                    <div className="flex h-64 flex-col items-center justify-center text-center p-6 border-2 border-dashed border-[#212121] rounded-2xl">
-                                                        <Video className="h-10 w-10 text-[#454444] mb-3" />
-                                                        <p className="text-[#9c9c9c] font-medium">No ready videos found in your library.</p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="grid grid-cols-3 gap-4 overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
-                                                        {libraryVideos.map((video) => (
-                                                            <div 
-                                                                key={video.id} 
-                                                                className={cn(
-                                                                    "group relative cursor-pointer overflow-hidden rounded-xl border-2 transition-all",
-                                                                    formMediaUrl === video.video_url ? "border-[#612bd3] ring-2 ring-[#612bd3]/50" : "border-[#212121] hover:border-[#454444]"
-                                                                )}
-                                                                onClick={() => {
-                                                                    setFormMediaUrl(video.video_url);
-                                                                    setIsVideoSelectorOpen(false);
-                                                                }}
-                                                            >
-                                                                <div className="aspect-video relative bg-black">
-                                                                     {video.images?.[0]?.url || video.series?.video_style_image ? (
-                                                                        <Image src={video.images?.[0]?.url || video.series?.video_style_image} alt={video.title} fill className="object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                                                     ) : (
-                                                                        <div className="flex items-center justify-center h-full text-[#454444]">
-                                                                            <Video className="h-8 w-8" />
-                                                                        </div>
-                                                                     )}
-                                                                </div>
-                                                                <div className="p-3 bg-[#1a1919]">
-                                                                    <p className="font-bold text-sm truncate">{video.title || "Untitled"}</p>
-                                                                    <p className="text-xs text-[#9c9c9c] truncate">{video.series?.series_name || "Single Video"}</p>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </DialogContent>
-                                        </Dialog>
-                                    </div>
-                                    <Input
-                                        placeholder="e.g. https://example.com/image.jpg"
-                                        value={formMediaUrl}
-                                        onChange={(e) => setFormMediaUrl(e.target.value)}
-                                        className="rounded-xl h-11 bg-[#1a1919] border-[#212121] text-zinc-900 placeholder:text-[#454444] focus-visible:ring-[#612bd3]"
-                                    />
-                                    <p className="text-xs text-[#9c9c9c]">Paste a direct URL or pick from your Generated Videos.</p>
-                                </div>
-                            )}
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-bold text-[#9c9c9c]">Color</label>
-                                <div className="flex items-center gap-2">
-                                    {COLOR_OPTIONS.map(c => (
-                                        <button
-                                            key={c.value}
-                                            onClick={() => setFormColor(c.value)}
-                                            className={cn(
-                                                'h-8 w-8 rounded-full transition-all border-2',
-                                                c.swatch,
-                                                formColor === c.value ? 'border-white scale-110' : 'border-transparent hover:scale-110 opacity-70 hover:opacity-100'
-                                            )}
-                                            title={c.label}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-[#9c9c9c]">Start Date *</label>
-                                    <Input
-                                        type="date"
-                                        value={formDate}
-                                        onChange={(e) => setFormDate(e.target.value)}
-                                        className="rounded-xl h-11 bg-[#1a1919] border-[#212121] text-zinc-900 focus-visible:ring-[#612bd3] [color-scheme:dark]"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-[#9c9c9c]">Start Time</label>
-                                    <Input
-                                        type="time"
-                                        value={formTime}
-                                        onChange={(e) => setFormTime(e.target.value)}
-                                        className="rounded-xl h-11 bg-[#1a1919] border-[#212121] text-zinc-900 focus-visible:ring-[#612bd3] [color-scheme:dark]"
-                                    />
-                                </div>
-                            </div>
-
-                            {(formType === 'event') && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-sm font-bold text-[#9c9c9c]">End Date</label>
-                                        <Input
-                                            type="date"
-                                            value={formEndDate}
-                                            onChange={(e) => setFormEndDate(e.target.value)}
-                                            className="rounded-xl h-11 bg-[#1a1919] border-[#212121] text-zinc-900 focus-visible:ring-[#612bd3] [color-scheme:dark]"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <label className="text-sm font-bold text-[#9c9c9c]">End Time</label>
-                                        <Input
-                                            type="time"
-                                            value={formEndTime}
-                                            onChange={(e) => setFormEndTime(e.target.value)}
-                                            className="rounded-xl h-11 bg-[#1a1919] border-[#212121] text-zinc-900 focus-visible:ring-[#612bd3] [color-scheme:dark]"
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
+            <SlidePanel
+                open={isCreateOpen}
+                onClose={() => setIsCreateOpen(false)}
+                title={editingEvent ? 'Edit Item' : 'Create New'}
+                subtitle={formType === 'post' ? 'Schedule a social post' : 'Add a calendar event'}
+                size={formType === 'post' ? 'xl' : 'md'}
+                footer={Footer}
+            >
+                <div className={cn("flex overflow-hidden h-full", formType === 'post' ? 'flex-row' : 'flex-col')}>
+                    {/* Editor Column */}
+                    <div className={cn("overflow-y-auto space-y-6 p-6", formType === 'post' ? "w-1/2 border-r border-zinc-100" : "w-full")}>
+                        {/* Header icon */}
+                        <div className="flex items-center gap-2 mb-2">
+                            <CalendarDays className="h-5 w-5 text-[#612bd3]" />
+                            <span className="text-sm font-bold text-zinc-500">Event details</span>
                         </div>
 
-                        {/* Preview Column */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-zinc-600">Type</label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {EVENT_TYPES.map(t => {
+                                    const Icon = t.icon;
+                                    const isSelected = formType === t.value;
+                                    return (
+                                        <button
+                                            key={t.value}
+                                            onClick={() => setFormType(t.value)}
+                                            className={cn(
+                                                'flex flex-col items-center gap-1.5 rounded-xl p-3 border-2 transition-all text-center',
+                                                isSelected
+                                                    ? 'border-[#612bd3] bg-indigo-50 text-indigo-700'
+                                                    : 'border-zinc-200 bg-zinc-50 text-zinc-500 hover:border-zinc-300 hover:bg-zinc-100'
+                                            )}
+                                        >
+                                            <Icon className={cn('h-5 w-5', isSelected ? 'text-[#612bd3]' : 'text-zinc-400')} />
+                                            <span className="text-xs font-bold">{t.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
                         {formType === 'post' && (
-                        <div className="w-1/2 bg-[#141313] p-6 flex flex-col relative overflow-hidden">
-                            <h3 className="text-lg font-bold text-zinc-900 mb-6">Preview</h3>
-                            
-                            <div className="flex-1 flex items-center justify-center">
-                                {!selectedAccount ? (
-                                    <div className="text-[#9c9c9c] text-center max-w-xs">
-                                        <Megaphone className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                                        <p>Select a social account to see how your post will look on that specific platform.</p>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-zinc-600">Select Connected Account</label>
+                                {socialConnections.length === 0 ? (
+                                    <div className="text-sm text-zinc-500 p-4 bg-zinc-50 rounded-xl border border-zinc-200">
+                                        No social accounts connected. Connect an account in Settings first.
                                     </div>
                                 ) : (
-                                    <div className="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden relative" style={{ color: '#000' }}>
-                                        {/* Dynamic Platform Preview Headers */}
-                                        <div className="p-3 border-b flex items-center gap-3">
+                                    <div className="flex flex-wrap gap-3">
+                                        {socialConnections.map(account => {
+                                            const isSelected = formAccountId === account.id;
+                                            return (
+                                                <button
+                                                    key={account.id}
+                                                    onClick={() => setFormAccountId(account.id)}
+                                                    className={cn(
+                                                        "relative flex items-center justify-center p-1 rounded-full border-2 transition-all",
+                                                        isSelected ? "border-[#612bd3] scale-105" : "border-transparent opacity-60 hover:opacity-100 hover:scale-105"
+                                                    )}
+                                                    title={account.profile_name}
+                                                >
+                                                    {account.profile_image ? (
+                                                        <img src={account.profile_image} alt={account.profile_name} className="w-12 h-12 rounded-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center">
+                                                            <PlatformIcon platform={account.platform} className="h-6 w-6" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 border border-zinc-200">
+                                                        <PlatformIcon platform={account.platform} className="h-3.5 w-3.5" />
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-zinc-600">Title *</label>
+                            <Input
+                                placeholder={formType === 'post' ? 'e.g. Tips for growth...' : 'e.g. Team standup'}
+                                value={formTitle}
+                                onChange={(e) => setFormTitle(e.target.value)}
+                                className="h-10 border-zinc-200 focus-visible:ring-[#612bd3]"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-zinc-600">Description</label>
+                            <Textarea
+                                placeholder="Add post caption or event details..."
+                                value={formDescription}
+                                onChange={(e) => setFormDescription(e.target.value)}
+                                className="resize-none border-zinc-200 focus-visible:ring-[#612bd3] min-h-[100px]"
+                            />
+                        </div>
+
+                        {formType === 'post' && (
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-bold text-zinc-600">Media URL (Optional)</label>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 text-xs font-bold border-zinc-200"
+                                        onClick={() => {
+                                            if (libraryVideos.length === 0) fetchLibraryVideos();
+                                            setIsVideoSelectorOpen(true);
+                                        }}
+                                    >
+                                        <FileVideo className="h-3.5 w-3.5 mr-1.5" />
+                                        Add from Library
+                                    </Button>
+                                </div>
+                                <Input
+                                    placeholder="e.g. https://example.com/image.jpg"
+                                    value={formMediaUrl}
+                                    onChange={(e) => setFormMediaUrl(e.target.value)}
+                                    className="h-10 border-zinc-200 focus-visible:ring-[#612bd3]"
+                                />
+                                <p className="text-xs text-zinc-400">Paste a direct URL or pick from your Generated Videos.</p>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-zinc-600">Color</label>
+                            <div className="flex items-center gap-2">
+                                {COLOR_OPTIONS.map(c => (
+                                    <button
+                                        key={c.value}
+                                        onClick={() => setFormColor(c.value)}
+                                        className={cn(
+                                            'h-8 w-8 rounded-full transition-all border-2',
+                                            c.swatch,
+                                            formColor === c.value ? 'border-zinc-900 scale-110' : 'border-transparent hover:scale-110 opacity-70 hover:opacity-100'
+                                        )}
+                                        title={c.label}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-bold text-zinc-600">Start Date *</label>
+                                <Input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} className="h-10 border-zinc-200 focus-visible:ring-[#612bd3]" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-bold text-zinc-600">Start Time</label>
+                                <Input type="time" value={formTime} onChange={(e) => setFormTime(e.target.value)} className="h-10 border-zinc-200 focus-visible:ring-[#612bd3]" />
+                            </div>
+                        </div>
+
+                        {(formType === 'event') && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold text-zinc-600">End Date</label>
+                                    <Input type="date" value={formEndDate} onChange={(e) => setFormEndDate(e.target.value)} className="h-10 border-zinc-200 focus-visible:ring-[#612bd3]" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold text-zinc-600">End Time</label>
+                                    <Input type="time" value={formEndTime} onChange={(e) => setFormEndTime(e.target.value)} className="h-10 border-zinc-200 focus-visible:ring-[#612bd3]" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Preview Column (only for Social Post) */}
+                    {formType === 'post' && (
+                        <div className="w-1/2 bg-zinc-50 p-6 flex flex-col overflow-y-auto">
+                            <h3 className="text-sm font-bold text-zinc-700 mb-4">Preview</h3>
+                            <div className="flex-1 flex items-center justify-center">
+                                {!selectedAccount ? (
+                                    <div className="text-zinc-400 text-center max-w-xs">
+                                        <Megaphone className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                                        <p className="text-sm">Select a social account to see a preview</p>
+                                    </div>
+                                ) : (
+                                    <div className="w-full max-w-xs bg-white rounded-xl shadow-lg overflow-hidden">
+                                        <div className="p-3 border-b flex items-center gap-2.5">
                                             {selectedAccount.profile_image ? (
-                                                <img src={selectedAccount.profile_image} className="w-10 h-10 rounded-full object-cover bg-zinc-200" alt="Profile" />
+                                                <img src={selectedAccount.profile_image} className="w-8 h-8 rounded-full object-cover" alt="Profile" />
                                             ) : (
-                                                <div className="w-10 h-10 rounded-full bg-zinc-200 flex items-center justify-center" />
+                                                <div className="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center" />
                                             )}
                                             <div>
-                                                <div className="font-bold text-sm leading-tight flex items-center gap-1">
-                                                    {selectedAccount.profile_name}
-                                                    {selectedAccount.platform.toLowerCase() === 'linkedin' && <Linkedin className="w-3 h-3 text-blue-600 ml-1" />}
-                                                </div>
-                                                <div className="text-xs text-zinc-500">
-                                                    {format(new Date(`${formDate}T${formTime}`), 'MMM dd, h:mm a')} • {selectedAccount.platform}
-                                                </div>
+                                                <div className="font-bold text-xs leading-tight">{selectedAccount.profile_name}</div>
+                                                <div className="text-[10px] text-zinc-500">{format(new Date(`${formDate}T${formTime}`), 'MMM dd, h:mm a')} · {selectedAccount.platform}</div>
                                             </div>
                                         </div>
-
-                                        {/* Mock Media Placeholder */}
                                         <div className="w-full aspect-video bg-zinc-100 flex flex-col items-center justify-center text-zinc-400 border-b relative overflow-hidden">
                                             {formMediaUrl ? (
-                                                formMediaUrl.match(/\.(mp4|webm|ogg)$/i) || formMediaUrl.includes('youtube.com') || formMediaUrl.includes('vimeo.com') ? (
-                                                    <div className="w-full h-full bg-black flex items-center justify-center">
-                                                        <Video className="h-12 w-12 text-zinc-900 opacity-50 absolute" />
-                                                        <video src={formMediaUrl} className="w-full h-full object-cover opacity-80" controls={false} />
-                                                    </div>
-                                                ) : (
-                                                    <img src={formMediaUrl} alt="Post media" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display='none'; }}/>
-                                                )
+                                                <img src={formMediaUrl} alt="Post media" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display='none'; }} />
                                             ) : (
-                                                <>
-                                                    <ImageIcon className="h-10 w-10 mb-2 opacity-30" />
-                                                    <span className="text-xs font-medium">Visual Media Placeholder</span>
-                                                </>
+                                                <><ImageIcon className="h-8 w-8 mb-1 opacity-30" /><span className="text-xs">Media Placeholder</span></>
                                             )}
                                         </div>
-
-                                        {/* Dynamic Text Body */}
-                                        <div className="p-4 space-y-2">
-                                            {selectedAccount.platform.toLowerCase() === 'youtube' ? (
-                                                <>
-                                                    <h3 className="font-bold text-lg leading-tight">{formTitle || "Video Title Placeholder"}</h3>
-                                                    <p className="text-sm text-zinc-600 line-clamp-2">{formDescription || "Description..."}</p>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {formTitle && <h3 className="font-bold text-sm mb-1">{formTitle}</h3>}
-                                                    <p className="text-sm text-zinc-800 whitespace-pre-wrap">
-                                                        {formDescription || "Write a caption for your post..."}
-                                                    </p>
-                                                </>
-                                            )}
+                                        <div className="p-3">
+                                            {formTitle && <p className="font-bold text-sm mb-1">{formTitle}</p>}
+                                            <p className="text-xs text-zinc-600 whitespace-pre-wrap line-clamp-4">{formDescription || 'Caption...'}</p>
                                         </div>
-                                        
-                                        {/* Platform specific footers Mock */}
-                                        {selectedAccount.platform.toLowerCase() === 'linkedin' && (
-                                            <div className="px-4 pb-3 pt-1 border-t flex items-center gap-4 text-zinc-500 text-xs font-semibold">
-                                                <span>👍 Like</span>
-                                                <span>💬 Comment</span>
-                                                <span>🔄 Repost</span>
-                                            </div>
-                                        )}
-                                        {selectedAccount.platform.toLowerCase() === 'instagram' && (
-                                            <div className="px-4 pb-3 pt-2 text-zinc-800 font-bold text-sm">
-                                                ♡ 〇 ⩶
-                                            </div>
-                                        )}
                                     </div>
                                 )}
                             </div>
                         </div>
-                        )}
-                    </div>
+                    )}
+                </div>
+            </SlidePanel>
 
-                    {/* Footer Actions */}
-                    <div className="px-6 py-4 border-t border-[#212121] bg-[#1a1919] flex justify-end gap-3 flex-shrink-0">
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsCreateOpen(false)}
-                            className="h-11 px-6 rounded-xl font-bold border-[#454444] text-[#9c9c9c] hover:bg-[#201f1f] hover:text-zinc-900 transition-all bg-transparent"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={isSubmitting || !formTitle.trim() || !formDate || (formType === 'post' && !formAccountId)}
-                            className="h-11 px-8 rounded-xl font-bold bg-[#612bd3] hover:bg-[#7236f1] text-zinc-900 border-0 transition-all active:scale-95 disabled:opacity-50 disabled:bg-[#612bd3]"
-                        >
-                            {isSubmitting ? (
-                                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
-                            ) : editingEvent ? 'Save Changes' : (formType === 'post' ? 'Schedule Post' : 'Add to Calendar')}
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            {/* Video Library Selector – keep as a secondary SlidePanel */}
+            <SlidePanel
+                open={isVideoSelectorOpen}
+                onClose={() => setIsVideoSelectorOpen(false)}
+                title="Select Video from Library"
+                size="lg"
+            >
+                <div className="p-6">
+                    {isLoadingVideos ? (
+                        <div className="flex h-64 items-center justify-center">
+                            <Loader2 className="h-8 w-8 animate-spin text-[#612bd3]" />
+                        </div>
+                    ) : libraryVideos.length === 0 ? (
+                        <div className="flex h-64 flex-col items-center justify-center text-center p-6 border-2 border-dashed border-zinc-200 rounded-2xl">
+                            <Video className="h-10 w-10 text-zinc-300 mb-3" />
+                            <p className="text-zinc-500 font-medium">No ready videos found in your library.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                            {libraryVideos.map((video) => (
+                                <div
+                                    key={video.id}
+                                    className={cn(
+                                        "group relative cursor-pointer overflow-hidden rounded-xl border-2 transition-all",
+                                        formMediaUrl === video.video_url ? "border-[#612bd3] ring-2 ring-[#612bd3]/30" : "border-zinc-200 hover:border-zinc-400"
+                                    )}
+                                    onClick={() => {
+                                        setFormMediaUrl(video.video_url);
+                                        setIsVideoSelectorOpen(false);
+                                    }}
+                                >
+                                    <div className="aspect-video relative bg-zinc-100">
+                                        {video.images?.[0]?.url || video.series?.video_style_image ? (
+                                            <Image src={video.images?.[0]?.url || video.series?.video_style_image} alt={video.title} fill className="object-cover" />
+                                        ) : (
+                                            <div className="flex items-center justify-center h-full text-zinc-300"><Video className="h-8 w-8" /></div>
+                                        )}
+                                    </div>
+                                    <div className="p-3 bg-white">
+                                        <p className="font-bold text-sm truncate text-zinc-900">{video.title || "Untitled"}</p>
+                                        <p className="text-xs text-zinc-400 truncate">{video.series?.series_name || "Single Video"}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </SlidePanel>
 
+            {/* Delete confirmation stays as AlertDialog (it's a destructive action prompt, not a detail panel) */}
             <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-                <AlertDialogContent className="rounded-2xl border border-[#212121] bg-[#0e0e0e] overflow-hidden text-zinc-900 shadow-2xl">
+                <AlertDialogContent className="rounded-2xl border border-zinc-200 bg-white max-w-sm shadow-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete this item?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-[#9c9c9c]">
+                        <AlertDialogTitle className="text-zinc-900">Delete this item?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-zinc-500">
                             This will permanently remove this calendar item. This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel className="rounded-xl font-bold bg-transparent border-[#454444] text-[#9c9c9c] hover:bg-[#1a1919] hover:text-zinc-900">Cancel</AlertDialogCancel>
+                        <AlertDialogCancel className="border-zinc-200 font-semibold">Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={confirmDelete}
-                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600 rounded-xl font-bold text-zinc-900 transition-all active:scale-95 border-0"
+                            className="bg-red-600 hover:bg-red-700 font-bold text-white border-0"
                         >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
@@ -565,4 +506,3 @@ export function CalendarModal() {
         </>
     );
 }
-
