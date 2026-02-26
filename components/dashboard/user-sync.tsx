@@ -1,20 +1,24 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/lib/auth-context';
 
 export function UserSync() {
-    const { user, isLoaded } = useUser();
+    const { user, loading, getIdToken } = useAuth();
     const hasSyncCalled = useRef(false);
 
     useEffect(() => {
         const syncUser = async () => {
-            if (!isLoaded || !user || hasSyncCalled.current) return;
+            if (loading || !user || hasSyncCalled.current) return;
 
             try {
                 hasSyncCalled.current = true;
+                const token = await getIdToken();
                 const response = await fetch('/api/user', {
                     method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
                 });
 
                 if (!response.ok) {
@@ -28,7 +32,7 @@ export function UserSync() {
         };
 
         syncUser();
-    }, [user, isLoaded]);
+    }, [user, loading, getIdToken]);
 
-    return null; // This component doesn't render anything
+    return null;
 }

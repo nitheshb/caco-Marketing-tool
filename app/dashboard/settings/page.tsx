@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useAuth } from "@/lib/auth-context";
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
 import { UpgradeModal } from '@/components/dashboard/upgrade-modal';
@@ -37,8 +37,31 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import Image from "next/image";
+
+interface SocialIntegration {
+    id: string;
+    platform: string;
+    name: string;
+    client_id: string;
+    created_at: string;
+}
 
 interface SocialConnection {
     id: string;
@@ -47,8 +70,7 @@ interface SocialConnection {
 }
 
 function SettingsForm() {
-    const { user } = useUser();
-    const { signOut } = useClerk();
+    const { user, signOut } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -84,20 +106,36 @@ function SettingsForm() {
             }
             router.replace(pathname);
         }
+
+        // Clean up funky hashes left by Facebook/Instagram OAuth
+        if (typeof window !== 'undefined' && window.location.hash === '#_') {
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+        }
     }, [searchParams, pathname, router]);
 
     const [connections, setConnections] = useState<SocialConnection[]>([]);
+    const [customIntegrations, setCustomIntegrations] = useState<SocialIntegration[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isCredentialsModalOpen, setIsCredentialsModalOpen] = useState(false);
+    const [selectedPlatformToManage, setSelectedPlatformToManage] = useState<string | null>(null);
 
     const fetchConnections = async () => {
         try {
-            const response = await fetch('/api/settings/social');
-            if (response.ok) {
-                const data = await response.json();
+            const [connResponse, integResponse] = await Promise.all([
+                fetch('/api/settings/social'),
+                fetch('/api/settings/social/integration')
+            ]);
+            
+            if (connResponse.ok) {
+                const data = await connResponse.json();
                 setConnections(data);
             }
+            if (integResponse.ok) {
+                const data = await integResponse.json();
+                setCustomIntegrations(data);
+            }
         } catch (error) {
-            console.error("Failed to fetch connections:", error);
+            console.error("Failed to fetch settings:", error);
         } finally {
             setIsLoading(false);
         }
@@ -221,7 +259,7 @@ function SettingsForm() {
                             <div className="relative group">
                                 <div className="h-24 w-24 rounded-2xl overflow-hidden ring-4 ring-indigo-50 transition-all group-hover:ring-indigo-100">
                                     <Image
-                                        src={user?.imageUrl || "/placeholder-user.png"}
+                                        src={user?.photoURL || "/placeholder-user.png"}
                                         alt="Profile"
                                         width={96}
                                         height={96}
@@ -235,11 +273,11 @@ function SettingsForm() {
                             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                                 <div className="space-y-1.5">
                                     <Label className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Full Name</Label>
-                                    <Input value={user?.fullName || ""} disabled className="bg-zinc-50 border-zinc-200 font-medium" />
+                                    <Input value={user?.displayName || ""} disabled className="bg-zinc-50 border-zinc-200 font-medium" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Email Address</Label>
-                                    <Input value={user?.primaryEmailAddress?.emailAddress || ""} disabled className="bg-zinc-50 border-zinc-200 font-medium" />
+                                    <Input value={user?.email || ""} disabled className="bg-zinc-50 border-zinc-200 font-medium" />
                                 </div>
                             </div>
                         </div>
@@ -249,9 +287,19 @@ function SettingsForm() {
 
             {/* Social Integrations Section */}
             <section className="space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                    <Link2 className="h-5 w-5 text-indigo-600" />
-                    <h2 className="text-xl font-bold text-zinc-900">Social Media Connections</h2>
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        <Link2 className="h-5 w-5 text-indigo-600" />
+                        <h2 className="text-xl font-bold text-zinc-900">Social Media Connections</h2>
+                    </div>
+                    <CredentialsManagerModal 
+                        customIntegrations={customIntegrations} 
+                        onUpdated={fetchConnections} 
+                        isOpen={isCredentialsModalOpen}
+                        onOpenChange={setIsCredentialsModalOpen}
+                        initialPlatform={selectedPlatformToManage}
+                        onOpenClick={() => setSelectedPlatformToManage(null)}
+                    />
                 </div>
                 {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
@@ -268,8 +316,14 @@ function SettingsForm() {
                             color="text-red-600"
                             bgColor="bg-red-50"
                             connections={connections.filter(c => c.platform === 'youtube')}
+                            customIntegrations={customIntegrations.filter(c => c.platform === 'youtube')}
                             onConnect={() => handleConnect('youtube')}
                             onDisconnect={(id: string) => handleDisconnect(id, 'youtube')}
+                            allowCustomApp={true}
+                            onManageCredentials={() => {
+                                setSelectedPlatformToManage('youtube');
+                                setIsCredentialsModalOpen(true);
+                            }}
                         />
 
                         {/* Facebook */}
@@ -279,9 +333,14 @@ function SettingsForm() {
                             color="text-blue-700"
                             bgColor="bg-blue-50"
                             connections={connections.filter(c => c.platform === 'facebook')}
+                            customIntegrations={customIntegrations.filter(c => c.platform === 'facebook')}
                             onConnect={() => handleConnect('facebook')}
                             onDisconnect={(id: string) => handleDisconnect(id, 'facebook')}
                             allowCustomApp={true}
+                            onManageCredentials={() => {
+                                setSelectedPlatformToManage('facebook');
+                                setIsCredentialsModalOpen(true);
+                            }}
                         />
 
                         {/* LinkedIn */}
@@ -291,9 +350,14 @@ function SettingsForm() {
                             color="text-blue-600"
                             bgColor="bg-blue-50"
                             connections={connections.filter(c => c.platform === 'linkedin')}
+                            customIntegrations={customIntegrations.filter(c => c.platform === 'linkedin')}
                             onConnect={() => handleConnect('linkedin')}
                             onDisconnect={(id: string) => handleDisconnect(id, 'linkedin')}
                             allowCustomApp={true}
+                            onManageCredentials={() => {
+                                setSelectedPlatformToManage('linkedin');
+                                setIsCredentialsModalOpen(true);
+                            }}
                         />
 
                         {/* Instagram */}
@@ -303,8 +367,14 @@ function SettingsForm() {
                             color="text-pink-600"
                             bgColor="bg-pink-50"
                             connections={connections.filter(c => c.platform === 'instagram')}
+                            customIntegrations={customIntegrations.filter(c => c.platform === 'instagram')}
                             onConnect={() => handleConnect('instagram')}
                             onDisconnect={(id: string) => handleDisconnect(id, 'instagram')}
+                            allowCustomApp={true}
+                            onManageCredentials={() => {
+                                setSelectedPlatformToManage('instagram');
+                                setIsCredentialsModalOpen(true);
+                            }}
                         />
 
                         {/* TikTok (Custom Placeholder for now) */}
@@ -325,14 +395,7 @@ function SettingsForm() {
                         />
                     </div>
                 )}
-                {currentPlan === 'free_user' && (
-                    <div className="mt-6 rounded-xl bg-indigo-50 border border-indigo-100 p-4">
-                        <p className="text-sm text-indigo-700 font-medium flex items-center gap-2">
-                            <Zap className="h-4 w-4" />
-                            Upgrade to Unlimited to connect Instagram and TikTok accounts and automate your entire social workflow!
-                        </p>
-                    </div>
-                )}
+
             </section>
 
             {/* Danger Zone */}
@@ -391,37 +454,9 @@ function SettingsForm() {
     );
 }
 
-function SocialPlatformCard({ platform, Icon, color, bgColor, connections, onConnect, onDisconnect, allowCustomApp }: any) {
+function SocialPlatformCard({ platform, Icon, color, bgColor, connections, customIntegrations, onConnect, onDisconnect, allowCustomApp, onManageCredentials }: any) {
     const isConnected = connections && connections.length > 0;
-    const [showCustomForm, setShowCustomForm] = useState(false);
-    const [clientId, setClientId] = useState('');
-    const [clientSecret, setClientSecret] = useState('');
-    const [isSavingCustom, setIsSavingCustom] = useState(false);
-
-    const handleCustomConnect = async () => {
-        if (!clientId || !clientSecret) {
-            toast.error("Client ID and Secret are required");
-            return;
-        }
-
-        setIsSavingCustom(true);
-        try {
-            const res = await fetch('/api/settings/social/integration', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ platform, clientId, clientSecret })
-            });
-
-            if (!res.ok) throw new Error("Failed to save credentials");
-
-            const data = await res.json();
-            // Redirect using the new integration ID
-            window.location.href = `/api/settings/social/connect/${platform}?integrationId=${data.id}`;
-        } catch (error) {
-            toast.error("Failed to start custom connection flow.");
-            setIsSavingCustom(false);
-        }
-    };
+    const [showCredentialsModal, setShowCredentialsModal] = useState(false);
 
     return (
         <Card className="border-zinc-200/60 shadow-sm bg-white group hover:shadow-md transition-all duration-300">
@@ -463,39 +498,288 @@ function SocialPlatformCard({ platform, Icon, color, bgColor, connections, onCon
                         </div>
                     )}
 
-                    {(!isConnected || allowCustomApp) && !showCustomForm && (
-                        <Button
-                            variant={isConnected ? "outline" : "default"}
-                            size="sm"
-                            className={isConnected ? "w-full rounded-xl" : "w-full rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold transition-transform active:scale-95 shadow-sm"}
-                            onClick={() => allowCustomApp ? setShowCustomForm(true) : onConnect()}
-                        >
-                            <ExternalLink className="mr-2 h-3.5 w-3.5" />
-                            {isConnected ? "Add Another Account" : "Connect Account"}
-                        </Button>
-                    )}
-
-                    {showCustomForm && (
-                        <div className="w-full space-y-3 bg-zinc-50 p-3 rounded-xl border border-zinc-200 text-left">
-                            <div className="space-y-1">
-                                <Label className="text-[10px] uppercase font-bold text-zinc-500">Client ID</Label>
-                                <Input value={clientId} onChange={e => setClientId(e.target.value)} className="h-8 text-xs font-mono" placeholder="Paste Client ID" />
-                            </div>
-                            <div className="space-y-1">
-                                <Label className="text-[10px] uppercase font-bold text-zinc-500">Client Secret</Label>
-                                <Input type="password" value={clientSecret} onChange={e => setClientSecret(e.target.value)} className="h-8 text-xs font-mono" placeholder="Paste Secret" />
-                            </div>
-                            <div className="flex gap-2 pt-1">
-                                <Button size="sm" variant="ghost" className="flex-1 h-8 text-xs" onClick={() => setShowCustomForm(false)}>Cancel</Button>
-                                <Button size="sm" disabled={isSavingCustom} className="flex-1 h-8 text-xs bg-indigo-600 hover:bg-indigo-700" onClick={handleCustomConnect}>
-                                    {isSavingCustom ? <Loader2 className="h-3 w-3 animate-spin"/> : "Authorize"}
-                                </Button>
-                            </div>
-                        </div>
+                    {/* Only non-custom apps can connect multiple unless allowCustomApp is handled, we handle custom selection via modal */}
+                    {(!isConnected || allowCustomApp) && (
+                        allowCustomApp ? (
+                            <Dialog open={showCredentialsModal} onOpenChange={setShowCredentialsModal}>
+                                <DialogTrigger asChild>
+                                    <Button
+                                        variant={isConnected ? "outline" : "default"}
+                                        size="sm"
+                                        className={isConnected ? "w-full rounded-xl" : "w-full rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold transition-transform active:scale-95 shadow-sm"}
+                                    >
+                                        <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                                        {isConnected ? "Add Another Account" : "Connect Account"}
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-md bg-white rounded-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle className="text-xl font-bold flex items-center gap-2 text-zinc-900 border-b border-zinc-100 pb-3">
+                                            <Icon className={`h-5 w-5 ${color}`} />
+                                            Select Credentials for {platform}
+                                        </DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4 pt-2 max-h-[300px] overflow-y-auto">
+                                        {customIntegrations && customIntegrations.length > 0 ? (
+                                            customIntegrations.map((app: any) => (
+                                                <div key={app.id} className="flex flex-col gap-2 p-3 rounded-xl bg-zinc-50 border border-zinc-200">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-sm font-bold text-zinc-900">{app.name}</span>
+                                                        <span className="text-[10px] font-mono font-bold text-zinc-500 bg-white px-2 py-0.5 rounded border border-zinc-100">ID: {app.client_id}</span>
+                                                    </div>
+                                                    <Button 
+                                                        onClick={() => {
+                                                            window.location.href = `/api/settings/social/connect/${platform}?integrationId=${app.id}`;
+                                                        }}
+                                                        className={`w-full text-white font-bold shadow-sm ${bgColor.replace('50', '600')} hover:opacity-90 transition-opacity`}
+                                                    >
+                                                        Use this Credential
+                                                    </Button>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-6">
+                                                <p className="text-sm text-zinc-500 mb-4">No saved credentials for {platform}.</p>
+                                                <Button 
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setShowCredentialsModal(false);
+                                                        onManageCredentials?.();
+                                                    }}
+                                                >
+                                                    Manage OAuth Credentials
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        ) : (
+                            <Button
+                                variant={isConnected ? "outline" : "default"}
+                                size="sm"
+                                className={isConnected ? "w-full rounded-xl" : "w-full rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold transition-transform active:scale-95 shadow-sm"}
+                                onClick={onConnect}
+                            >
+                                <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                                {isConnected ? "Add Another Account" : "Connect Account"}
+                            </Button>
+                        )
                     )}
                 </div>
             </CardContent>
         </Card>
+    );
+}
+
+function CredentialsManagerModal({ 
+    customIntegrations, 
+    onUpdated, 
+    isOpen, 
+    onOpenChange,
+    initialPlatform,
+    onOpenClick
+}: { 
+    customIntegrations: SocialIntegration[], 
+    onUpdated: () => void,
+    isOpen: boolean,
+    onOpenChange: (open: boolean) => void,
+    initialPlatform?: string | null,
+    onOpenClick?: () => void
+}) {
+    const [platform, setPlatform] = useState(initialPlatform || 'facebook');
+    const [name, setName] = useState('');
+    const [clientId, setClientId] = useState('');
+    const [clientSecret, setClientSecret] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isOpen) {
+            if (initialPlatform) {
+                setPlatform(initialPlatform);
+            } else {
+                setPlatform('facebook');
+            }
+        }
+    }, [isOpen, initialPlatform]);
+
+    const handleSave = async () => {
+        if (!clientId || !clientSecret || !name) {
+            toast.error("App Name, Client ID and Secret are required");
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const res = await fetch('/api/settings/social/integration', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ platform, name, clientId, clientSecret })
+            });
+
+            if (!res.ok) throw new Error("Failed to save credentials");
+            toast.success("Credentials saved successfully");
+            setName('');
+            setClientId('');
+            setClientSecret('');
+            onUpdated();
+        } catch (error) {
+            toast.error("Failed to save credentials.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        setIsDeleting(id);
+        try {
+            const res = await fetch('/api/settings/social/integration', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (!res.ok) throw new Error("Failed to delete credentials");
+            toast.success("Credentials deleted successfully");
+            onUpdated();
+        } catch (error) {
+            toast.error("Failed to delete credentials.");
+        } finally {
+            setIsDeleting(null);
+        }
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="bg-white hover:bg-zinc-50 font-bold border-zinc-200" onClick={() => onOpenClick?.()}>
+                    Manage OAuth Credentials
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md bg-white rounded-2xl">
+                <DialogHeader>
+                    <DialogTitle className="text-xl font-bold flex items-center gap-2 text-zinc-900 border-b border-zinc-100 pb-3">
+                        <ShieldAlert className="h-5 w-5 text-indigo-600" />
+                        Manage Custom Apps
+                    </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-6 pt-4">
+                    {/* Add new form */}
+                    <div className="space-y-4 bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
+                        <h3 className="text-sm font-bold text-zinc-900">Add New Credential</h3>
+                        
+                        <div className="space-y-2">
+                            <Label className="text-xs uppercase font-bold text-zinc-500">Platform</Label>
+                            <Select value={platform} onValueChange={setPlatform} disabled={!!initialPlatform}>
+                                <SelectTrigger className="bg-white h-10">
+                                    <SelectValue placeholder="Select platform" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {(!initialPlatform || initialPlatform === 'facebook') && (
+                                        <SelectItem value="facebook">
+                                            <div className="flex items-center gap-2">
+                                                <Facebook className="h-4 w-4 text-blue-600" />
+                                                <span>Facebook</span>
+                                            </div>
+                                        </SelectItem>
+                                    )}
+                                    {(!initialPlatform || initialPlatform === 'linkedin') && (
+                                        <SelectItem value="linkedin">
+                                            <div className="flex items-center gap-2">
+                                                <Linkedin className="h-4 w-4 text-blue-700" />
+                                                <span>LinkedIn</span>
+                                            </div>
+                                        </SelectItem>
+                                    )}
+                                    {(!initialPlatform || initialPlatform === 'instagram') && (
+                                        <SelectItem value="instagram">
+                                            <div className="flex items-center gap-2">
+                                                <Instagram className="h-4 w-4 text-pink-600" />
+                                                <span>Instagram</span>
+                                            </div>
+                                        </SelectItem>
+                                    )}
+                                    {(!initialPlatform || initialPlatform === 'youtube') && (
+                                        <SelectItem value="youtube">
+                                            <div className="flex items-center gap-2">
+                                                <Youtube className="h-4 w-4 text-red-600" />
+                                                <span>YouTube</span>
+                                            </div>
+                                        </SelectItem>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-xs uppercase font-bold text-zinc-500">App Name</Label>
+                            <Input value={name} onChange={e => setName(e.target.value)} className="bg-white border-zinc-200 text-xs" placeholder="e.g. My Company Page" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-xs uppercase font-bold text-zinc-500">Client ID</Label>
+                            <Input value={clientId} onChange={e => setClientId(e.target.value)} className="bg-white border-zinc-200 font-mono text-xs" placeholder="Paste Client ID" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <Label className="text-xs uppercase font-bold text-zinc-500">Client Secret</Label>
+                            <Input type="password" value={clientSecret} onChange={e => setClientSecret(e.target.value)} className="bg-white border-zinc-200 font-mono text-xs" placeholder="Paste Secret" />
+                        </div>
+                        
+                        <Button 
+                            className="w-full bg-zinc-900 text-white hover:bg-zinc-800 transition-colors" 
+                            onClick={handleSave}
+                            disabled={isSaving}
+                        >
+                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                            Save Credentials
+                        </Button>
+                    </div>
+
+                    {/* Saved Credentials List */}
+                    <div className="space-y-3">
+                        <h3 className="text-sm font-bold text-zinc-900">Saved Credentials</h3>
+                        {(() => {
+                            const filteredIntegrations = customIntegrations.filter(app => app.platform === platform);
+                            if (filteredIntegrations.length === 0) {
+                                return <p className="text-sm text-zinc-500 italic">No saved credentials found for {platform}.</p>;
+                            }
+                            return (
+                                <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                                    {filteredIntegrations.map((app) => (
+                                        <div key={app.id} className="flex items-center justify-between p-3 rounded-xl bg-white border border-zinc-200 shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600">
+                                                    <Link2 className="h-4 w-4" />
+                                                </div>
+                                                <div className="space-y-0.5 flex-1 min-w-0">
+                                                    <p className="text-[13px] font-bold text-zinc-900 capitalize truncate">{app.name}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-indigo-100 text-indigo-600 font-medium">
+                                                            {app.platform}
+                                                        </Badge>
+                                                        <p className="text-[10px] font-mono text-zinc-500 truncate">{app.client_id}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
+                                                onClick={() => handleDelete(app.id)}
+                                                disabled={isDeleting === app.id}
+                                            >
+                                                {isDeleting === app.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                                <span className="sr-only">Delete app</span>
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })()}</div>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }
 

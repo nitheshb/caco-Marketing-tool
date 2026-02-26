@@ -1,14 +1,13 @@
 'use server'
 
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getAuthUser } from "@/lib/auth-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function syncUser() {
     try {
-        const { userId } = await auth();
-        const user = await currentUser();
+        const { userId, email, name } = await getAuthUser();
 
-        if (!userId || !user) {
+        if (!userId) {
             return { error: "User not found" };
         }
 
@@ -22,8 +21,8 @@ export async function syncUser() {
         if (!existingUser) {
             const { error } = await supabaseAdmin.from("users").insert({
                 user_id: userId,
-                email: user.emailAddresses[0].emailAddress,
-                name: `${user.firstName} ${user.lastName}`,
+                email: email || '',
+                name: name || '',
             });
 
             if (error) {
