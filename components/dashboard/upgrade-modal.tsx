@@ -1,9 +1,17 @@
 'use client';
 
-import { SlidePanel } from '@/components/ui/slide-panel';
-import { Button } from '@/components/ui/button';
-import { Zap, Crown } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Zap, Crown } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface UpgradeModalProps {
     isOpen: boolean;
@@ -12,65 +20,60 @@ interface UpgradeModalProps {
     description?: string;
 }
 
-const features = [
-    'Unlock unlimited series creation',
-    'Connect Instagram & TikTok accounts',
-    'Prioritized high-speed rendering',
-];
-
 export function UpgradeModal({
     isOpen,
     onClose,
-    title = 'Upgrade Your Plan',
-    description = "You've reached the limit of your current plan. Upgrade to unlock more features and generations.",
+    title = "Upgrade Your Plan",
+    description = "You've reached the limit of your current plan. Upgrade to unlock more features and generations."
 }: UpgradeModalProps) {
     const router = useRouter();
 
     return (
-        <SlidePanel
-            open={isOpen}
-            onClose={onClose}
-            title={title}
-            subtitle={description}
-            size="sm"
-            footer={
-                <div className="flex flex-col gap-2">
-                    <Button
-                        onClick={() => router.push('/dashboard/billing')}
-                        className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-lg shadow-indigo-100"
-                    >
-                        Go to Billing
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        onClick={onClose}
-                        className="w-full h-9 text-zinc-400 hover:text-zinc-600"
-                    >
-                        Maybe later
-                    </Button>
-                </div>
-            }
-        >
-            <div className="p-6 space-y-6">
-                {/* Crown icon */}
-                <div className="flex justify-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+        <AlertDialog open={isOpen} onOpenChange={onClose}>
+            <AlertDialogContent className="max-w-md rounded-2xl border-indigo-100 shadow-2xl">
+                <AlertDialogHeader className="items-center text-center">
+                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 shadow-inner">
                         <Crown className="h-8 w-8" />
                     </div>
-                </div>
-
-                {/* Feature list */}
-                <div className="rounded-xl bg-zinc-50 border border-zinc-100 p-4 space-y-3">
-                    {features.map((f, i) => (
-                        <div key={i} className="flex items-start gap-3">
-                            <div className="mt-0.5 rounded-full bg-indigo-100 p-1 flex-shrink-0">
-                                <Zap className="h-3 w-3 text-indigo-600" />
-                            </div>
-                            <p className="text-sm font-medium text-zinc-700">{f}</p>
+                    <AlertDialogTitle className="text-2xl font-black tracking-tight text-zinc-900">
+                        {title}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-base text-zinc-500">
+                        {description}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="my-6 space-y-4 rounded-xl bg-zinc-50 p-4 border border-zinc-100">
+                    <div className="flex items-start gap-3">
+                        <div className="mt-0.5 rounded-full bg-indigo-100 p-1">
+                            <Zap className="h-3 w-3 text-indigo-600" />
                         </div>
-                    ))}
+                        <p className="text-sm font-medium text-zinc-700">Unlock unlimited series creation</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                        <div className="mt-0.5 rounded-full bg-indigo-100 p-1">
+                            <Zap className="h-3 w-3 text-indigo-600" />
+                        </div>
+                        <p className="text-sm font-medium text-zinc-700">Connect Instagram & TikTok accounts</p>
+                    </div>
+                    <div className="flex items-start gap-3">
+                        <div className="mt-0.5 rounded-full bg-indigo-100 p-1">
+                            <Zap className="h-3 w-3 text-indigo-600" />
+                        </div>
+                        <p className="text-sm font-medium text-zinc-700">Prioritized high-speed rendering</p>
+                    </div>
                 </div>
-            </div>
-        </SlidePanel>
+                <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+                    <AlertDialogAction
+                        onClick={() => router.push('/dashboard/billing')}
+                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-12 shadow-lg shadow-indigo-200"
+                    >
+                        Go to Billing
+                    </AlertDialogAction>
+                    <AlertDialogCancel className="w-full border-none text-zinc-400 hover:text-zinc-600 hover:bg-transparent">
+                        Maybe later
+                    </AlertDialogCancel>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     );
 }

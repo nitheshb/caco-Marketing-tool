@@ -7,12 +7,24 @@ import { useState } from 'react';
 import {
     Home, Search, Send, DollarSign, Wrench, ArrowDownLeft,
     Bookmark, ShieldCheck, Settings, ChevronDown, ChevronRight,
-    ChevronsLeft, Menu
+    ChevronsLeft, Menu, Film, Video, CalendarDays, Plus, CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useClerk } from '@clerk/nextjs';
 
 const sidebarData = [
+    {
+        name: 'Studio',
+        icon: Film,
+        defaultExpanded: true,
+        items: [
+            { name: 'Series', href: '/dashboard' },
+            { name: 'Videos', href: '/dashboard/videos' },
+            { name: 'Calendar', href: '/dashboard/calendar' },
+            { name: 'Create New', href: '/dashboard/create' },
+            { name: 'Billing', href: '/dashboard/billing' },
+        ]
+    },
     {
         name: 'Home',
         icon: Home,
