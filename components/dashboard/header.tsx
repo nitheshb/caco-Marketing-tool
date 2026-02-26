@@ -9,15 +9,15 @@ export function Header() {
         <header className="flex h-14 items-center justify-between border-b border-zinc-200 bg-white px-4 shrink-0 transition-all font-sans">
             <div className="flex flex-1 items-center max-w-2xl">
                 {/* Enhanced Search Bar */}
-                <div className="group flex w-full max-w-[500px] items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1.5 transition-all focus-within:border-zinc-300 focus-within:bg-white focus-within:shadow-sm hover:border-zinc-300">
-                    <Search className="h-4 w-4 text-zinc-400 group-focus-within:text-zinc-500" />
+                <div className="group flex w-full max-w-[240px] items-center gap-1.5 rounded flex-shrink-0 border border-zinc-200 bg-zinc-50 px-2 py-1 transition-all focus-within:border-zinc-300 focus-within:bg-white focus-within:shadow-sm hover:border-zinc-300">
+                    <Search className="h-3 w-3 text-zinc-400 group-focus-within:text-zinc-500" />
                     <input
                         type="text"
                         placeholder="Search across Apollo..."
-                        className="flex-1 bg-transparent text-sm text-zinc-900 placeholder:text-zinc-500 focus:outline-none"
+                        className="flex-1 bg-transparent text-xs text-zinc-900 placeholder:text-zinc-500 focus:outline-none"
                     />
-                    <div className="flex items-center gap-1 rounded bg-white border border-zinc-200 px-1.5 py-0.5 shadow-sm text-[10px] font-medium text-zinc-500">
-                        <Command className="h-3 w-3" />
+                    <div className="flex items-center gap-0.5 rounded bg-white border border-zinc-200 px-1 py-0.5 shadow-sm text-[9px] font-medium text-zinc-500">
+                        <Command className="h-2.5 w-2.5" />
                         <span>K</span>
                     </div>
                 </div>
