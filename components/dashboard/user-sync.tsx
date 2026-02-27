@@ -14,11 +14,27 @@ export function UserSync() {
             try {
                 hasSyncCalled.current = true;
                 const token = await getIdToken();
+                
+                // Check if we have partner auth info from a fresh login
+                const partnerInfoStr = localStorage.getItem('partner_auth_info');
+                let body = {};
+                if (partnerInfoStr) {
+                    try {
+                        body = JSON.parse(partnerInfoStr);
+                        // Only use this info once
+                        localStorage.removeItem('partner_auth_info');
+                    } catch (e) {
+                        console.error('Failed to parse partner auth info:', e);
+                    }
+                }
+
                 const response = await fetch('/api/user', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify(body),
                 });
 
                 if (!response.ok) {

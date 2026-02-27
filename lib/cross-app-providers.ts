@@ -19,16 +19,16 @@ export interface CrossAppProvider {
 // Client-safe provider list (no secrets)
 export const CROSS_APP_PROVIDERS: CrossAppProvider[] = [
   {
-    id: 'redefine',
-    name: 'Redefine',
-    color: '#6366f1',
-    bgColor: '#eef2ff',
-  },
-  {
     id: 'hellostores',
     name: 'HelloStores',
     color: '#10b981',
     bgColor: '#ecfdf5',
+  },
+  {
+    id: 'redefine',
+    name: 'Redefine',
+    color: '#6366f1',
+    bgColor: '#eef2ff',
   },
 ];
 

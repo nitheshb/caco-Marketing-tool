@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { getHelloStoresAuth } from '@/lib/firebase-hellostores';
+import { getRedefineAuth } from '@/lib/firebase-redefine';
+import { HelloStoresLoginModal } from '@/components/hellostores-login-modal';
+import { RedefineLoginModal } from '@/components/redefine-login-modal';
 import { CROSS_APP_PROVIDERS } from '@/lib/cross-app-providers';
 import { Video, Mail, Lock, User, ArrowRight, Loader2 } from 'lucide-react';
 
@@ -14,6 +18,8 @@ export default function SignUpPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isHelloStoresModalOpen, setIsHelloStoresModalOpen] = useState(false);
+    const [isRedefineModalOpen, setIsRedefineModalOpen] = useState(false);
     const router = useRouter();
 
     const handleEmailSignUp = async (e: React.FormEvent) => {
@@ -50,27 +56,46 @@ export default function SignUpPage() {
         }
     };
 
-    const handleCrossAppLogin = (providerId: string) => {
-        const callbackUrl = `${window.location.origin}/api/auth/cross-app/callback`;
-        const initUrl = `/api/auth/cross-app/initiate?provider=${providerId}&redirect=${encodeURIComponent('/dashboard')}&callback=${encodeURIComponent(callbackUrl)}`;
-        
-        // Calculate popup position to be centered
-        const width = 500;
-        const height = 600;
-        const left = window.screenX + (window.outerWidth - width) / 2;
-        const top = window.screenY + (window.outerHeight - height) / 2;
-        
-        window.open(initUrl, 'CrossAppLogin', `width=${width},height=${height},left=${left},top=${top},popup=yes`);
+    const handleHelloStoresLogin = () => {
+        setIsHelloStoresModalOpen(true);
+    };
 
-        // Listen for the success message from the popup
-        const messageListener = (event: MessageEvent) => {
-            if (event.origin !== window.location.origin) return;
-            if (event.data === 'cross_app_login_success') {
-                window.removeEventListener('message', messageListener);
-                router.push('/dashboard');
+    const handleRedefineLogin = () => {
+        setIsRedefineModalOpen(true);
+    };
+
+    const handleLoginSuccess = async (email: string, pass: string, extraData?: any) => {
+        setIsHelloStoresModalOpen(false);
+        setIsRedefineModalOpen(false);
+        setLoading(true);
+        try {
+            // Store partner data for UserSync to pick up
+            if (extraData) {
+                localStorage.setItem('partner_auth_info', JSON.stringify({
+                    org_id: extraData.org_id,
+                    project_id: extraData.project_id,
+                    source_login: extraData.source_login
+                }));
             }
-        };
-        window.addEventListener('message', messageListener);
+
+            await signInWithEmailAndPassword(auth, email, pass);
+            router.push('/dashboard');
+        } catch (err: any) {
+            setError(err.message || 'VidMaxx sign-in failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCrossAppLogin = (providerId: string) => {
+        if (providerId === 'hellostores') {
+            handleHelloStoresLogin();
+            return;
+        }
+        if (providerId === 'redefine') {
+            handleRedefineLogin();
+            return;
+        }
     };
 
     return (
@@ -198,6 +223,18 @@ export default function SignUpPage() {
                     </p>
                 </div>
             </div>
+
+            <HelloStoresLoginModal 
+                isOpen={isHelloStoresModalOpen}
+                onClose={() => setIsHelloStoresModalOpen(false)}
+                onSuccess={handleLoginSuccess}
+            />
+
+            <RedefineLoginModal 
+                isOpen={isRedefineModalOpen}
+                onClose={() => setIsRedefineModalOpen(false)}
+                onSuccess={handleLoginSuccess}
+            />
         </div>
     );
 }

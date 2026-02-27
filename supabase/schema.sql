@@ -153,3 +153,29 @@ ALTER TABLE public.media_assets ENABLE ROW LEVEL SECURITY;
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('media', 'media', true)
 ON CONFLICT (id) DO NOTHING;
+
+-- Alter existing tables to add multi-tenancy fields
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS project_id TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS source_login TEXT;
+
+ALTER TABLE public.social_integrations ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.social_integrations ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.social_connections ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.social_connections ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.series ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.series ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.videos ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.videos ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.calendar_events ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.calendar_events ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.folders ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.folders ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.media_assets ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.media_assets ADD COLUMN IF NOT EXISTS project_id TEXT;

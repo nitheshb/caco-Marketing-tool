@@ -34,7 +34,7 @@ async function getGooglePublicKeys(): Promise<Record<string, string>> {
  * Verifies a Firebase ID token WITHOUT the Admin SDK.
  * Uses Google's published public certificates to verify the JWT signature.
  */
-async function verifyFirebaseToken(token: string): Promise<any> {
+export async function verifyFirebaseToken(token: string, customProjectId?: string): Promise<any> {
   // Decode the token header to get the key ID (kid)
   const decodedHeader = jwt.decode(token, { complete: true });
   if (!decodedHeader || typeof decodedHeader === 'string') {
@@ -55,7 +55,7 @@ async function verifyFirebaseToken(token: string): Promise<any> {
   }
 
   // Verify the token signature and claims
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const projectId = customProjectId || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   const decoded = jwt.verify(token, publicKey, {
     algorithms: ['RS256'],
     audience: projectId,

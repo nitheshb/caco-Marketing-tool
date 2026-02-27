@@ -6,6 +6,8 @@ export async function POST(req: Request) {
     try {
         const { userId, email, name } = await getAuthUser(req);
 
+        const { org_id, project_id, source_login } = await req.json().catch(() => ({}));
+
         // Upsert user data into the existing 'users' table
         const { error } = await supabaseAdmin
             .from('users')
@@ -13,6 +15,9 @@ export async function POST(req: Request) {
                 user_id: userId,
                 email: email || '',
                 name: name || '',
+                org_id: org_id || null,
+                project_id: project_id || null,
+                source_login: source_login || 'vidmaxx', // default to direct login
             }, {
                 onConflict: 'user_id'
             });
