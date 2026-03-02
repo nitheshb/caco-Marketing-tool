@@ -3,124 +3,265 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import {
-    Film,
-    Video,
-    CalendarDays,
-    BookOpen,
-    CreditCard,
-    Settings,
-    Plus,
-    Zap,
-    User
+    Home, Search, Send, DollarSign, Wrench, ArrowDownLeft,
+    Bookmark, ShieldCheck, Settings, ChevronDown, ChevronRight,
+    ChevronsLeft, Menu, Film, Video, CalendarDays, Plus, CreditCard, User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
 
-const navItems = [
-    { name: 'Series', href: '/dashboard', icon: Film },
-    { name: 'Videos', href: '/dashboard/videos', icon: Video },
-    { name: 'Calendar', href: '/dashboard/calendar', icon: CalendarDays },
-    { name: 'Guides', href: 'https://tubeguruji.com', icon: BookOpen },
-    { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+const sidebarData = [
+    {
+        name: 'Home',
+        icon: Home,
+        href: '/dashboard',
+        hasBorderBottom: true,
+    },
+    {
+        name: 'Postings Calendar',
+        icon: CalendarDays,
+        href: '/dashboard/postings-calendar'
+    },
+    {
+        name: 'Content Creation',
+        icon: Film,
+        defaultExpanded: true,
+        items: [
+            { name: 'Series', href: '/dashboard' },
+            { name: 'Videos', href: '/dashboard/videos' },
+            { name: 'Posters', href: '/dashboard/posters' },
+            
+            { name: 'Create New', href: '/dashboard/create' },
+            // { name: 'Billing', href: '/dashboard/billing' },
+        ]
+    },
+    {
+        name: 'Billing',
+        icon: CreditCard,
+        href: '/dashboard/billing'
+    },
+    {
+        name: 'Whatsapp',
+        icon: Search,
+        defaultExpanded: true,
+        items: [
+            { name: 'People', href: '/dashboard/people' },
+            { name: 'Companies', href: '/dashboard/companies' },
+            { name: 'Lists', href: '/dashboard/lists' },
+            { name: 'Data enrichment', href: '/dashboard/data-enrichment' },
+        ]
+    },
+    {
+        name: 'CRM',
+        icon: CreditCard,
+        href: '/dashboard/billing',
+        items: [
+            { name: 'Contacts', href: '/dashboard/contacts' },
+            { name: 'Companies', href: '/dashboard/companies' },
+            { name: 'Lists', href: '/dashboard/lists' },
+            { name: 'Data enrichment', href: '/dashboard/data-enrichment' },
+        ]
+    },
+    {
+        name: 'Engage',
+        icon: Send,
+        defaultExpanded: true,
+        items: [
+            { name: 'Sequences', href: '/dashboard/sequences' },
+            { name: 'Emails', href: '/dashboard/emails' },
+            { name: 'Calls', href: '/dashboard/calls' },
+            { name: 'Tasks', href: '/dashboard/tasks' },
+        ]
+    },
+    {
+        name: 'Win deals',
+        icon: DollarSign,
+        defaultExpanded: false,
+        items: [
+            { name: 'Meetings', href: '/dashboard/meetings' },
+            { name: 'Conversations', href: '/dashboard/conversations' },
+            { name: 'Deals', href: '/dashboard/deals' },
+        ]
+    },
+    {
+        name: 'Tools and automation',
+        icon: Wrench,
+        defaultExpanded: false,
+        items: [
+            { name: 'Workflows', href: '/dashboard/workflows' },
+            { name: 'Analytics', href: '/dashboard/analytics' },
+        ]
+    },
+    {
+        name: 'Inbound',
+        icon: ArrowDownLeft,
+        defaultExpanded: false,
+        items: [
+            { name: 'Website visitors', href: '/dashboard/website-visitors', badge: 'New' },
+            { name: 'Forms', href: '/dashboard/forms' },
+        ]
+    },
+    {
+        name: 'Saved records',
+        icon: Bookmark,
+        defaultExpanded: false,
+        items: [
+            { name: 'People', href: '/dashboard/saved-people' },
+        ]
+    },
+    {
+        name: 'Deliverability suite',
+        icon: ShieldCheck,
+        href: '/dashboard/deliverability'
+    },
+   
+    {
+        name: 'Admin Settings',
+        icon: Settings,
+        href: '/dashboard/settings',
+        hasArrow: true
+    }
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
     const { currentPlan } = usePlanLimits();
-
     const showUpgrade = false; // All features enabled
 
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(
+        sidebarData.reduce((acc, section) => {
+            if (section.items) {
+                acc[section.name] = section.defaultExpanded ?? false;
+            }
+            return acc;
+        }, {} as Record<string, boolean>)
+    );
+
+    const toggleSection = (name: string) => {
+        if (isCollapsed) setIsCollapsed(false);
+        setExpandedSections(prev => ({ ...prev, [name]: !prev[name] }));
+    };
+
     return (
-        <aside className="flex h-screen w-72 flex-col border-r border-zinc-200 bg-white shadow-sm transition-all duration-300">
-            {/* Header */}
-            <div className="flex h-16 items-center gap-3 border-b border-zinc-100 px-6">
-                <Image
-                    src="/logo.png"
-                    alt="VidMaxx Logo"
-                    width={32}
-                    height={32}
-                    className="h-8 w-8 rounded-lg object-contain"
-                />
-                <span className="text-xl font-bold tracking-tight text-zinc-900">
-                    VidMaxx
-                </span>
+        <aside className={cn(
+            "flex h-screen flex-col border-r border-zinc-200 bg-white transition-all duration-300 overflow-hidden font-sans",
+            isCollapsed ? "w-14" : "w-[240px]"
+        )}>
+            {/* Header / Logo and Toggle */}
+            <div className={cn("flex h-14 items-center px-4 flex-shrink-0", isCollapsed ? "justify-center" : "justify-between")}>
+                {!isCollapsed && (
+                    <div className="flex items-center gap-3">
+                        <img
+                            src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48ZyBmaWxsPSIjMDAwIj48cGF0aCBkPSJtMjUuNzU5IDYuMDg2LjAwNSAxMy4wOThjLjAwMSAyLjA2OS0yLjIgMy4zOTUtNC4wMyAyLjQyOGwtMTMuMTMtNi45NDVhMTguMSAxOC4xIDAgMCAxIDMuNzItNC4zNjdsMTAuMjk5IDkuNTE4Yy41NDYuNTA0IDEuNDA2LS4wNDMgMS4xODEtLjc1TDE5LjgxIDYuNDlhMTggMTggMCAwIDEgNS45NDktLjQwNU0yMi4xOTYgNDEuOTEgMjIuMTkgMjguODhjLS4wMDEtMi4wNyAyLjItMy4zOTYgNC4wMy0yLjQyOWwxMy4xMzUgNi45NDdhMTguMSAxOC4xIDAgMCAxLTMuNzM5IDQuMzUzbC0xMC4yODUtOS41MDZjLS41NDUtLjUwNC0xLjQwNi4wNDMtMS4xOC43NWwzLjk3OCAxMi41M2ExOCAxOCAwIDAgMS01LjkzMy4zODZNMjguMTkgMjIuNjc4bDkuNTM4LTEwLjMyYTE4LjEgMTguMSAwIDAgMC00LjM2OC0zLjczNWwtNi45NjQgMTMuMTY2Yy0uOTY4IDEuODMuMzYgNC4wMzEgMi40MjggNC4wM2wxMy4wODYtLjAwNlE0MiAyNC45MiA0MiAyNGMwLTEuNDIzLS4xNjYtMi44MDgtLjQ3OC00LjEzNkwyOC45NCAyMy44NTljLS43MDguMjI0LTEuMjU1LS42MzYtLjc1LTEuMTgxTTYuMDg1IDIyLjI0OWwxMy4wNDUtLjAwNmMyLjA3IDAgMy4zOTcgMi4yIDIuNDMgNC4wM0wxNC42MyAzOS4zN2ExOC4xIDE4LjEgMCAwIDEtNC4zNTItMy43MjNsOS40ODctMTAuMjY0Yy41MDQtLjU0NS0uMDQzLTEuNDA1LS43NS0xLjE4TDYuNDg4IDI4LjE4YTE4IDE4IDAgMCAxLS40MDQtNS45MzEiLz48L2c+PC9zdmc+"
+                            alt="Logo"
+                            className="h-8 w-8 object-contain text-black"
+                        />
+                    </div>
+                )}
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="p-1 rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+                    title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                >
+                    {isCollapsed ? <Menu className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
+                </button>
             </div>
 
-            {/* Action Button */}
-            <div className="p-6">
-                <Link href="/dashboard/create">
-                    <Button
-                        className="w-full h-12 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-200 bg-indigo-600 hover:bg-indigo-700 active:scale-95"
-                    >
-                        <Plus className="mr-2 h-5 w-5" />
-                        Create New Series
-                    </Button>
-                </Link>
-            </div>
+            {/* Navigation Scroll Area */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3 pt-1 space-y-0 custom-scrollbar">
+                {sidebarData.map((section) => {
+                    const Icon = section.icon;
+                    const isExpanded = expandedSections[section.name];
 
-            {/* Navigation */}
-            <nav className="flex-1 space-y-1 px-4">
-                {navItems.map((item) => {
-                    const Icon = item.icon;
-                    const isExternal = item.href.startsWith('http');
-                    const isActive = !isExternal && (item.href === '/dashboard'
-                        ? pathname === '/dashboard'
-                        : pathname.startsWith(item.href));
-
-                    const content = (
-                        <>
-                            <Icon className={cn("h-6 w-6", isActive ? "text-indigo-600" : "text-zinc-400 group-hover:text-zinc-600")} />
-                            {item.name}
-                        </>
-                    );
-
-                    const className = cn(
-                        "flex items-center gap-3 rounded-lg px-4 py-3.5 text-base font-medium transition-all duration-200",
-                        isActive
-                            ? "bg-indigo-50 text-indigo-700 shadow-sm"
-                            : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
-                    );
-
-                    if (isExternal) {
+                    if (section.items) {
                         return (
-                            <a
-                                key={item.href}
-                                href={item.href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={className}
-                            >
-                                {content}
-                            </a>
+                            <div key={section.name} className="flex flex-col">
+                                <button
+                                    onClick={() => toggleSection(section.name)}
+                                    className={cn(
+                                        "group flex items-center rounded-md px-2 py-1 text-[12px] font-bold text-black hover:bg-zinc-100 transition-colors",
+                                        isCollapsed ? "justify-center" : "justify-between w-full"
+                                    )}
+                                    title={isCollapsed ? section.name : undefined}
+                                >
+                                    <div className="flex items-center gap-2.5">
+                                        <Icon className="h-4 w-4 text-black" strokeWidth={2} />
+                                        {!isCollapsed && <span>{section.name}</span>}
+                                    </div>
+                                    {!isCollapsed && (
+                                        isExpanded ? (
+                                            <ChevronDown className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600" />
+                                        ) : (
+                                            <ChevronRight className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600" />
+                                        )
+                                    )}
+                                </button>
+
+                                {!isCollapsed && isExpanded && (
+                                    <div className="mt-0.5 flex flex-col space-y-0.5 relative pl-[16px]">
+                                        {section.items.map(item => {
+                                            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                                            return (
+                                                <Link
+                                                    key={item.name}
+                                                    href={item.href}
+                                                    className={cn(
+                                                        "flex items-center rounded-md px-3 py-1 text-[12px] transition-colors justify-between",
+                                                        isActive
+                                                            ? "bg-zinc-900 text-white font-bold shadow-sm"
+                                                            : "text-black font-medium hover:bg-zinc-100"
+                                                    )}
+                                                >
+                                                    <span className="truncate">{item.name}</span>
+                                                    {(item as any).badge && (
+                                                        <span className="text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-sm font-semibold flex-shrink-0 ml-2">
+                                                            {(item as any).badge}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         );
                     }
 
+                    // Single link items
+                    const isActive = section.href === '/dashboard'
+                        ? pathname === '/dashboard'
+                        : pathname.startsWith(section.href!);
+
                     return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={className}
-                        >
-                            {content}
-                        </Link>
-                    )
-                })}
-            </nav>
-
-            {/* Footer */}
-            <div className="border-t border-zinc-100 p-4 space-y-2">
-                {showUpgrade && (
-                    <Link href="/dashboard/billing">
-                        <div className="group flex items-center gap-3 rounded-lg px-4 py-3.5 text-base font-medium text-zinc-600 transition-all hover:bg-amber-50 hover:text-amber-700">
-                            <Zap className="h-6 w-6 text-amber-500 group-hover:text-amber-600" />
-                            <span>Upgrade Plan</span>
+                        <div key={section.name} className={cn("flex flex-col", section.hasBorderBottom && "border-b border-zinc-200 pb-2 mb-2")}>
+                            <Link
+                                href={section.href!}
+                                title={isCollapsed ? section.name : undefined}
+                                className={cn(
+                                    "group flex items-center transition-colors my-0",
+                                    isCollapsed
+                                        ? "justify-center p-2 rounded-md"
+                                        : "w-full justify-between px-3 py-1 text-[12px] font-bold",
+                                    isActive
+                                        ? "bg-zinc-900 text-white rounded-md shadow-sm"
+                                        : "text-black hover:bg-zinc-100 rounded-md",
+                                )}
+                            >
+                                <div className="flex items-center gap-2.5 overflow-hidden">
+                                    <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-black")} strokeWidth={isActive ? 2.5 : 2} />
+                                    {!isCollapsed && <span className="truncate">{section.name}</span>}
+                                </div>
+                                {!isCollapsed && section.hasArrow && (
+                                    <ChevronRight className={cn("h-4 w-4 flex-shrink-0 transition-opacity", isActive ? "text-zinc-300 opacity-100" : "text-zinc-400 opacity-0 group-hover:opacity-100")} />
+                                )}
+                            </Link>
                         </div>
-                    </Link>
-                )}
-
+                    );
+                })}
                 <Link
                     href="/dashboard/settings"
                     className="w-full flex items-center gap-3 rounded-lg px-4 py-3.5 text-base font-medium text-zinc-600 transition-all hover:bg-zinc-50 hover:text-zinc-900"
@@ -129,6 +270,15 @@ export function Sidebar() {
                     <span>Profile Settings</span>
                 </Link>
             </div>
+
+            <div className="h-4 border-t border-zinc-200 mt-auto bg-zinc-50" />
+
+            <style jsx global>{`
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 4px; }
+                .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #d4d4d8; }
+            `}</style>
         </aside>
     );
 }
