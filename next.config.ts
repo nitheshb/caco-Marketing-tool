@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'img.clerk.com',
+        hostname: 'lh3.googleusercontent.com',
       }
     ],
   },

@@ -1,9 +1,13 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Sparkles } from "lucide-react";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
+import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 
 export function Hero() {
+    const { user, loading } = useAuth();
+
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black pt-16">
             {/* Background Effects */}
@@ -32,22 +36,22 @@ export function Hero() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-                        <SignedOut>
+                        {!loading && !user && (
                             <Link href="/sign-up">
                                 <Button size="lg" className="h-12 px-8 text-base bg-white text-black hover:bg-zinc-200 transition-all hover:scale-105">
                                     Start Creating for Free
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </Link>
-                        </SignedOut>
-                        <SignedIn>
+                        )}
+                        {!loading && user && (
                             <Link href="/dashboard">
                                 <Button size="lg" className="h-12 px-8 text-base bg-white text-black hover:bg-zinc-200 transition-all hover:scale-105">
                                     Go to Dashboard
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </Link>
-                        </SignedIn>
+                        )}
                         <Button size="lg" variant="outline" className="h-12 px-8 text-base border-white/10 text-white bg-white/10 ">
                             <Play className="mr-2 h-4 w-4" />
                             Watch Demo
@@ -60,7 +64,6 @@ export function Hero() {
                             Trusted by creators on
                         </p>
                         <div className="flex items-center gap-8 opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-                            {/* Simple text representation for platforms if icons aren't available, or we can use Lucide icons where possible or simple SVGs */}
                             <span className="text-xl font-bold text-white">YouTube Shorts</span>
                             <span className="text-xl font-bold text-white">Instagram Reels</span>
                             <span className="text-xl font-bold text-white">TikTok</span>

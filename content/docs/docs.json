@@ -1,0 +1,280 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "name": "Postiz Documentation",
+  "colors": {
+    "primary": "#9900e6",
+    "light": "#b266ff",
+    "dark": "#7700b3"
+  },
+  "favicon": "/favicon.ico",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "howitworks",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Installation",
+            "pages": [
+              "installation/docker-compose",
+              "installation/docker",
+              "installation/kubernetes-helm",
+              "installation/coolify",
+              "installation/development",
+              "installation/devcontainer"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/reference",
+              "configuration/docker",
+              "configuration/emails",
+              "configuration/r2",
+              "configuration/oauth",
+              "configuration/chrome-extension"
+            ]
+          },
+          {
+            "group": "Reverse Proxies",
+            "pages": [
+              "reverse-proxies/caddy",
+              "reverse-proxies/nginx",
+              "reverse-proxies/traefik"
+            ]
+          },
+          {
+            "group": "Providers",
+            "pages": [
+              "providers/overview",
+              "configuration/create-provider",
+              {
+                "group": "Social Platforms",
+                "expanded": true,
+                "pages": [
+                  "providers/x-twitter",
+                  "providers/linkedin",
+                  "providers/linkedin-page",
+                  "providers/facebook",
+                  "providers/instagram",
+                  "providers/threads",
+                  "providers/bluesky",
+                  "providers/mastodon",
+                  "providers/google-my-business"
+                ]
+              },
+              {
+                "group": "Video Platforms",
+                "expanded": true,
+                "pages": [
+                  "providers/youtube",
+                  "providers/tiktok"
+                ]
+              },
+              {
+                "group": "Other Platforms",
+                "expanded": true,
+                "pages": [
+                  "providers/reddit",
+                  "providers/pinterest",
+                  "providers/discord",
+                  "providers/slack",
+                  "providers/telegram",
+                  "providers/dribbble",
+                  "providers/skool",
+                  "providers/whop"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Public API",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "public-api/introduction"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "public-api/integrations/list",
+              "public-api/integrations/is-connected",
+              "public-api/integrations/find-slot"
+            ]
+          },
+          {
+            "group": "Posts",
+            "pages": [
+              "public-api/posts/list",
+              "public-api/posts/create",
+              "public-api/posts/delete",
+              "public-api/posts/delete-by-group",
+              "public-api/posts/missing-content",
+              "public-api/posts/update-release-id"
+            ]
+          },
+          {
+            "group": "Analytics",
+            "pages": [
+              "public-api/analytics/platform",
+              "public-api/analytics/post"
+            ]
+          },
+          {
+            "group": "Notifications",
+            "pages": [
+              "public-api/notifications/list"
+            ]
+          },
+          {
+            "group": "Uploads",
+            "pages": [
+              "public-api/uploads/upload-file",
+              "public-api/uploads/upload-from-url"
+            ]
+          },
+          {
+            "group": "Video Generation",
+            "pages": [
+              "public-api/video/generate",
+              "public-api/video/function"
+            ]
+          },
+          {
+            "group": "Provider Settings (25 with custom settings)",
+            "pages": [
+              "public-api/providers/x",
+              "public-api/providers/linkedin",
+              "public-api/providers/facebook",
+              "public-api/providers/instagram",
+              "public-api/providers/warpcast",
+              "public-api/providers/youtube",
+              "public-api/providers/tiktok",
+              "public-api/providers/reddit",
+              "public-api/providers/lemmy",
+              "public-api/providers/pinterest",
+              "public-api/providers/discord",
+              "public-api/providers/slack",
+              "public-api/providers/dribbble",
+              "public-api/providers/medium",
+              "public-api/providers/devto",
+              "public-api/providers/hashnode",
+              "public-api/providers/wordpress",
+              "public-api/providers/listmonk",
+              "public-api/providers/gmb",
+              "public-api/providers/whop",
+              "public-api/providers/skool",
+              "public-api/providers/kick",
+              "public-api/providers/twitch",
+              "public-api/providers/moltbook"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Postiz CLI",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "cli/introduction"
+            ]
+          },
+          {
+            "group": "Usage",
+            "pages": [
+              "cli/managing-posts",
+              "cli/integrations",
+              "cli/analytics",
+              "cli/media-upload"
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "cli/platform-examples"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Contributing",
+        "groups": [
+          {
+            "group": "Development",
+            "pages": [
+              "developer-guide",
+              "contributing",
+              "support"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/gitroomhq/postiz-app",
+          "icon": "github"
+        },
+        {
+          "anchor": "Discord",
+          "href": "https://discord.postiz.com",
+          "icon": "discord"
+        },
+        {
+          "anchor": "YouTube",
+          "href": "https://youtube.com/@postizofficial",
+          "icon": "youtube"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.png",
+    "dark": "/logo/dark.png"
+  },
+  "navbar": {
+    "links": [
+      {
+        "icon": "discord",
+        "label": "Discord",
+        "href": "https://discord.postiz.com"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Register to the cloud",
+      "href": "https://postiz.com"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "cursor"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/neaborleon",
+      "github": "https://github.com/gitroomhq/postiz-app",
+      "discord": "https://discord.postiz.com"
+    }
+  }
+}

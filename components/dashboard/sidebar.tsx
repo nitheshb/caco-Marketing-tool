@@ -7,10 +7,11 @@ import { useState } from 'react';
 import {
     Home, Search, Send, DollarSign, Wrench, ArrowDownLeft,
     Bookmark, ShieldCheck, Settings, ChevronDown, ChevronRight,
-    ChevronsLeft, Menu, Film, Video, CalendarDays, Plus, CreditCard
+    ChevronsLeft, Menu, Film, Video, CalendarDays, Plus, CreditCard, User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useClerk } from '@clerk/nextjs';
+import { Button } from '@/components/ui/button';
+import { usePlanLimits } from '@/hooks/use-plan-limits';
 
 const sidebarData = [
     {
@@ -127,7 +128,8 @@ const sidebarData = [
 
 export function Sidebar() {
     const pathname = usePathname();
-    const { openUserProfile } = useClerk();
+    const { currentPlan } = usePlanLimits();
+    const showUpgrade = false; // All features enabled
 
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(
@@ -215,9 +217,9 @@ export function Sidebar() {
                                                     )}
                                                 >
                                                     <span className="truncate">{item.name}</span>
-                                                    {item.badge && (
+                                                    {(item as any).badge && (
                                                         <span className="text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-sm font-semibold flex-shrink-0 ml-2">
-                                                            {item.badge}
+                                                            {(item as any).badge}
                                                         </span>
                                                     )}
                                                 </Link>
@@ -260,6 +262,13 @@ export function Sidebar() {
                         </div>
                     );
                 })}
+                <Link
+                    href="/dashboard/settings"
+                    className="w-full flex items-center gap-3 rounded-lg px-4 py-3.5 text-base font-medium text-zinc-600 transition-all hover:bg-zinc-50 hover:text-zinc-900"
+                >
+                    <User className="h-6 w-6 text-zinc-400" />
+                    <span>Profile Settings</span>
+                </Link>
             </div>
 
             <div className="h-4 border-t border-zinc-200 mt-auto bg-zinc-50" />
