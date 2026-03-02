@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.social_integrations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
   platform TEXT NOT NULL,
+  name TEXT NOT NULL,
   client_id TEXT NOT NULL,
   client_secret TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -38,6 +39,7 @@ CREATE TABLE IF NOT EXISTS public.social_connections (
   platform TEXT NOT NULL,
   profile_name TEXT,
   platform_user_id TEXT,
+  internal_id TEXT,
   access_token TEXT,
   refresh_token TEXT,
   expires_at TIMESTAMPTZ,
@@ -151,3 +153,29 @@ ALTER TABLE public.media_assets ENABLE ROW LEVEL SECURITY;
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('media', 'media', true)
 ON CONFLICT (id) DO NOTHING;
+
+-- Alter existing tables to add multi-tenancy fields
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS project_id TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS source_login TEXT;
+
+ALTER TABLE public.social_integrations ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.social_integrations ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.social_connections ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.social_connections ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.series ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.series ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.videos ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.videos ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.calendar_events ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.calendar_events ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.folders ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.folders ADD COLUMN IF NOT EXISTS project_id TEXT;
+
+ALTER TABLE public.media_assets ADD COLUMN IF NOT EXISTS org_id TEXT;
+ALTER TABLE public.media_assets ADD COLUMN IF NOT EXISTS project_id TEXT;

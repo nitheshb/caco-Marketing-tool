@@ -95,8 +95,8 @@ export default function DashboardPage() {
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                    <h1 className="text-3xl font-black tracking-tight text-zinc-900">Your Series</h1>
-                    <p className="text-zinc-500 font-medium">Manage and monitor your automated video series.</p>
+                    <h1 className="text-xl font-bold tracking-tight text-zinc-900">Your Series</h1>
+                    <p className="text-[13px] text-zinc-500 font-medium">Manage and monitor your automated video series.</p>
                 </div>
                 <Link href="/dashboard/create">
                     <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 shadow-lg shadow-indigo-200 transition-all active:scale-95 gap-2 rounded-xl">

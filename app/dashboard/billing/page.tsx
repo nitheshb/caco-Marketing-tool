@@ -1,6 +1,5 @@
 "use client"
-import { PricingTable } from "@clerk/nextjs";
-import { CreditCard, Zap, ShieldCheck, Clock, Loader2 } from "lucide-react";
+import { CreditCard, Zap, ShieldCheck, Clock, Loader2, Check } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePlanLimits } from "@/hooks/use-plan-limits";
@@ -125,8 +124,14 @@ export default function BillingPage() {
                     </p>
                 </div>
 
-                <div className="rounded-3xl border border-zinc-200 bg-white p-2 shadow-xl shadow-zinc-200/50">
-                    <PricingTable />
+                <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-xl shadow-zinc-200/50 text-center">
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                        <Check className="h-8 w-8 text-emerald-500" />
+                        <h3 className="text-2xl font-bold text-zinc-900">All Features Enabled</h3>
+                    </div>
+                    <p className="text-zinc-500 max-w-md mx-auto">
+                        You currently have access to all features including unlimited series, video generations, and all social platform integrations.
+                    </p>
                 </div>
             </div>
 

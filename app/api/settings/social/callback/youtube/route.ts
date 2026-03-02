@@ -1,5 +1,5 @@
 import { google } from 'googleapis';
-import { auth as clerkAuth } from "@clerk/nextjs/server";
+import { getAuthUser } from "@/lib/auth-helpers";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -7,10 +7,37 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const code = searchParams.get('code');
-        const state = searchParams.get('state'); // This is the userId passed from redirect
+        const state = searchParams.get('state'); // Base64 encoded JSON { userId, integrationId }
 
         if (!code) {
             return new NextResponse("Missing code", { status: 400 });
+        }
+
+        let stateObj;
+        try {
+            const decodedState = Buffer.from(state || '', 'base64').toString('ascii');
+            stateObj = JSON.parse(decodedState);
+        } catch (e) {
+            console.error("Failed to decode state:", e);
+            return new NextResponse("Invalid state parameter", { status: 400 });
+        }
+
+        const { userId, integrationId } = stateObj;
+
+        if (!userId || !integrationId) {
+            return new NextResponse("Missing userId or integrationId in state", { status: 400 });
+        }
+
+        const { data: integration, error: integrationError } = await supabaseAdmin
+            .from('social_integrations')
+            .select('client_id, client_secret')
+            .eq('id', integrationId)
+            .eq('user_id', userId)
+            .single();
+
+        if (integrationError || !integration) {
+            console.error("Failed to fetch custom integration credentials:", integrationError);
+            return new NextResponse("Invalid integration", { status: 400 });
         }
 
         const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/settings/social/callback/youtube`;
@@ -19,8 +46,8 @@ export async function GET(req: Request) {
         console.log("DEBUG: Redirect URI used:", redirectUri);
 
         const oauth2Client = new google.auth.OAuth2(
-            process.env.GOOGLE_CLIENT_ID,
-            process.env.GOOGLE_CLIENT_SECRET,
+            integration.client_id,
+            integration.client_secret,
             redirectUri
         );
 
@@ -47,19 +74,24 @@ export async function GET(req: Request) {
         const profileName = channel?.snippet?.title || 'YouTube Channel';
         const profileImage = channel?.snippet?.thumbnails?.default?.url || '';
 
+        const channelId = channel?.id || '';
+
         // Store in Supabase
         const { error: upsertError } = await supabaseAdmin
             .from('social_connections')
             .upsert({
-                user_id: state,
+                user_id: userId,
+                integration_id: integrationId,
                 platform: 'youtube',
                 access_token: tokens.access_token,
                 refresh_token: tokens.refresh_token,
                 expires_at: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
                 profile_name: profileName,
                 profile_image: profileImage,
+                platform_user_id: channelId,
+                internal_id: channelId,
                 created_at: new Date().toISOString()
-            }, { onConflict: 'user_id,platform' });
+            }, { onConflict: 'user_id,platform,platform_user_id' });
 
         if (upsertError) {
             console.error("Supabase storage error:", upsertError);

@@ -8,15 +8,15 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="flex h-screen bg-gray-50/50">
+        <div className="flex h-screen bg-white overflow-hidden">
             <UserSync />
-            <div className="hidden md:flex">
+            <div className="hidden md:flex flex-shrink-0">
                 <Sidebar />
             </div>
 
-            <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
                 <Header />
-                <main className="flex-1 overflow-y-auto p-8">
+                <main className="flex-1 overflow-y-auto bg-zinc-50/30 p-8">
                     <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {children}
                     </div>

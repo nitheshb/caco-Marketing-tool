@@ -1,21 +1,14 @@
-import { auth, createClerkClient } from "@clerk/nextjs/server";
+import { getAuthUser } from "@/lib/auth-helpers";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
-export async function DELETE() {
-    try {
-        const { userId } = await auth();
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
+const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY!;
 
-        const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+export async function DELETE(req: Request) {
+    try {
+        const { userId } = await getAuthUser(req);
 
         // 1. Delete all user data from Supabase
-        // Cascading deletes should be handled if foreign keys are set up with ON DELETE CASCADE
-        // But let's be safe and delete manually if needed
-
-        // Delete Videos
         const { error: videoError } = await supabaseAdmin
             .from('videos')
             .delete()
@@ -23,7 +16,6 @@ export async function DELETE() {
 
         if (videoError) console.error("Error deleting videos:", videoError);
 
-        // Delete Series
         const { error: seriesError } = await supabaseAdmin
             .from('series')
             .delete()
@@ -31,7 +23,6 @@ export async function DELETE() {
 
         if (seriesError) console.error("Error deleting series:", seriesError);
 
-        // Delete Social Connections
         const { error: socialError } = await supabaseAdmin
             .from('social_connections')
             .delete()
@@ -39,12 +30,37 @@ export async function DELETE() {
 
         if (socialError) console.error("Error deleting social connections:", socialError);
 
-        // 2. Delete User from Clerk
-        await clerkClient.users.deleteUser(userId);
+        const { error: userError } = await supabaseAdmin
+            .from('users')
+            .delete()
+            .eq('user_id', userId);
+
+        if (userError) console.error("Error deleting user:", userError);
+
+        // 2. Delete user from Firebase via REST API (uses the user's own ID token)
+        const authHeader = req.headers.get('Authorization');
+        const idToken = authHeader?.split('Bearer ')[1];
+        if (idToken) {
+            try {
+                await fetch(
+                    `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${FIREBASE_API_KEY}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken }),
+                    }
+                );
+            } catch (firebaseErr) {
+                console.error("Error deleting Firebase user:", firebaseErr);
+            }
+        }
 
         return NextResponse.json({ success: true });
 
     } catch (error: any) {
+        if (error.message === 'Unauthorized') {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
         console.error("Account deletion error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }

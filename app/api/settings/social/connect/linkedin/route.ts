@@ -1,10 +1,10 @@
-import { auth as clerkAuth } from "@clerk/nextjs/server";
+import { getAuthUser } from "@/lib/auth-helpers";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(req: Request) {
     try {
-        const { userId } = await clerkAuth();
+        const { userId } = await getAuthUser(req);
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
 
         const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/settings/social/callback/linkedin`;
 
-        const scopes = ['openid', 'profile', 'email', 'w_member_social', 'w_organization_social'];
+        const scopes = ['openid', 'profile', 'email', 'w_member_social'];
 
         const stateData = JSON.stringify({ userId, integrationId });
 

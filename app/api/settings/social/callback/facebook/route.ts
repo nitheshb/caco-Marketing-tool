@@ -41,7 +41,12 @@ export async function GET(req: Request) {
 
         const clientId = integration.client_id;
         const clientSecret = integration.client_secret;
-        const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/settings/social/callback/facebook`;
+        
+        // Dynamically get the current host (works for ngrok or localhost)
+        const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+        const protocol = host?.includes('localhost') ? 'http' : 'https';
+        const baseUrl = `${protocol}://${host}`;
+        const redirectUri = `${baseUrl}/api/settings/social/callback/facebook`;
 
         // 2. Exchange code for access token
         const tokenResponse = await fetch(`https://graph.facebook.com/v20.0/oauth/access_token?client_id=${clientId}&redirect_uri=${redirectUri}&client_secret=${clientSecret}&code=${code}`);
@@ -81,50 +86,31 @@ export async function GET(req: Request) {
             return NextResponse.redirect(new URL('/dashboard/settings?error=no_facebook_pages_found', req.url));
         }
 
-        // 5. Save connections for each page
-        // For multi-account, we save EACH page as a separate connection.
-        // We use the page's specific access_token.
+        // 5. Save connections for each page using upsert
         let addedCount = 0;
         for (const page of pages) {
             const pageId = page.id;
             const pageName = page.name;
-            const pageAccessToken = page.access_token; // The Page Access Token is needed for posting
+            const pageAccessToken = page.access_token;
             
-             // Check if page already exists
-            const { data: existingPage } = await supabaseAdmin
+            const { error: upsertError } = await supabaseAdmin
                 .from('social_connections')
-                .select('id')
-                .eq('user_id', userId)
-                .eq('platform', 'facebook')
-                .eq('internal_id', pageId)
-                .single();
-                
-            if (existingPage) {
-                // Update tokens
-                await supabaseAdmin
-                    .from('social_connections')
-                    .update({
-                        access_token: pageAccessToken,
-                        refresh_token: userAccessToken, // We store the user token here as the "root" token if needed
-                        profile_name: pageName,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', existingPage.id);
+                .upsert({
+                    user_id: userId,
+                    integration_id: integrationId,
+                    platform: 'facebook',
+                    profile_name: pageName,
+                    platform_user_id: pageId,
+                    internal_id: pageId,
+                    access_token: pageAccessToken,
+                    refresh_token: userAccessToken, // User token stored as root reference
+                    created_at: new Date().toISOString()
+                }, { onConflict: 'user_id,platform,platform_user_id' });
+
+            if (upsertError) {
+                console.error(`Failed to upsert Facebook page ${pageId}:`, upsertError);
             } else {
-                 // Insert new connection
-                 await supabaseAdmin
-                    .from('social_connections')
-                    .insert({
-                        user_id: userId,
-                        integration_id: integrationId,
-                        platform: 'facebook',
-                        profile_name: pageName,
-                        internal_id: pageId, // Use the page ID as internal_id
-                        access_token: pageAccessToken,
-                        refresh_token: userAccessToken, // Store user token here or as an extra field
-                        token_expires_at: null // Page tokens are usually long-lived depending on how they are fetched
-                    });
-                  addedCount++;
+                addedCount++;
             }
         }
         
