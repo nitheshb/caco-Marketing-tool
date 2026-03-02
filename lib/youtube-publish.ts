@@ -40,14 +40,25 @@ export async function publishToYouTube({
     console.log('[YouTube] expires_at:', connection.expires_at);
     console.log('[YouTube] Token expired?', connection.expires_at ? new Date(connection.expires_at) < new Date() : 'no expiry stored');
 
-    // 2. Setup OAuth2 client
-    console.log('[YouTube] Step 2: Setting up OAuth2 client...');
-    console.log('[YouTube] GOOGLE_CLIENT_ID set:', !!process.env.GOOGLE_CLIENT_ID);
-    console.log('[YouTube] GOOGLE_CLIENT_SECRET set:', !!process.env.GOOGLE_CLIENT_SECRET);
+    // 2. Fetch the custom integration credentials from social_integrations
+    console.log('[YouTube] Step 2: Fetching custom integration credentials for integration_id:', connection.integration_id);
+    const { data: integration, error: integrationError } = await supabaseAdmin
+        .from('social_integrations')
+        .select('client_id, client_secret')
+        .eq('id', connection.integration_id)
+        .single();
+
+    if (integrationError || !integration) {
+        console.error('[YouTube] Failed to fetch custom integration credentials:', integrationError);
+        throw new Error(`Failed to load custom YouTube credentials for this connection.`);
+    }
+
+    // 3. Setup OAuth2 client
+    console.log('[YouTube] Step 3: Setting up OAuth2 client with custom credentials...');
 
     const oauth2Client = new google.auth.OAuth2(
-        process.env.GOOGLE_CLIENT_ID,
-        process.env.GOOGLE_CLIENT_SECRET,
+        integration.client_id,
+        integration.client_secret,
         `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/settings/social/callback/youtube`
     );
 
@@ -57,8 +68,8 @@ export async function publishToYouTube({
         expiry_date: connection.expires_at ? new Date(connection.expires_at).getTime() : undefined
     });
 
-    // 3. Force token refresh to avoid "Unauthorized" errors from expired access tokens
-    console.log('[YouTube] Step 3: Forcing token refresh...');
+    // 4. Force token refresh to avoid "Unauthorized" errors from expired access tokens
+    console.log('[YouTube] Step 4: Forcing token refresh...');
     try {
         const { token } = await oauth2Client.getAccessToken();
         console.log('[YouTube] getAccessToken() succeeded. Got token:', !!token);
@@ -89,12 +100,12 @@ export async function publishToYouTube({
         throw new Error(`YouTube token refresh failed. Please reconnect your YouTube account in Settings. (${refreshError.message})`);
     }
 
-    // 4. Setup YouTube API
-    console.log('[YouTube] Step 4: Setting up YouTube API client...');
+    // 5. Setup YouTube API
+    console.log('[YouTube] Step 5: Setting up YouTube API client...');
     const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
 
-    // 5. Download video as stream
-    console.log('[YouTube] Step 5: Downloading video from:', videoUrl);
+    // 6. Download video as stream
+    console.log('[YouTube] Step 6: Downloading video from:', videoUrl);
     let response;
     try {
         response = await axios({
@@ -110,8 +121,8 @@ export async function publishToYouTube({
         throw new Error(`Failed to download video: ${downloadError.message}`);
     }
 
-    // 6. Upload to YouTube
-    console.log('[YouTube] Step 6: Uploading to YouTube...');
+    // 7. Upload to YouTube
+    console.log('[YouTube] Step 7: Uploading to YouTube...');
     try {
         const youtubeRes = await youtube.videos.insert({
             part: ['snippet', 'status'],
@@ -135,7 +146,7 @@ export async function publishToYouTube({
         console.log('[YouTube] Upload SUCCESS! Video ID:', youtubeRes.data.id);
         console.log('[YouTube] Upload status:', youtubeRes.data.status?.uploadStatus);
 
-        // 7. Save any post-upload token refresh
+        // 8. Save any post-upload token refresh
         const currentTokens = oauth2Client.credentials;
         if (currentTokens.access_token !== connection.access_token) {
             console.log('[YouTube] Post-upload token refresh detected, saving...');

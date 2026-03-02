@@ -1,26 +1,23 @@
 'use client';
 
-import { useUser, useAuth } from "@clerk/nextjs";
-
 export type PlanType = 'free_user' | 'basic' | 'unlimited';
 
-// We still keep the mapping for UI/Limits logic that isn't just "has/doesn't have"
 export const PLAN_LIMITS = {
     free_user: {
         name: 'Free User',
         price: 0,
-        maxSeries: 1,
-        maxVideos: 2,
-        canExecuteWorkflow: false,
-        allowedPlatforms: ['youtube', 'linkedin', 'email'],
+        maxSeries: Infinity,
+        maxVideos: Infinity,
+        canExecuteWorkflow: true,
+        allowedPlatforms: ['youtube', 'linkedin', 'instagram', 'tiktok', 'email', 'facebook'],
     },
     basic: {
         name: 'Basic',
         price: 9.99,
-        maxSeries: 3,
+        maxSeries: Infinity,
         maxVideos: Infinity,
         canExecuteWorkflow: true,
-        allowedPlatforms: ['youtube', 'email'],
+        allowedPlatforms: ['youtube', 'linkedin', 'instagram', 'tiktok', 'email', 'facebook'],
     },
     unlimited: {
         name: 'Unlimited',
@@ -28,38 +25,21 @@ export const PLAN_LIMITS = {
         maxSeries: Infinity,
         maxVideos: Infinity,
         canExecuteWorkflow: true,
-        allowedPlatforms: ['youtube', 'linkedin', 'instagram', 'tiktok', 'email'],
+        allowedPlatforms: ['youtube', 'linkedin', 'instagram', 'tiktok', 'email', 'facebook'],
     }
 };
 
 export function usePlanLimits() {
-    const { user, isLoaded: isUserLoaded } = useUser();
-    const { has, isLoaded: isAuthLoaded } = useAuth();
-
-    const isLoaded = isUserLoaded && isAuthLoaded;
-
-    // Determine current plan using the official 'has' method
-    const isUnlimited = has?.({ plan: 'unlimited' });
-    const isBasic = has?.({ plan: 'basic' });
-
-    const currentPlan: PlanType = isUnlimited ? 'unlimited' : isBasic ? 'basic' : 'free_user';
+    // All features enabled — hardcoded to unlimited
+    const currentPlan: PlanType = 'unlimited';
     const limits = PLAN_LIMITS[currentPlan];
 
-    const canCreateSeries = (currentCount: number) => {
-        return currentCount < limits.maxSeries;
-    };
-
-    const canCreateVideo = (currentCount: number) => {
-        return currentCount < limits.maxVideos;
-    };
-
-    const isPlatformAllowed = (platform: string) => {
-        // Can also use has({ feature: platform }) if defined in Clerk
-        return limits.allowedPlatforms.includes(platform.toLowerCase());
-    };
+    const canCreateSeries = (_currentCount: number) => true;
+    const canCreateVideo = (_currentCount: number) => true;
+    const isPlatformAllowed = (_platform: string) => true;
 
     return {
-        isLoaded,
+        isLoaded: true,
         currentPlan,
         planName: limits.name,
         limits,
@@ -67,6 +47,6 @@ export function usePlanLimits() {
         canCreateVideo,
         canExecuteWorkflow: limits.canExecuteWorkflow,
         isPlatformAllowed,
-        hasFeature: (feature: string) => has?.({ feature })
+        hasFeature: (_feature: string) => true,
     };
 }

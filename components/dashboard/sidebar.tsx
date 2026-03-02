@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { useClerk } from '@clerk/nextjs';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
 
 const navItems = [
@@ -30,10 +29,9 @@ const navItems = [
 
 export function Sidebar() {
     const pathname = usePathname();
-    const { openUserProfile } = useClerk();
     const { currentPlan } = usePlanLimits();
 
-    const showUpgrade = currentPlan === 'free_user' || currentPlan === 'basic';
+    const showUpgrade = false; // All features enabled
 
     return (
         <aside className="flex h-screen w-72 flex-col border-r border-zinc-200 bg-white shadow-sm transition-all duration-300">
@@ -123,13 +121,13 @@ export function Sidebar() {
                     </Link>
                 )}
 
-                <button
-                    onClick={() => openUserProfile()}
+                <Link
+                    href="/dashboard/settings"
                     className="w-full flex items-center gap-3 rounded-lg px-4 py-3.5 text-base font-medium text-zinc-600 transition-all hover:bg-zinc-50 hover:text-zinc-900"
                 >
                     <User className="h-6 w-6 text-zinc-400" />
                     <span>Profile Settings</span>
-                </button>
+                </Link>
             </div>
         </aside>
     );

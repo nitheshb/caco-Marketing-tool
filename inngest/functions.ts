@@ -5,11 +5,12 @@ import { generateTTS } from "@/lib/tts";
 import { generateCaptions } from "@/lib/captions";
 import { generateImages } from "@/lib/images";
 import { triggerVideoRender, pollRenderStatus } from "@/lib/remotion";
-import { createClerkClient } from "@clerk/nextjs/server";
 import { sendVideoReadyEmail } from "@/lib/plunk";
 import { publishToYouTube } from "@/lib/youtube-publish";
 import { publishToLinkedIn } from "@/lib/linkedin-publish";
 import { publishToFacebook } from "@/lib/facebook-publish";
+import { publishToInstagram } from "@/lib/instagram-publish";
+import { publishToTikTok } from "@/lib/tiktok-publish";
 
 export const helloWorld = inngest.createFunction(
     { id: "hello-world" },
@@ -209,10 +210,13 @@ export const generateVideo = inngest.createFunction(
             const platforms = series.platforms || [];
             const results = [];
 
-            // Email Notification
-            const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
-            const user = await clerkClient.users.getUser(series.user_id);
-            const emailAddress = user.emailAddresses[0].emailAddress;
+            // Email Notification - get email from Supabase users table
+            const { data: userData } = await supabaseAdmin
+                .from('users')
+                .select('email')
+                .eq('user_id', series.user_id)
+                .single();
+            const emailAddress = userData?.email;
 
             if (emailAddress) {
                 await sendVideoReadyEmail({
@@ -271,15 +275,69 @@ export const generateVideo = inngest.createFunction(
             }
 
             if (platforms.includes('instagram')) {
-                console.log(`[PUBLISH] Triggering Instagram Post for ${finalVideoUrl}`);
-                // TODO: Integrate Facebook/Instagram Graph API
-                results.push("instagram-queued");
+                // Fetch ALL connected Instagram accounts for this user
+                const { data: instagramConnections } = await supabaseAdmin
+                    .from('social_connections')
+                    .select('id, profile_name')
+                    .eq('user_id', series.user_id)
+                    .eq('platform', 'instagram');
+
+                if (instagramConnections && instagramConnections.length > 0) {
+                    if (!finalVideoUrl) {
+                        console.error("[PUBLISH] Instagram publish skipped: finalVideoUrl is null");
+                        results.push("instagram-failed:video-url-missing");
+                    } else {
+                        for (const conn of instagramConnections) {
+                            console.log(`[PUBLISH] Triggering Instagram Post for ${finalVideoUrl} to account ${conn.profile_name}`);
+                            try {
+                                const igResult = await publishToInstagram({
+                                    connectionId: conn.id,
+                                    text: `${scriptData.title}\n\n${scriptData.summary || `Daily ${series.series_name} video.`}`,
+                                    mediaUrl: finalVideoUrl!
+                                });
+                                results.push(`instagram-published:${conn.profile_name}:${igResult.postId}`);
+                            } catch (err: any) {
+                                console.error(`Instagram Publish Error for ${conn.profile_name}:`, err);
+                                results.push(`instagram-failed:${conn.profile_name}:${err.message}`);
+                            }
+                        }
+                    }
+                } else {
+                    console.log(`[PUBLISH] No Instagram connections found for user ${series.user_id}`);
+                }
             }
 
             if (platforms.includes('tiktok')) {
-                console.log(`[PUBLISH] Triggering TikTok Upload for ${finalVideoUrl}`);
-                // TODO: Integrate TikTok For Developers API
-                results.push("tiktok-queued");
+                // Fetch ALL connected TikTok accounts for this user
+                const { data: tiktokConnections } = await supabaseAdmin
+                    .from('social_connections')
+                    .select('id, profile_name')
+                    .eq('user_id', series.user_id)
+                    .eq('platform', 'tiktok');
+
+                if (tiktokConnections && tiktokConnections.length > 0) {
+                    if (!finalVideoUrl) {
+                        console.error("[PUBLISH] TikTok publish skipped: finalVideoUrl is null");
+                        results.push("tiktok-failed:video-url-missing");
+                    } else {
+                        for (const conn of tiktokConnections) {
+                            console.log(`[PUBLISH] Triggering TikTok Upload for ${finalVideoUrl} to account ${conn.profile_name}`);
+                            try {
+                                const ttResult = await publishToTikTok({
+                                    userId: series.user_id, // publishToTikTok handles the fetch itself but we can pass the userId
+                                    text: `${scriptData.title}\n\n${scriptData.summary || `Daily ${series.series_name} video.`}`,
+                                    videoUrl: finalVideoUrl!
+                                });
+                                results.push(`tiktok-published:${conn.profile_name}:${ttResult.publishId}`);
+                            } catch (err: any) {
+                                console.error(`TikTok Publish Error for ${conn.profile_name}:`, err);
+                                results.push(`tiktok-failed:${conn.profile_name}:${err.message}`);
+                            }
+                        }
+                    }
+                } else {
+                    console.log(`[PUBLISH] No TikTok connections found for user ${series.user_id}`);
+                }
             }
 
             return { published: results };
@@ -306,7 +364,9 @@ export const processScheduledPosts = inngest.createFunction(
                 .select('*, social_connections(profile_name)')
                 .eq('status', 'scheduled')
                 .eq('type', 'post')
-                .lte('scheduled_at', now);
+                .lte('scheduled_at', now)
+                .order('scheduled_at', { ascending: true })
+                .limit(50);
                 
             if (error) throw new Error(`Failed to fetch due posts: ${error.message}`);
             return data;
@@ -338,7 +398,7 @@ export const processScheduledPosts = inngest.createFunction(
                     
                     await step.run(`publish-youtube-${post.id}`, async () => {
                         await publishToYouTube({
-                            videoUrl: post.media_url,
+                            videoUrl: post.media_url!,
                             title: post.title,
                             description: post.description || "",
                             userId: post.user_id
@@ -354,9 +414,34 @@ export const processScheduledPosts = inngest.createFunction(
                             mediaUrl: post.media_url
                         });
                     });
+                } else if (post.platform?.toLowerCase() === 'instagram') {
+                    if (!post.account_id) throw new Error("Missing account_id for Instagram post");
+                    if (!post.media_url) throw new Error("Media URL is required for Instagram");
+
+                    await step.run(`publish-instagram-${post.id}`, async () => {
+                        const urls = post.media_url ? post.media_url.split(',').map((u: string) => u.trim()) : [];
+                        await publishToInstagram({
+                            connectionId: post.account_id!,
+                            text: `${post.title}${post.description ? `\n\n${post.description}` : ''}`,
+                            mediaUrls: urls
+                        });
+                    });
+                } else if (post.platform?.toLowerCase() === 'tiktok') {
+                    // TikTok typically expects userId to find connection if account_id isn't directly the connection record ID
+                    // But in our social_connections it seems we use account_id for connectionId on other platforms
+                    const connectionId = post.account_id;
+                    if (!connectionId) throw new Error("Missing account_id for TikTok post");
+                    if (!post.media_url) throw new Error("Media URL (video) is required for TikTok");
+
+                    await step.run(`publish-tiktok-${post.id}`, async () => {
+                        await publishToTikTok({
+                            userId: post.user_id,
+                            text: `${post.title}${post.description ? `\n\n${post.description}` : ''}`,
+                            videoUrl: post.media_url!
+                        });
+                    });
                 } else {
-                    // Placeholder for other platforms (Instagram, TikTok, etc)
-                    console.log(`[PUBLISH] Platform ${post.platform} not yet fully supported for auto-publish.`);
+                    throw new Error(`Platform ${post.platform} not supported or not yet fully implemented for auto-publish.`);
                 }
 
                 // 3. Mark as published

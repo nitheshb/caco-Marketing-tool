@@ -1,18 +1,46 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-const isPublicRoute = createRouteMatcher(['/', '/sign-in(.*)', '/sign-up(.*)', '/api/inngest(.*)']);
+const publicRoutes = ['/', '/docs', '/sign-in', '/sign-up', '/api/inngest', '/api/auth/hellostores', '/api/auth/redefine'];
 
-export default clerkMiddleware(async (auth, request) => {
-    if (!isPublicRoute(request)) {
-        await auth.protect();
-    }
-});
+function isPublicRoute(pathname: string) {
+  return publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/') || pathname.startsWith(route + '?'));
+}
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Skip static files and Next.js internals
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next();
+  }
+
+  // Public routes don't need auth
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next();
+  }
+
+  // Check for session cookie (set by AuthProvider on client)
+  const session = request.cookies.get('__session')?.value;
+
+  if (!session) {
+    const signInUrl = new URL('/sign-in', request.url);
+    signInUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  // Token is present — actual verification happens in API routes via getAuthUser()
+  // Edge middleware can't run Firebase Admin SDK, so we just check cookie existence
+  return NextResponse.next();
+}
 
 export const config = {
-    matcher: [
-        // Skip Next.js internals and all static files, unless found in search params
-        '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-        // Always run for API routes
-        '/(api|trpc)(.*)',
-    ],
+  matcher: [
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/(api|trpc)(.*)',
+  ],
 };
