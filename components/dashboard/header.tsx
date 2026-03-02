@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/lib/auth-context";
 import { LogOut, User } from "lucide-react";
+import Link from "next/link";
 
 export function Header() {
     const { user, signOut } = useAuth();

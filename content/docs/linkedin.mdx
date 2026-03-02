@@ -1,0 +1,49 @@
+---
+title: LinkedIn
+description: 'How to add LinkedIn to your system'
+---
+
+> *Snippet: never-share.mdx*
+
+
+### Create a new app
+Head over to [LinkedIn developers](https://www.linkedin.com/developers/apps) and create a new app.
+
+![LinkedIn](/images/providers/linkedin/linkedin-001.png)
+
+
+### Add required products
+Fill in all the details, once created head over to Products and make sure you add all the required products.
+
+![LinkedIn](/images/providers/linkedin/linkedin-002.png)
+
+> **Warning:** 
+It is important to request the Advertising API permissions and fill up the request form, or you will not have the ability to refresh your tokens.
+
+
+
+### Configure OAuth2 Redirect URI
+> *Snippet: oauth2redirect.mdx*
+
+**Your LinkedIn OAuth2 Redirect URI:**
+- Production: `https://your-postiz-domain.com/integrations/social/linkedin`
+- Local development: `http://localhost:4200/integrations/social/linkedin`
+- Docker: `http://localhost:5000/integrations/social/linkedin`
+
+<Note>
+If you are using the "LinkedIn Page" provider, replace `linkedin` with `linkedin-page` in the redirect URI.
+</Note>
+
+
+### Copy your credentials
+Copy the created `Client ID` and `Client Secret` and add them to your `.env` file.
+
+```env
+LINKEDIN_CLIENT_ID=""
+LINKEDIN_CLIENT_SECRET=""
+```
+
+You can find those under the Auth Tab of your LinkedIn App in the developer portal.
+
+
+

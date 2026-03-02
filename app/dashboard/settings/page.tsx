@@ -20,6 +20,7 @@ import {
     Zap,
     Loader2
 } from "lucide-react";
+import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -292,14 +293,21 @@ function SettingsForm() {
                         <Link2 className="h-5 w-5 text-indigo-600" />
                         <h2 className="text-xl font-bold text-zinc-900">Social Media Connections</h2>
                     </div>
-                    <CredentialsManagerModal 
-                        customIntegrations={customIntegrations} 
-                        onUpdated={fetchConnections} 
-                        isOpen={isCredentialsModalOpen}
-                        onOpenChange={setIsCredentialsModalOpen}
-                        initialPlatform={selectedPlatformToManage}
-                        onOpenClick={() => setSelectedPlatformToManage(null)}
-                    />
+                    <div className="flex items-center gap-2">
+                        <Link href="/docs" target="_blank">
+                            <Button variant="outline" size="sm" className="bg-white hover:bg-zinc-50 font-bold border-zinc-200 text-indigo-600 hover:text-indigo-700">
+                                Docs
+                            </Button>
+                        </Link>
+                        <CredentialsManagerModal 
+                            customIntegrations={customIntegrations} 
+                            onUpdated={fetchConnections} 
+                            isOpen={isCredentialsModalOpen}
+                            onOpenChange={setIsCredentialsModalOpen}
+                            initialPlatform={selectedPlatformToManage}
+                            onOpenClick={() => setSelectedPlatformToManage(null)}
+                        />
+                    </div>
                 </div>
                 {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
