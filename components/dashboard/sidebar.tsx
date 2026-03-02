@@ -20,23 +20,45 @@ const sidebarData = [
         hasBorderBottom: true,
     },
     {
-        name: 'Studio',
+        name: 'Postings Calendar',
+        icon: CalendarDays,
+        href: '/dashboard/postings-calendar'
+    },
+    {
+        name: 'Content Creation',
         icon: Film,
         defaultExpanded: true,
         items: [
             { name: 'Series', href: '/dashboard' },
             { name: 'Videos', href: '/dashboard/videos' },
-            { name: 'Calendar', href: '/dashboard/calendar' },
+            { name: 'Posters', href: '/dashboard/posters' },
+            
             { name: 'Create New', href: '/dashboard/create' },
-            { name: 'Billing', href: '/dashboard/billing' },
+            // { name: 'Billing', href: '/dashboard/billing' },
         ]
     },
     {
-        name: 'Prospect and enrich',
+        name: 'Billing',
+        icon: CreditCard,
+        href: '/dashboard/billing'
+    },
+    {
+        name: 'Whatsapp',
         icon: Search,
         defaultExpanded: true,
         items: [
             { name: 'People', href: '/dashboard/people' },
+            { name: 'Companies', href: '/dashboard/companies' },
+            { name: 'Lists', href: '/dashboard/lists' },
+            { name: 'Data enrichment', href: '/dashboard/data-enrichment' },
+        ]
+    },
+    {
+        name: 'CRM',
+        icon: CreditCard,
+        href: '/dashboard/billing',
+        items: [
+            { name: 'Contacts', href: '/dashboard/contacts' },
             { name: 'Companies', href: '/dashboard/companies' },
             { name: 'Lists', href: '/dashboard/lists' },
             { name: 'Data enrichment', href: '/dashboard/data-enrichment' },
@@ -94,6 +116,7 @@ const sidebarData = [
         icon: ShieldCheck,
         href: '/dashboard/deliverability'
     },
+   
     {
         name: 'Admin Settings',
         icon: Settings,
