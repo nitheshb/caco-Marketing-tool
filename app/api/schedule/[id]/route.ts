@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getAuthUser } from "@/lib/auth-helpers";
 
 export async function PATCH(
     req: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId } = await getAuthUser(req);
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
@@ -51,7 +51,7 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId } = await getAuthUser(req);
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }

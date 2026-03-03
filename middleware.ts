@@ -1,22 +1,43 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// Define public routes that don't require authentication
-const isPublicRoute = createRouteMatcher([
+// Public routes that don't require authentication
+const publicRoutes = [
   '/',
   '/docs',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/api/inngest(.*)',
-  '/api/auth/hellostores(.*)',
-  '/api/auth/redefine(.*)'
-]);
+  '/sign-in',
+  '/sign-up',
+  '/api/inngest',
+  '/api/auth/hellostores',
+  '/api/auth/redefine',
+];
 
-export default clerkMiddleware(async (auth, req) => {
-  // Protect all non-public routes
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+function isPublicRoute(pathname: string): boolean {
+  return publicRoutes.some(
+    (route) => pathname === route || pathname.startsWith(route + '/')
+  );
+}
+
+export default function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // Always allow public routes and Next.js internals
+  if (isPublicRoute(pathname)) {
+    return NextResponse.next();
   }
-});
+
+  // Check for Firebase session cookie
+  const session = req.cookies.get('__session')?.value;
+
+  // If no session and trying to access a protected route, redirect to sign-in
+  if (!session && !pathname.startsWith('/api/')) {
+    const signInUrl = new URL('/sign-in', req.url);
+    signInUrl.searchParams.set('redirect_url', pathname);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [

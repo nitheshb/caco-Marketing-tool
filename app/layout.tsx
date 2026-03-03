@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
-import { UserSync } from "@/components/user-sync";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -20,18 +18,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <head>
-          <script defer data-tracker="7f12607e-73a3-409e-991a-3c393ce9e279" data-hosts="vidmaxx.vercel.app" src="https://www.webtracky.com/analytics.js"></script>
-        </head>
-        <body
-          className={`${inter.variable} antialiased font-sans`}
-        >
-          <UserSync />
-          {children}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <head>
+        <script defer data-tracker="7f12607e-73a3-409e-991a-3c393ce9e279" data-hosts="vidmaxx.vercel.app" src="https://www.webtracky.com/analytics.js"></script>
+      </head>
+      <body
+        className={`${inter.variable} antialiased font-sans`}
+      >
+        {children}
+      </body>
+    </html>
   );
 }

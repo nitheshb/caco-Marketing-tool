@@ -2,11 +2,23 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Sparkles } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { app } from "@/lib/firebase";
 import Link from "next/link";
 
 export function Hero() {
-    const { user, isLoaded } = useUser();
+    const [user, setUser] = useState<any>(null);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        const auth = getAuth(app);
+        const unsub = onAuthStateChanged(auth, (u) => {
+            setUser(u);
+            setIsLoaded(true);
+        });
+        return () => unsub();
+    }, []);
 
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black pt-16">

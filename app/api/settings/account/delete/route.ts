@@ -1,12 +1,12 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getAuthUser } from "@/lib/auth-helpers";
 
 const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY!;
 
 export async function DELETE(req: Request) {
     try {
-        const { userId } = await auth();
+        const { userId } = await getAuthUser(req);
 
         // 1. Delete all user data from Supabase
         const { error: videoError } = await supabaseAdmin

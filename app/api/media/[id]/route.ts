@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getAuthUser } from "@/lib/auth-helpers";
 
 export async function DELETE(
     req: Request,
@@ -8,7 +8,7 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params;
-        const { userId } = await auth();
+        const { userId } = await getAuthUser(req);
         if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
         if (!id) return new NextResponse("Media ID is required", { status: 400 });

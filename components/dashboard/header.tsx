@@ -1,10 +1,19 @@
 'use client';
 
-import { Search, Sparkles, Command, LogOut, User } from "lucide-react";
-import { UserButton } from "@clerk/nextjs";
+import { Search, Sparkles, Command, LogOut } from "lucide-react";
+import { getAuth, signOut } from "firebase/auth";
+import { app } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export function Header() {
+    const router = useRouter();
+
+    const handleSignOut = async () => {
+        const auth = getAuth(app);
+        await signOut(auth);
+        router.push('/sign-in');
+    };
 
     return (
         <header className="flex h-14 items-center justify-between border-b border-zinc-200 bg-white px-4 shrink-0 transition-all font-sans">
@@ -36,9 +45,14 @@ export function Header() {
                     PR
                 </div>
 
-                <div className="flex items-center justify-center ml-2">
-                    <UserButton afterSignOutUrl="/" />
-                </div>
+                {/* Sign Out Button */}
+                <button
+                    onClick={handleSignOut}
+                    title="Sign out"
+                    className="flex items-center justify-center h-7 w-7 rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors ml-2"
+                >
+                    <LogOut className="h-3.5 w-3.5 text-zinc-600" />
+                </button>
             </div>
         </header>
     );

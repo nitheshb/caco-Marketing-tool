@@ -23,7 +23,7 @@ const sidebarData = [
     {
         name: 'Postings Calendar',
         icon: CalendarDays,
-        href: '/dashboard/postings-calendar'
+        href: '/dashboard/calendar'
     },
     {
         name: 'Content Creation',

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useUser, useAuth } from "@clerk/nextjs";
+import { getAuth, onAuthStateChanged, User, signOut as firebaseSignOut } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
 import { UpgradeModal } from '@/components/dashboard/upgrade-modal';
@@ -71,11 +72,28 @@ interface SocialConnection {
 }
 
 function SettingsForm() {
-    const { user } = useUser();
-    const { signOut } = useAuth();
+    const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
+
+    useEffect(() => {
+        const auth = getAuth(app);
+        return onAuthStateChanged(auth, (u) => setFirebaseUser(u));
+    }, []);
+
+    const user = firebaseUser ? {
+        imageUrl: firebaseUser.photoURL || '/placeholder-user.png',
+        fullName: firebaseUser.displayName || '',
+        primaryEmailAddress: { emailAddress: firebaseUser.email || '' }
+    } : null;
+
+    const signOut = async () => {
+        const auth = getAuth(app);
+        await firebaseSignOut(auth);
+        document.cookie = '__session=; path=/; max-age=0';
+        router.push('/');
+    };
 
     const { isPlatformAllowed, currentPlan, limits } = usePlanLimits();
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
@@ -664,15 +682,15 @@ function CredentialsManagerModal({
                     Manage OAuth Credentials
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md bg-white rounded-2xl">
-                <DialogHeader>
+            <DialogContent className="max-w-md bg-white rounded-2xl flex flex-col max-h-[85vh]">
+                <DialogHeader className="shrink-0">
                     <DialogTitle className="text-xl font-bold flex items-center gap-2 text-zinc-900 border-b border-zinc-100 pb-3">
                         <ShieldAlert className="h-5 w-5 text-indigo-600" />
                         Manage Custom Apps
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="space-y-6 pt-4">
+                <div className="space-y-6 pt-4 overflow-y-auto pr-2 flex-1 min-h-0">
                     {/* Add new form */}
                     <div className="space-y-4 bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
                         <h3 className="text-sm font-bold text-zinc-900">Add New Credential</h3>
@@ -746,7 +764,7 @@ function CredentialsManagerModal({
                     </div>
 
                     {/* Saved Credentials List */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 pb-4">
                         <h3 className="text-sm font-bold text-zinc-900">Saved Credentials</h3>
                         {(() => {
                             const filteredIntegrations = customIntegrations.filter(app => app.platform === platform);
@@ -754,27 +772,34 @@ function CredentialsManagerModal({
                                 return <p className="text-sm text-zinc-500 italic">No saved credentials found for {platform}.</p>;
                             }
                             return (
-                                <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                                    {filteredIntegrations.map((app) => (
+                                <div className="space-y-2 shrink-0">
+                                    {filteredIntegrations.map((app) => {
+                                        const visibleId = app.client_id.length > 8 
+                                            ? `••••${app.client_id.slice(-4)}`
+                                            : app.client_id;
+                                            
+                                        return (
                                         <div key={app.id} className="flex items-center justify-between p-3 rounded-xl bg-white border border-zinc-200 shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600">
+                                            <div className="flex items-start gap-3 overflow-hidden mr-2">
+                                                <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 shrink-0">
                                                     <Link2 className="h-4 w-4" />
                                                 </div>
                                                 <div className="space-y-0.5 flex-1 min-w-0">
-                                                    <p className="text-[13px] font-bold text-zinc-900 capitalize truncate">{app.name}</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-indigo-100 text-indigo-600 font-medium">
+                                                    <p className="text-[13px] font-bold text-zinc-900 capitalize truncate" title={app.name}>{app.name}</p>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-indigo-100 text-indigo-600 font-medium shrink-0">
                                                             {app.platform}
                                                         </Badge>
-                                                        <p className="text-[10px] font-mono text-zinc-500 truncate">{app.client_id}</p>
+                                                        <p className="text-[10px] font-mono text-zinc-500 bg-zinc-50 px-1.5 rounded truncate" title={app.client_id}>
+                                                            {visibleId}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>
                                             <Button 
                                                 variant="ghost" 
                                                 size="sm" 
-                                                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
+                                                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0 shrink-0"
                                                 onClick={() => handleDelete(app.id)}
                                                 disabled={isDeleting === app.id}
                                             >
@@ -782,7 +807,7 @@ function CredentialsManagerModal({
                                                 <span className="sr-only">Delete app</span>
                                             </Button>
                                         </div>
-                                    ))}
+                                    )})}
                                 </div>
                             );
                         })()}</div>

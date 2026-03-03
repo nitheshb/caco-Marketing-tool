@@ -3,9 +3,30 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Video, LogOut } from "lucide-react";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { app } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 
 export function Navbar() {
+    const [isSignedIn, setIsSignedIn] = useState(false);
+    const router = useRouter();
+
+    useEffect(() => {
+        const auth = getAuth(app);
+        const unsub = onAuthStateChanged(auth, (user) => {
+            setIsSignedIn(!!user);
+        });
+        return () => unsub();
+    }, []);
+
+    const handleSignOut = async () => {
+        const auth = getAuth(app);
+        await signOut(auth);
+        document.cookie = '__session=; path=/; max-age=0';
+        router.push('/');
+    };
+
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -18,39 +39,16 @@ export function Navbar() {
                     </span>
                 </Link>
                 <div className="hidden items-center gap-8 md:flex">
-                    <Link
-                        href="#features"
-                        className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
-                    >
-                        Features
-                    </Link>
-                    <Link
-                        href="#pricing"
-                        className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
-                    >
-                        Pricing
-                    </Link>
-                    <Link
-                        href="/docs"
-                        className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
-                    >
-                        Docs
-                    </Link>
-                    <Link
-                        href="#about"
-                        className="text-sm font-medium text-zinc-400 transition-colors hover:text-white"
-                    >
-                        About
-                    </Link>
+                    <Link href="#features" className="text-sm font-medium text-zinc-400 transition-colors hover:text-white">Features</Link>
+                    <Link href="#pricing" className="text-sm font-medium text-zinc-400 transition-colors hover:text-white">Pricing</Link>
+                    <Link href="/docs" className="text-sm font-medium text-zinc-400 transition-colors hover:text-white">Docs</Link>
+                    <Link href="#about" className="text-sm font-medium text-zinc-400 transition-colors hover:text-white">About</Link>
                 </div>
                 <div className="flex items-center gap-4">
-                    <SignedOut>
+                    {!isSignedIn ? (
                         <>
                             <Link href="/sign-in">
-                                <Button
-                                    variant="ghost"
-                                    className="hidden text-zinc-400 hover:text-white hover:bg-white/5 sm:flex"
-                                >
+                                <Button variant="ghost" className="hidden text-zinc-400 hover:text-white hover:bg-white/5 sm:flex">
                                     Sign In
                                 </Button>
                             </Link>
@@ -60,17 +58,19 @@ export function Navbar() {
                                 </Button>
                             </Link>
                         </>
-                    </SignedOut>
-                    <SignedIn>
+                    ) : (
                         <>
                             <Link href="/dashboard">
                                 <Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-white/5">
                                     Dashboard
                                 </Button>
                             </Link>
-                            <UserButton afterSignOutUrl="/" />
+                            <button onClick={handleSignOut} className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white transition-colors">
+                                <LogOut className="h-4 w-4" />
+                                Sign out
+                            </button>
                         </>
-                    </SignedIn>
+                    )}
                 </div>
             </div>
         </nav>

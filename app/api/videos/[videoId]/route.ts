@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getAuthUser } from "@/lib/auth-helpers";
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({
@@ -64,7 +64,7 @@ export async function DELETE(
     { params }: { params: Promise<{ videoId: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId } = await getAuthUser(_req);
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyFirebaseToken } from '@/lib/auth-helpers';
+import { ensureFirebaseUser } from '@/lib/auth-server-utils';
 
 
 export async function POST(req: Request) {
@@ -29,9 +30,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Token missing required field: email' }, { status: 400 });
         }
 
-        // 2. Legacy Firebase user sync removed since migrating to Clerk
-        const password = "legacy_firebase_password_removed";
-        const uid = "legacy_firebase_uid_removed";
+        // 2. Create or find corresponding VidMaxx Firebase user
+        const { password, uid } = await ensureFirebaseUser(email, name || email.split('@')[0]);
 
         // 3. Return the credentials and Redefine data to the client
         return NextResponse.json({

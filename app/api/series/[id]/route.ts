@@ -1,13 +1,13 @@
-import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getAuthUser } from "@/lib/auth-helpers";
 
 export async function GET(
     req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId } = await getAuthUser(req);
         const { id } = await params;
 
         if (!userId) {
@@ -36,7 +36,7 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId } = await getAuthUser(req);
         const { id } = await params;
 
         if (!userId) {
@@ -64,7 +64,7 @@ export async function PATCH(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { userId } = await auth();
+        const { userId } = await getAuthUser(req);
         const { id } = await params;
         const body = await req.json();
 
