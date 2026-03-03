@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyFirebaseToken } from '@/lib/auth-helpers';
 import { ensureFirebaseUser } from '@/lib/auth-server-utils';
 
+
 export async function POST(req: Request) {
     try {
         const { idToken, redefineUserData } = await req.json();
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Token missing required field: email' }, { status: 400 });
         }
 
-        // 2. Ensure Firebase user exists in Caco/VidMaxx project
+        // 2. Create or find corresponding VidMaxx Firebase user
         const { password, uid } = await ensureFirebaseUser(email, name || email.split('@')[0]);
 
         // 3. Return the credentials and Redefine data to the client

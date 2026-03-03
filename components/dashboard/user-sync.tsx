@@ -1,27 +1,27 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 
 export function UserSync() {
-    const { user, loading, getIdToken } = useAuth();
     const hasSyncCalled = useRef(false);
 
     useEffect(() => {
-        const syncUser = async () => {
-            if (loading || !user || hasSyncCalled.current) return;
+        const auth = getAuth(app);
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user || hasSyncCalled.current) return;
 
             try {
                 hasSyncCalled.current = true;
-                const token = await getIdToken();
-                
-                // Check if we have partner auth info from a fresh login
+                const token = await user.getIdToken();
+
+                // Check if we have partner auth info from a fresh cross-app login
                 const partnerInfoStr = localStorage.getItem('partner_auth_info');
                 let body = {};
                 if (partnerInfoStr) {
                     try {
                         body = JSON.parse(partnerInfoStr);
-                        // Only use this info once
                         localStorage.removeItem('partner_auth_info');
                     } catch (e) {
                         console.error('Failed to parse partner auth info:', e);
@@ -45,10 +45,10 @@ export function UserSync() {
             } catch (error) {
                 console.error('Error synchronizing user:', error);
             }
-        };
+        });
 
-        syncUser();
-    }, [user, loading, getIdToken]);
+        return () => unsubscribe();
+    }, []);
 
     return null;
 }

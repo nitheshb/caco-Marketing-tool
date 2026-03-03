@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
-      }
+      },
     ],
   },
   serverExternalPackages: ['@remotion/renderer', '@remotion/lambda'],

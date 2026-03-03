@@ -1,14 +1,18 @@
-import { getAuthUser } from "@/lib/auth-helpers";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getAuthUser } from "@/lib/auth-helpers";
 
 export async function POST(req: Request) {
     try {
         const { userId, email, name } = await getAuthUser(req);
+        if (!userId) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
 
         const { org_id, project_id, source_login } = await req.json().catch(() => ({}));
 
-        // Upsert user data into the existing 'users' table
+        // Upsert on email so that old Clerk-era rows (same email, different user_id)
+        // get updated to the current Firebase UID rather than causing a duplicate key error.
         const { error } = await supabaseAdmin
             .from('users')
             .upsert({
@@ -17,9 +21,10 @@ export async function POST(req: Request) {
                 name: name || '',
                 org_id: org_id || null,
                 project_id: project_id || null,
-                source_login: source_login || 'vidmaxx', // default to direct login
+                source_login: source_login || 'vidmaxx',
             }, {
-                onConflict: 'user_id'
+                onConflict: 'email',
+                ignoreDuplicates: false,
             });
 
         if (error) {

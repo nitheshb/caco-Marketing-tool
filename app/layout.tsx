@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
-import { UserSync } from "@/components/user-sync";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,10 +25,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} antialiased font-sans`}
       >
-        <AuthProvider>
-          <UserSync />
-          {children}
-        </AuthProvider>
+        {children}
       </body>
     </html>
   );

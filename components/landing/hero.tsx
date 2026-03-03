@@ -2,11 +2,23 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Sparkles } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import { useEffect, useState } from "react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { app } from "@/lib/firebase";
 import Link from "next/link";
 
 export function Hero() {
-    const { user, loading } = useAuth();
+    const [user, setUser] = useState<any>(null);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        const auth = getAuth(app);
+        const unsub = onAuthStateChanged(auth, (u) => {
+            setUser(u);
+            setIsLoaded(true);
+        });
+        return () => unsub();
+    }, []);
 
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black pt-16">
@@ -36,7 +48,7 @@ export function Hero() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-                        {!loading && !user && (
+                        {isLoaded && !user && (
                             <Link href="/sign-up">
                                 <Button size="lg" className="h-12 px-8 text-base bg-white text-black hover:bg-zinc-200 transition-all hover:scale-105">
                                     Start Creating for Free
@@ -44,7 +56,7 @@ export function Hero() {
                                 </Button>
                             </Link>
                         )}
-                        {!loading && user && (
+                        {isLoaded && user && (
                             <Link href="/dashboard">
                                 <Button size="lg" className="h-12 px-8 text-base bg-white text-black hover:bg-zinc-200 transition-all hover:scale-105">
                                     Go to Dashboard

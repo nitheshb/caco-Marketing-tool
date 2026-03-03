@@ -1,4 +1,6 @@
 'use client';
+import React from "react";
+
 
 import { Button } from "@/components/ui/button";
 import { Search, Mail, CheckCircle2, Clock, AlertCircle, RefreshCw, Link as LinkIcon } from "lucide-react";
@@ -12,7 +14,7 @@ const emails = [
     { subject: 'Last check-in before I close your file', to: 'anna@ecommerce.io', status: 'bounced', time: '3d ago', sequence: 'Re-engagement' },
 ];
 
-const statusConfig: Record<string, { icon: JSX.Element; color: string }> = {
+const statusConfig: Record<string, { icon: React.ReactNode; color: string }> = {
     opened: { icon: <CheckCircle2 className="h-3.5 w-3.5" />, color: 'bg-blue-50 text-blue-700' },
     sent: { icon: <Clock className="h-3.5 w-3.5" />, color: 'bg-zinc-100 text-zinc-600' },
     clicked: { icon: <LinkIcon className="h-3.5 w-3.5" />, color: 'bg-purple-50 text-purple-700' },

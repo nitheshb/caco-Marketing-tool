@@ -1,6 +1,6 @@
-import { getAuthUser } from "@/lib/auth-helpers";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getAuthUser } from "@/lib/auth-helpers";
 
 export async function PATCH(
     req: NextRequest,

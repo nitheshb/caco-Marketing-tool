@@ -1,7 +1,7 @@
-import { getAuthUser } from "@/lib/auth-helpers";
 import { NextResponse } from "next/server";
 import { inngest } from "@/inngest/client";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getAuthUser } from "@/lib/auth-helpers";
 
 export async function POST(req: Request) {
     try {

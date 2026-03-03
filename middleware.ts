@@ -1,46 +1,49 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const publicRoutes = ['/', '/docs', '/sign-in', '/sign-up', '/api/inngest', '/api/auth/hellostores', '/api/auth/redefine'];
+// Public routes that don't require authentication
+const publicRoutes = [
+  '/',
+  '/docs',
+  '/sign-in',
+  '/sign-up',
+  '/api/inngest',
+  '/api/auth/hellostores',
+  '/api/auth/redefine',
+];
 
-function isPublicRoute(pathname: string) {
-  return publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/') || pathname.startsWith(route + '?'));
+function isPublicRoute(pathname: string): boolean {
+  return publicRoutes.some(
+    (route) => pathname === route || pathname.startsWith(route + '/')
+  );
 }
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export default function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-  // Skip static files and Next.js internals
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon') ||
-    pathname.includes('.')
-  ) {
-    return NextResponse.next();
-  }
-
-  // Public routes don't need auth
+  // Always allow public routes and Next.js internals
   if (isPublicRoute(pathname)) {
     return NextResponse.next();
   }
 
-  // Check for session cookie (set by AuthProvider on client)
-  const session = request.cookies.get('__session')?.value;
+  // Check for Firebase session cookie
+  const session = req.cookies.get('__session')?.value;
 
-  if (!session) {
-    const signInUrl = new URL('/sign-in', request.url);
-    signInUrl.searchParams.set('redirect', pathname);
+  // If no session and trying to access a protected route, redirect to sign-in
+  if (!session && !pathname.startsWith('/api/')) {
+    const signInUrl = new URL('/sign-in', req.url);
+    signInUrl.searchParams.set('redirect_url', pathname);
     return NextResponse.redirect(signInUrl);
   }
 
-  // Token is present — actual verification happens in API routes via getAuthUser()
-  // Edge middleware can't run Firebase Admin SDK, so we just check cookie existence
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
     '/(api|trpc)(.*)',
   ],
 };

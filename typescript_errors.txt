@@ -1,0 +1,8 @@
+actions/user.ts(25,24): error TS2304: Cannot find name 'email'.
+actions/user.ts(26,23): error TS1345: An expression of type 'void' cannot be tested for truthiness.
+app/api/auth/hellostores/verify/route.ts(3,36): error TS2307: Cannot find module '@/lib/auth-server-utils' or its corresponding type declarations.
+app/api/auth/redefine/verify/route.ts(3,36): error TS2307: Cannot find module '@/lib/auth-server-utils' or its corresponding type declarations.
+app/api/schedule/[id]/route.ts(1,10): error TS2300: Duplicate identifier 'NextResponse'.
+app/api/schedule/[id]/route.ts(3,23): error TS2300: Duplicate identifier 'NextResponse'.
+app/api/schedule/route.ts(1,10): error TS2300: Duplicate identifier 'NextResponse'.
+app/api/schedule/route.ts(3,23): error TS2300: Duplicate identifier 'NextResponse'.

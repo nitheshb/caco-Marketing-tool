@@ -22,6 +22,11 @@ export default function SignUpPage() {
     const [isRedefineModalOpen, setIsRedefineModalOpen] = useState(false);
     const router = useRouter();
 
+    const setSessionCookie = async (firebaseUser: import('firebase/auth').User) => {
+        const token = await firebaseUser.getIdToken();
+        document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax`;
+    };
+
     const handleEmailSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -31,6 +36,7 @@ export default function SignUpPage() {
             if (name) {
                 await updateProfile(userCredential.user, { displayName: name });
             }
+            await setSessionCookie(userCredential.user);
             router.push('/dashboard');
         } catch (err: any) {
             if (err.code === 'auth/email-already-in-use') {
@@ -49,7 +55,8 @@ export default function SignUpPage() {
         setError('');
         try {
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider);
+            const cred = await signInWithPopup(auth, provider);
+            await setSessionCookie(cred.user);
             router.push('/dashboard');
         } catch (err: any) {
             setError(err.message || 'Google sign-up failed');
@@ -78,7 +85,8 @@ export default function SignUpPage() {
                 }));
             }
 
-            await signInWithEmailAndPassword(auth, email, pass);
+            const cred = await signInWithEmailAndPassword(auth, email, pass);
+            await setSessionCookie(cred.user);
             router.push('/dashboard');
         } catch (err: any) {
             setError(err.message || 'VidMaxx sign-in failed');

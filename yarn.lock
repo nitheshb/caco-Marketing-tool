@@ -5954,7 +5954,7 @@ find-up@^5.0.0:
     locate-path "^6.0.0"
     path-exists "^4.0.0"
 
-firebase@^12.9.0:
+firebase@^12.10.0:
   version "12.10.0"
   resolved "https://registry.npmjs.org/firebase/-/firebase-12.10.0.tgz"
   integrity sha512-tAjHnEirksqWpa+NKDUSUMjulOnsTcsPC1X1rQ+gwPtjlhJS572na91CwaBXQJHXharIrfj7sw/okDkXOsphjA==

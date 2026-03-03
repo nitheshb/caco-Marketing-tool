@@ -1,17 +1,33 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useAuth } from '@/lib/auth-context';
-import { syncUser } from '@/actions/user';
+import { useEffect, useRef } from 'react';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 
 export function UserSync() {
-    const { user, loading } = useAuth();
+    const hasSyncCalled = useRef(false);
 
     useEffect(() => {
-        if (!loading && user) {
-            syncUser();
-        }
-    }, [loading, user]);
+        const auth = getAuth(app);
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (!user || hasSyncCalled.current) return;
+            try {
+                hasSyncCalled.current = true;
+                const token = await user.getIdToken();
+                await fetch('/api/user', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({}),
+                });
+            } catch (e) {
+                console.error('UserSync error:', e);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
 
     return null;
 }

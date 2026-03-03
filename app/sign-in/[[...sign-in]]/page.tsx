@@ -31,7 +31,9 @@ export default function SignInPage() {
         if (crossAppEmail && crossAppPass) {
             setLoading(true);
             signInWithEmailAndPassword(auth, crossAppEmail, crossAppPass)
-                .then(() => {
+                .then(async (cred) => {
+                    const token = await cred.user.getIdToken();
+                    document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax`;
                     // Check if we are inside a popup
                     if (window.opener && !window.opener.closed) {
                         window.opener.postMessage('cross_app_login_success', window.location.origin);
@@ -50,12 +52,18 @@ export default function SignInPage() {
         }
     }, [crossAppEmail, crossAppPass, crossAppError, redirect, router]);
 
+    const setSessionCookie = async (firebaseUser: import('firebase/auth').User) => {
+        const token = await firebaseUser.getIdToken();
+        document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax`;
+    };
+
     const handleEmailSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            const cred = await signInWithEmailAndPassword(auth, email, password);
+            await setSessionCookie(cred.user);
             router.push(redirect);
         } catch (err: any) {
             if (err.code === 'auth/invalid-credential') {
@@ -74,7 +82,8 @@ export default function SignInPage() {
         setError('');
         try {
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider);
+            const cred = await signInWithPopup(auth, provider);
+            await setSessionCookie(cred.user);
             router.push(redirect);
         } catch (err: any) {
             setError(err.message || 'Google sign-in failed');
@@ -103,7 +112,8 @@ export default function SignInPage() {
                 }));
             }
 
-            await signInWithEmailAndPassword(auth, email, pass);
+            const cred = await signInWithEmailAndPassword(auth, email, pass);
+            await setSessionCookie(cred.user);
             router.push(redirect);
         } catch (err: any) {
             setError(err.message || 'VidMaxx sign-in failed');
