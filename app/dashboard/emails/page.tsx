@@ -1,5 +1,6 @@
-import React from "react";
 'use client';
+import React from "react";
+
 
 import { Button } from "@/components/ui/button";
 import { Search, Mail, CheckCircle2, Clock, AlertCircle, RefreshCw, Link as LinkIcon } from "lucide-react";
