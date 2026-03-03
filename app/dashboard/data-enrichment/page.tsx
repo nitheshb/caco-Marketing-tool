@@ -1,3 +1,4 @@
+import React from "react";
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ const enrichments = [
     { name: 'Phone Numbers', records: '620', status: 'failed', date: 'Feb 18, 2025', icon: '📞' },
 ];
 
-const statusIcon: Record<string, JSX.Element> = {
+const statusIcon: Record<string, React.ReactNode> = {
     completed: <CheckCircle2 className="h-4 w-4 text-green-600" />,
     processing: <Clock className="h-4 w-4 text-blue-500 animate-spin" />,
     failed: <AlertCircle className="h-4 w-4 text-red-500" />,

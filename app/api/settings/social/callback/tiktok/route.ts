@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/lib/auth-helpers";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 

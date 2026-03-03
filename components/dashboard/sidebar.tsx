@@ -44,15 +44,10 @@ const sidebarData = [
         href: '/dashboard/billing'
     },
     {
-        name: 'Whatsapp',
+        name: 'Whathub',
         icon: Search,
-        defaultExpanded: true,
-        items: [
-            { name: 'People', href: '/dashboard/people' },
-            { name: 'Companies', href: '/dashboard/companies' },
-            { name: 'Lists', href: '/dashboard/lists' },
-            { name: 'Data enrichment', href: '/dashboard/data-enrichment' },
-        ]
+        href: 'http://146.190.113.104:8080/',
+        external: true,
     },
     {
         name: 'CRM',
@@ -205,6 +200,24 @@ export function Sidebar() {
                                     <div className="mt-0.5 flex flex-col space-y-0.5 relative pl-[16px]">
                                         {section.items.map(item => {
                                             const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                                            
+                                            if ((item as any).external) {
+                                                return (
+                                                    <a
+                                                        key={item.name}
+                                                        href={item.href}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className={cn(
+                                                            "flex items-center rounded-md px-3 py-1 text-[12px] transition-colors justify-between",
+                                                            "text-black font-medium hover:bg-zinc-100"
+                                                        )}
+                                                    >
+                                                        <span className="truncate">{item.name}</span>
+                                                    </a>
+                                                );
+                                            }
+                                            
                                             return (
                                                 <Link
                                                     key={item.name}
@@ -232,33 +245,55 @@ export function Sidebar() {
                     }
 
                     // Single link items
-                    const isActive = section.href === '/dashboard'
-                        ? pathname === '/dashboard'
-                        : pathname.startsWith(section.href!);
+                    const isActive = !section.external && (
+                        section.href === '/dashboard'
+                            ? pathname === '/dashboard'
+                            : pathname.startsWith(section.href!)
+                    );
+
+                    const linkClasses = cn(
+                        "group flex items-center transition-colors my-0",
+                        isCollapsed
+                            ? "justify-center p-2 rounded-md"
+                            : "w-full justify-between px-2 py-1 text-[12px] font-bold",
+                        isActive
+                            ? "bg-zinc-900 text-white rounded-md shadow-sm"
+                            : "text-black hover:bg-zinc-100 rounded-md",
+                    );
+
+                    const linkContent = (
+                        <>
+                            <div className="flex items-center gap-2.5 overflow-hidden">
+                                <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-black")} strokeWidth={isActive ? 2.5 : 2} />
+                                {!isCollapsed && <span className="truncate">{section.name}</span>}
+                            </div>
+                            {!isCollapsed && section.hasArrow && (
+                                <ChevronRight className={cn("h-4 w-4 flex-shrink-0 transition-opacity", isActive ? "text-zinc-300 opacity-100" : "text-zinc-400 opacity-0 group-hover:opacity-100")} />
+                            )}
+                        </>
+                    );
 
                     return (
                         <div key={section.name} className={cn("flex flex-col", section.hasBorderBottom && "border-b border-zinc-200 pb-2 mb-2")}>
-                            <Link
-                                href={section.href!}
-                                title={isCollapsed ? section.name : undefined}
-                                className={cn(
-                                    "group flex items-center transition-colors my-0",
-                                    isCollapsed
-                                        ? "justify-center p-2 rounded-md"
-                                        : "w-full justify-between px-3 py-1 text-[12px] font-bold",
-                                    isActive
-                                        ? "bg-zinc-900 text-white rounded-md shadow-sm"
-                                        : "text-black hover:bg-zinc-100 rounded-md",
-                                )}
-                            >
-                                <div className="flex items-center gap-2.5 overflow-hidden">
-                                    <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-black")} strokeWidth={isActive ? 2.5 : 2} />
-                                    {!isCollapsed && <span className="truncate">{section.name}</span>}
-                                </div>
-                                {!isCollapsed && section.hasArrow && (
-                                    <ChevronRight className={cn("h-4 w-4 flex-shrink-0 transition-opacity", isActive ? "text-zinc-300 opacity-100" : "text-zinc-400 opacity-0 group-hover:opacity-100")} />
-                                )}
-                            </Link>
+                            {(section as any).external ? (
+                                <a
+                                    href={section.href!}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title={isCollapsed ? section.name : undefined}
+                                    className={linkClasses}
+                                >
+                                    {linkContent}
+                                </a>
+                            ) : (
+                                <Link
+                                    href={section.href!}
+                                    title={isCollapsed ? section.name : undefined}
+                                    className={linkClasses}
+                                >
+                                    {linkContent}
+                                </Link>
+                            )}
                         </div>
                     );
                 })}

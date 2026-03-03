@@ -3,11 +3,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Video, LogOut } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export function Navbar() {
-    const { user, loading, signOut } = useAuth();
-
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -46,7 +44,7 @@ export function Navbar() {
                     </Link>
                 </div>
                 <div className="flex items-center gap-4">
-                    {!loading && !user && (
+                    <SignedOut>
                         <>
                             <Link href="/sign-in">
                                 <Button
@@ -62,27 +60,17 @@ export function Navbar() {
                                 </Button>
                             </Link>
                         </>
-                    )}
-                    {!loading && user && (
+                    </SignedOut>
+                    <SignedIn>
                         <>
                             <Link href="/dashboard">
                                 <Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-white/5">
                                     Dashboard
                                 </Button>
                             </Link>
-                            {user.photoURL ? (
-                                <img
-                                    src={user.photoURL}
-                                    alt="Profile"
-                                    className="h-8 w-8 rounded-full object-cover ring-2 ring-white/20"
-                                />
-                            ) : (
-                                <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-bold">
-                                    {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
-                                </div>
-                            )}
+                            <UserButton afterSignOutUrl="/" />
                         </>
-                    )}
+                    </SignedIn>
                 </div>
             </div>
         </nav>

@@ -1,19 +1,20 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { useUser, useAuth } from '@clerk/nextjs';
 
 export function UserSync() {
-    const { user, loading, getIdToken } = useAuth();
+    const { user, isLoaded } = useUser();
+    const { getToken, isLoaded: authLoaded } = useAuth();
     const hasSyncCalled = useRef(false);
 
     useEffect(() => {
         const syncUser = async () => {
-            if (loading || !user || hasSyncCalled.current) return;
+            if (!isLoaded || !authLoaded || !user || hasSyncCalled.current) return;
 
             try {
                 hasSyncCalled.current = true;
-                const token = await getIdToken();
+                const token = await getToken();
                 
                 // Check if we have partner auth info from a fresh login
                 const partnerInfoStr = localStorage.getItem('partner_auth_info');
@@ -48,7 +49,7 @@ export function UserSync() {
         };
 
         syncUser();
-    }, [user, loading, getIdToken]);
+    }, [user, isLoaded, authLoaded, getToken]);
 
     return null;
 }

@@ -1,17 +1,17 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import { useUser } from '@clerk/nextjs';
 import { syncUser } from '@/actions/user';
 
 export function UserSync() {
-    const { user, loading } = useAuth();
+    const { user, isLoaded, isSignedIn } = useUser();
 
     useEffect(() => {
-        if (!loading && user) {
+        if (isLoaded && isSignedIn && user) {
             syncUser();
         }
-    }, [loading, user]);
+    }, [isLoaded, isSignedIn, user]);
 
     return null;
 }

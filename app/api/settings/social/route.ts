@@ -1,10 +1,10 @@
-import { getAuthUser } from "@/lib/auth-helpers";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(req: Request) {
     try {
-        const { userId } = await getAuthUser(req);
+        const { userId } = await auth();
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
@@ -27,7 +27,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        const { userId } = await getAuthUser(req);
+        const { userId } = await auth();
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
     try {
-        const { userId } = await getAuthUser(req);
+        const { userId } = await auth();
         if (!userId) {
             return new NextResponse("Unauthorized", { status: 401 });
         }

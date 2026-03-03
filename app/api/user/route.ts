@@ -1,10 +1,17 @@
-import { getAuthUser } from "@/lib/auth-helpers";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function POST(req: Request) {
     try {
-        const { userId, email, name } = await getAuthUser(req);
+        const { userId } = await auth();
+        if (!userId) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+
+        const user = await currentUser();
+        const email = user?.primaryEmailAddress?.emailAddress || '';
+        const name = user?.fullName || '';
 
         const { org_id, project_id, source_login } = await req.json().catch(() => ({}));
 
@@ -13,8 +20,8 @@ export async function POST(req: Request) {
             .from('users')
             .upsert({
                 user_id: userId,
-                email: email || '',
-                name: name || '',
+                email,
+                name,
                 org_id: org_id || null,
                 project_id: project_id || null,
                 source_login: source_login || 'vidmaxx', // default to direct login

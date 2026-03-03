@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useAuth } from "@/lib/auth-context";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
 import { UpgradeModal } from '@/components/dashboard/upgrade-modal';
@@ -71,7 +71,8 @@ interface SocialConnection {
 }
 
 function SettingsForm() {
-    const { user, signOut } = useAuth();
+    const { user } = useUser();
+    const { signOut } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -260,7 +261,7 @@ function SettingsForm() {
                             <div className="relative group">
                                 <div className="h-24 w-24 rounded-2xl overflow-hidden ring-4 ring-indigo-50 transition-all group-hover:ring-indigo-100">
                                     <Image
-                                        src={user?.photoURL || "/placeholder-user.png"}
+                                        src={user?.imageUrl || "/placeholder-user.png"}
                                         alt="Profile"
                                         width={96}
                                         height={96}
@@ -274,11 +275,11 @@ function SettingsForm() {
                             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                                 <div className="space-y-1.5">
                                     <Label className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Full Name</Label>
-                                    <Input value={user?.displayName || ""} disabled className="bg-zinc-50 border-zinc-200 font-medium" />
+                                    <Input value={user?.fullName || ""} disabled className="bg-zinc-50 border-zinc-200 font-medium" />
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Email Address</Label>
-                                    <Input value={user?.email || ""} disabled className="bg-zinc-50 border-zinc-200 font-medium" />
+                                    <Input value={user?.primaryEmailAddress?.emailAddress || ""} disabled className="bg-zinc-50 border-zinc-200 font-medium" />
                                 </div>
                             </div>
                         </div>

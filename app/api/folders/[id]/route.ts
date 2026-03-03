@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/lib/auth-helpers";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -8,7 +8,7 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params;
-        const { userId } = await getAuthUser(req);
+        const { userId } = await auth();
         if (!userId) return new NextResponse("Unauthorized", { status: 401 });
 
         if (!id) return new NextResponse("Folder ID is required", { status: 400 });
