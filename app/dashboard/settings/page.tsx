@@ -780,11 +780,21 @@ function CredentialsManagerModal({
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md bg-white rounded-2xl flex flex-col max-h-[85vh]">
-                <DialogHeader className="shrink-0">
-                    <DialogTitle className="text-xl font-bold flex items-center gap-2 text-zinc-900 border-b border-zinc-100 pb-3">
+                <DialogHeader className="shrink-0 flex flex-row items-center justify-between border-b border-zinc-100 pb-3 pr-8">
+                    <DialogTitle className="text-xl font-bold flex items-center gap-2 text-zinc-900">
                         <ShieldAlert className="h-5 w-5 text-indigo-600" />
                         Manage Custom Apps
                     </DialogTitle>
+                    {platform && (
+                        <Link 
+                            href={platform === 'instagram' ? '/docs/instagram' : `/docs/${platform}`} 
+                            target="_blank" 
+                            className="flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors"
+                        >
+                            <ExternalLink className="h-4 w-4" />
+                            Docs
+                        </Link>
+                    )}
                 </DialogHeader>
 
                 <div className="space-y-6 pt-4 overflow-y-auto pr-2 flex-1 min-h-0">
