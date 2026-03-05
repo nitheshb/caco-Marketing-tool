@@ -295,13 +295,7 @@ export function Sidebar() {
                         </div>
                     );
                 })}
-                <Link
-                    href="/dashboard/settings"
-                    className="w-full flex items-center gap-3 rounded-lg px-4 py-3.5 text-base font-medium text-zinc-600 transition-all hover:bg-zinc-50 hover:text-zinc-900"
-                >
-                    <User className="h-6 w-6 text-zinc-400" />
-                    <span>Profile Settings</span>
-                </Link>
+
             </div>
 
             <div className="h-4 border-t border-zinc-200 mt-auto bg-zinc-50" />
