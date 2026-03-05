@@ -1,6 +1,6 @@
-# Vidmaxx AI Prompt Documentation (Full Project History)
+# Agent Elephant AI Prompt Documentation (Full Project History)
 
-This document details the AI prompts used throughout the development of Vidmaxx, organized by project phase. More Fromatted one and might be different from the one in the project.
+This document details the AI prompts used throughout the development of Agent Elephant, organized by project phase. More Fromatted one and might be different from the one in the project.
 
 ---
 

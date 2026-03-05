@@ -41,7 +41,7 @@ export function Features() {
                         Create, Schedule, Dominate
                     </p>
                     <p className="mt-6 text-lg leading-8 text-zinc-400">
-                        VidMaxx gives you the superpowers to scale your video content without hiring a team.
+                        Agent Elephant gives you the superpowers to scale your video content without hiring a team.
                         Focus on ideas, let AI handle the rest.
                     </p>
                 </div>

@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Vidmaxx: AI Video Generator and Scheduler App",
-  description: "Vidmaxx is a video generation and scheduling app that uses AI to generate videos and schedule them for you.",
+  title: "Agent Elephant: AI Video Generator and Scheduler App",
+  description: "Agent Elephant is a video generation and scheduling app that uses AI to generate videos and schedule them for you.",
 };
 
 export default function RootLayout({

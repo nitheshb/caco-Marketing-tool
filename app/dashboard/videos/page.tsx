@@ -608,7 +608,7 @@ function MediaLibrary() {
                                                         <Badge variant="outline" className="text-[10px] h-5 py-0">Generated</Badge>
                                                     </td>
                                                     <td className="px-4 py-2.5 text-zinc-500">{format(new Date(video.created_at), 'MMM dd, yyyy HH:mm')}</td>
-                                                    <td className="px-4 py-2.5 text-zinc-500">VidMaxx Video</td>
+                                                    <td className="px-4 py-2.5 text-zinc-500">Agent Elephant Video</td>
                                                     <td className="px-4 py-2.5 text-zinc-500">-</td>
                                                     <td className="px-4 py-2.5 text-right flex justify-end gap-1 opacity-0 group-hover:opacity-100">
                                                         {video.video_url && (

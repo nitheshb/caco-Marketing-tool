@@ -35,7 +35,7 @@ export function Navbar() {
                         <Video className="h-5 w-5" />
                     </div>
                     <span className="text-xl font-bold tracking-tight text-white">
-                        VidMaxx
+                        Agent Elephant
                     </span>
                 </Link>
                 <div className="hidden items-center gap-8 md:flex">

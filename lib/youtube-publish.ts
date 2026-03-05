@@ -131,7 +131,7 @@ export async function publishToYouTube({
                     title: title.substring(0, 100),
                     description: description,
                     categoryId: '24',
-                    tags: ['vidmaxx', 'ai-generated', 'shorts']
+                    tags: ['agent-elephant', 'ai-generated', 'shorts']
                 },
                 status: {
                     privacyStatus: 'public',

@@ -15,7 +15,7 @@ export async function sendVideoReadyEmail({
     videoUrl: string;
     seriesName: string;
 }) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://vidmaxx.ai";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://agentelephant.ai";
     const videoPageUrl = `${appUrl}/dashboard/videos`;
 
     const html = `
@@ -54,7 +54,7 @@ export async function sendVideoReadyEmail({
             </div>
             
             <div class="footer">
-                <p>&copy; ${new Date().getFullYear()} Vidmaxx AI. All rights reserved.</p>
+                <p>&copy; ${new Date().getFullYear()} Agent Elephant AI. All rights reserved.</p>
                 <p>If you didn't expect this email, you can safely ignore it.</p>
             </div>
         </div>
@@ -65,7 +65,7 @@ export async function sendVideoReadyEmail({
     try {
         await plunk.emails.send({
             to: email,
-            subject: `✨ Your Vidmaxx video is ready: ${title}`,
+            subject: `✨ Your Agent Elephant video is ready: ${title}`,
             body: html,
         });
         return { success: true };

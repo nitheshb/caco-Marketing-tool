@@ -89,7 +89,7 @@ export default function SignUpPage() {
             await setSessionCookie(cred.user);
             router.push('/dashboard');
         } catch (err: any) {
-            setError(err.message || 'VidMaxx sign-in failed');
+            setError(err.message || 'Agent Elephant sign-up failed');
         } finally {
             setLoading(false);
         }
@@ -120,7 +120,7 @@ export default function SignUpPage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.5)]">
                         <Video className="h-6 w-6" />
                     </div>
-                    <span className="text-2xl font-bold tracking-tight text-white">VidMaxx</span>
+                    <span className="text-2xl font-bold tracking-tight text-white">Agent Elephant</span>
                 </div>
 
                 {/* Card */}

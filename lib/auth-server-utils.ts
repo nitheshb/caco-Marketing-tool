@@ -1,7 +1,7 @@
 const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY!;
 
 /**
- * Ensures a Firebase user exists for the given email on Caco's (VidMaxx) Firebase project.
+ * Ensures a Firebase user exists for the given email on Caco's (Agent Elephant) Firebase project.
  * Creates the user if they don't exist, using a deterministic password.
  * Returns the deterministic password so the client can sign in via the SDK.
  */

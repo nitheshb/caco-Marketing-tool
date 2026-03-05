@@ -1,19 +1,41 @@
 'use client';
 
-import { Search, Sparkles, Command, LogOut } from "lucide-react";
-import { getAuth, signOut } from "firebase/auth";
+import { Search, Sparkles, Command, LogOut, Settings as SettingsIcon } from "lucide-react";
+import { getAuth, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { app } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
     const router = useRouter();
+    const [user, setUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const auth = getAuth(app);
+        return onAuthStateChanged(auth, setUser);
+    }, []);
 
     const handleSignOut = async () => {
         const auth = getAuth(app);
         await signOut(auth);
+        document.cookie = '__session=; path=/; max-age=0';
         router.push('/sign-in');
     };
+
+    const initials = user?.displayName
+        ? user.displayName.substring(0, 2).toUpperCase()
+        : user?.email?.substring(0, 2).toUpperCase() || 'U';
 
     return (
         <header className="flex h-14 items-center justify-between border-b border-zinc-200 bg-white px-4 shrink-0 transition-all font-sans">
@@ -40,19 +62,39 @@ export function Header() {
                     <span>Execute with AI</span>
                 </button>
 
-                {/* Additional Badge (Green PR placeholder from screenshot) */}
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-xs font-medium text-emerald-800 ring-1 ring-inset ring-emerald-200">
-                    PR
-                </div>
-
-                {/* Sign Out Button */}
-                <button
-                    onClick={handleSignOut}
-                    title="Sign out"
-                    className="flex items-center justify-center h-7 w-7 rounded-full bg-zinc-100 hover:bg-zinc-200 transition-colors ml-2"
-                >
-                    <LogOut className="h-3.5 w-3.5 text-zinc-600" />
-                </button>
+                {/* Profile Dropdown Menu */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button className="relative ml-2 flex h-8 w-8 items-center justify-center rounded-full bg-zinc-100 hover:ring-2 hover:ring-indigo-100 transition-all outline-none">
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || 'User'} />
+                                <AvatarFallback className="bg-emerald-100 text-emerald-800 text-xs font-medium">
+                                    {initials}
+                                </AvatarFallback>
+                            </Avatar>
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 font-sans mt-2 rounded-xl">
+                        <DropdownMenuLabel className="font-normal p-2">
+                            <div className="flex flex-col space-y-1">
+                                <p className="text-sm font-bold leading-none text-zinc-900">{user?.displayName || 'User'}</p>
+                                <p className="text-xs leading-none text-zinc-500 truncate">{user?.email}</p>
+                            </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild className="rounded-lg m-1 p-2">
+                            <Link href="/dashboard/settings" className="cursor-pointer group flex items-center">
+                                <SettingsIcon className="mr-2 h-4 w-4 text-zinc-500 group-hover:text-zinc-900" />
+                                <span className="font-medium">Profile Settings</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleSignOut} className="rounded-lg m-1 p-2 text-rose-600 focus:bg-rose-50 focus:text-rose-700 cursor-pointer font-bold">
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Sign out</span>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </header>
     );
