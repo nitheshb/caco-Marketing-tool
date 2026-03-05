@@ -7,63 +7,61 @@ To connect your Instagram account to Agent Elephant, you need to set up a develo
 
 This guide walks you through the exact steps needed in Meta's latest developer dashboard layout.
 
----
-
-## Part 1: Setting up the Meta Application
+## Setting up Meta Application
 
 Both Instagram Professional accounts and Creator accounts require a Meta Developer App to allow third-party posting.
 
-### Step 1: Create a New App
+### 1. Create a New App
 Head to the [Meta for Developers](https://developers.facebook.com/apps/) portal and click the green **Create App** button in the top right.
 
-![Meta Developer Portal - Create App](/images/providers/instagram/step-1.png)
+![Meta Developer Portal - My Apps page](/images/providers/instagram/step-1.png)
 
-### Step 1.1: Enter App Details
-Give your app a name (e.g., "Agent Elephant"), enter your contact email, and click **Create App**.
+Also enter your app name and contact email:
 
-![Meta Developer Portal - App Details](/images/providers/instagram/step-1.1.png)
+![Enter app name and email](/images/providers/instagram/step-1.1.png)
 
----
-
-### Step 2: Select Use Case
+### 2. Select Use Case
 Meta offers many app templates. To secure the correct posting permissions:
 
-1. Under the **Filter by** menu on the left side, click **All (19)** to see all available use cases.
+1. Under the **Filter by** menu on the left side, select **All (19)**.
 
-![Select Use Case - All 19](/images/providers/instagram/step-2.png)
+![Filter by All (19)](/images/providers/instagram/step-2.png)
 
 2. Scroll through the list and select **Manage messaging & content on Instagram**.
 
-![Select Use Case - Manage Messaging and Content on Instagram](/images/providers/instagram/step-2.1.png)
+![Select - Manage messaging and content on Instagram](/images/providers/instagram/step-2.1.png)
 
 3. Click the blue **Next** button.
 
-![Select Use Case - Clicking Next](/images/providers/instagram/step-2.2.png)
+![Click Next](/images/providers/instagram/step-2.2.png)
 
 4. On the next screen, confirm by clicking **Next** again.
 
-![Confirm Use Case](/images/providers/instagram/step-2.3.png)
+![Confirm - Click Next again](/images/providers/instagram/step-2.3.png)
 
-5. Click **Create App** to finalize.
+### 3. Add App Details
+1. Give your app a recognizable name (e.g., "Agent Elephant App").
+2. Ensure your contact email is correct.
+3. Click **Create App**.
 
-![Create App Confirmation](/images/providers/instagram/step-2.4.png)
+![Add App Details and Click Create App](/images/providers/instagram/step-2.4.png)
 
 ---
 
-## Part 2: Configuring the App
+## Configuring the App
 
 Once your app is created, you will be dropped into the App Dashboard.
 
-### Step 3: Set up the Redirect URI
-To ensure a secure login loop, you need to whitelist Agent Elephant's callback address.
+### 1. Set up Redirect URI
+To ensure a secure login loop, you need to whitelist Agent Elephant's return address.
 
 1. In the left sidebar, click on **API setup with Instagram login**.
 
-![API Setup with Instagram Login Sidebar](/images/providers/instagram/Configuring-theApp-1.png)
+![API setup with Instagram login - sidebar](/images/providers/instagram/Configuring-theApp-1.png)
 
-2. Scroll down until you find the **Valid OAuth Redirect URIs** section and paste in your Agent Elephant redirect URI.
+2. Scroll down until you find the **Valid OAuth Redirect URIs** field and paste in your redirect URI.
 
-![Adding Redirect URI](/images/providers/instagram/Configuring-theApp-1.1.png)
+![Add the redirect URI](/images/providers/instagram/Configuring-theApp-1.1.png)
 
 > **Your Redirect URI:**
 > - Production: `https://your-domain.com/api/settings/social/callback/instagram`
@@ -71,38 +69,32 @@ To ensure a secure login loop, you need to whitelist Agent Elephant's callback a
 
 3. Click **Save Changes**.
 
----
 
-### Step 4: Copy Your Credentials
+### 2. Copy Your Credentials
 
-1. On the same page, scroll up to the top section where you can see **Instagram app ID** and **Instagram app secret**.
+1. On the same page, scroll up to see your **Instagram app ID** and **Instagram app secret**.
 
 ![App ID and App Secret location](/images/providers/instagram/Configuring-theApp-2.png)
 
-2. Copy the **App ID**.
-
-3. Click **Show** next to the App Secret, then copy it.
+2. Copy the **App ID** and click **Show** next to the App Secret to reveal and copy it.
 
 ![Copy App Secret](/images/providers/instagram/Configuring-theApp-2.1.png)
 
-4. Also make a note of the **Instagram app secret** shown on this same screen.
-
-![Instagram App Secret Revealed](/images/providers/instagram/Configuring-theApp2.2.png)
+![Instagram App Secret revealed](/images/providers/instagram/Configuring-theApp2.2.png)
 
 ---
 
-## Part 3: Connecting in Agent Elephant
+## Connecting in Agent Elephant
 
 Now that you have your credentials, you can connect your account!
 
 1. Go back to Agent Elephant's **Admin Settings**.
 2. Click the **Manage Custom Apps** button.
-3. Set the **Platform** dropdown to **Instagram**.
+3. Set the Platform dropdown to **Instagram**.
 4. Paste in the **App ID** and **App Secret** you just copied from Meta.
 5. Click **Save Credentials**.
-6. Finally, click the **Connect** button under the Instagram integration, select your new credential profile, and follow the permissions prompts.
+6. Finally, click the **Connect** button under the Instagram integration, select your new credential profile, and follow the permissions prompts window!
 
-![Final Step - Connect Instagram in Agent Elephant](/images/providers/instagram/final-step.png)
+![Final Step - Select Credentials and Connect](/images/providers/instagram/Final-step.png)
 
 Instagram is now connected! 🎉
-
