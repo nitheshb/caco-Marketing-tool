@@ -7,6 +7,8 @@ import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 
 import { auth } from '@/lib/firebase';
 import { getHelloStoresAuth } from '@/lib/firebase-hellostores';
 import { getRedefineAuth } from '@/lib/firebase-redefine';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import Image from "next/image";
 import { HelloStoresLoginModal } from '@/components/hellostores-login-modal';
 import { RedefineLoginModal } from '@/components/redefine-login-modal';
 import { CROSS_APP_PROVIDERS } from '@/lib/cross-app-providers';
@@ -155,8 +157,8 @@ export default function SignInPage() {
             <div className="relative z-10 w-full max-w-md mx-4">
                 {/* Logo */}
                 <div className="flex items-center justify-center gap-2 mb-8">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.5)]">
-                        <Video className="h-6 w-6" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.3)] overflow-hidden">
+                        <Image src="/logo.png" alt="Agent Elephant Logo" width={40} height={40} className="object-cover scale-125" />
                     </div>
                     <span className="text-2xl font-bold tracking-tight text-white">Agent Elephant</span>
                 </div>

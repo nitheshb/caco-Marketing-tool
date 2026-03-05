@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Video, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -31,8 +32,8 @@ export function Navbar() {
         <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 <Link href="/" className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-[0_0_15px_rgba(79,70,229,0.5)]">
-                        <Video className="h-5 w-5" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 overflow-hidden">
+                        <Image src="/logo.png" alt="Agent Elephant Logo" width={32} height={32} className="object-cover scale-125" />
                     </div>
                     <span className="text-xl font-bold tracking-tight text-white">
                         Agent Elephant

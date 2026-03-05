@@ -150,11 +150,9 @@ export function Sidebar() {
             <div className={cn("flex h-14 items-center px-4 flex-shrink-0", isCollapsed ? "justify-center" : "justify-between")}>
                 {!isCollapsed && (
                     <div className="flex items-center gap-3">
-                        <img
-                            src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgZmlsbD0ibm9uZSIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48ZyBmaWxsPSIjMDAwIj48cGF0aCBkPSJtMjUuNzU5IDYuMDg2LjAwNSAxMy4wOThjLjAwMSAyLjA2OS0yLjIgMy4zOTUtNC4wMyAyLjQyOGwtMTMuMTMtNi45NDVhMTguMSAxOC4xIDAgMCAxIDMuNzItNC4zNjdsMTAuMjk5IDkuNTE4Yy41NDYuNTA0IDEuNDA2LS4wNDMgMS4xODEtLjc1TDE5LjgxIDYuNDlhMTggMTggMCAwIDEgNS45NDktLjQwNU0yMi4xOTYgNDEuOTEgMjIuMTkgMjguODhjLS4wMDEtMi4wNyAyLjItMy4zOTYgNC4wMy0yLjQyOWwxMy4xMzUgNi45NDdhMTguMSAxOC4xIDAgMCAxLTMuNzM5IDQuMzUzbC0xMC4yODUtOS41MDZjLS41NDUtLjUwNC0xLjQwNi4wNDMtMS4xOC43NWwzLjk3OCAxMi41M2ExOCAxOCAwIDAgMS01LjkzMy4zODZNMjguMTkgMjIuNjc4bDkuNTM4LTEwLjMyYTE4LjEgMTguMSAwIDAgMC00LjM2OC0zLjczNWwtNi45NjQgMTMuMTY2Yy0uOTY4IDEuODMuMzYgNC4wMzEgMi40MjggNC4wM2wxMy4wODYtLjAwNlE0MiAyNC45MiA0MiAyNGMwLTEuNDIzLS4xNjYtMi44MDgtLjQ3OC00LjEzNkwyOC45NCAyMy44NTljLS43MDguMjI0LTEuMjU1LS42MzYtLjc1LTEuMTgxTTYuMDg1IDIyLjI0OWwxMy4wNDUtLjAwNmMyLjA3IDAgMy4zOTcgMi4yIDIuNDMgNC4wM0wxNC42MyAzOS4zN2ExOC4xIDE4LjEgMCAwIDEtNC4zNTItMy43MjNsOS40ODctMTAuMjY0Yy41MDQtLjU0NS0uMDQzLTEuNDA1LS43NS0xLjE4TDYuNDg4IDI4LjE4YTE4IDE4IDAgMCAxLS40MDQtNS45MzEiLz48L2c+PC9zdmc+"
-                            alt="Logo"
-                            className="h-8 w-8 object-contain text-black"
-                        />
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 overflow-hidden shrink-0">
+                            <Image src="/logo.png" alt="Agent Elephant Logo" width={32} height={32} className="object-cover scale-125" />
+                        </div>
                     </div>
                 )}
                 <button

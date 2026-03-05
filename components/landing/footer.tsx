@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Video } from "lucide-react";
+import Image from "next/image";
 
 export function Footer() {
     return (
@@ -11,8 +12,8 @@ export function Footer() {
                 <div className="xl:grid xl:grid-cols-3 xl:gap-8">
                     <div className="space-y-8">
                         <Link href="/" className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
-                                <Video className="h-5 w-5" />
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 overflow-hidden">
+                                <Image src="/logo.png" alt="Agent Elephant Logo" width={32} height={32} className="object-cover scale-125" />
                             </div>
                             <span className="text-xl font-bold text-white">Agent Elephant</span>
                         </Link>
