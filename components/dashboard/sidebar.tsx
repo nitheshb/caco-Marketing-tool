@@ -57,7 +57,7 @@ const sidebarData = [
     {
         name: 'Whathub',
         icon: WhatsappIcon,
-        href: 'http://146.190.113.104:8080/',
+        href: '/api/whathub/sso',
         external: true,
     },
     {
