@@ -655,7 +655,7 @@ function SocialPlatformCard({ platform, Icon, color, bgColor, connections, custo
                                                         onClick={() => {
                                                             window.location.href = `/api/settings/social/connect/${platform}?integrationId=${app.id}`;
                                                         }}
-                                                        className={`w-full text-white font-bold shadow-sm ${bgColor.replace('50', '600')} hover:opacity-90 transition-opacity`}
+                                                        className="w-full text-white font-bold shadow-sm transition-colors bg-zinc-800 hover:bg-zinc-900"
                                                     >
                                                         Use this Credential
                                                     </Button>
