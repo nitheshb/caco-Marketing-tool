@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { getAuth, onAuthStateChanged, User, signOut as firebaseSignOut } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User, signOut as firebaseSignOut, updateProfile } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
@@ -19,7 +19,10 @@ import {
     CheckCircle2,
     ShieldAlert,
     Zap,
-    Loader2
+    Loader2,
+    Camera,
+    Pencil,
+    Save
 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
@@ -69,6 +72,135 @@ interface SocialConnection {
     id: string;
     platform: 'youtube' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook';
     profile_name?: string;
+}
+
+function ProfileSection({ firebaseUser }: { firebaseUser: User | null }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [name, setName] = useState("");
+    const [isUploading, setIsUploading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        if (firebaseUser) {
+            setName(firebaseUser.displayName || "");
+        }
+    }, [firebaseUser]);
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !firebaseUser) return;
+        
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            
+            const res = await fetch("/api/media", {
+                method: "POST",
+                body: formData
+            });
+            if (!res.ok) throw new Error("Upload failed");
+            const data = await res.json();
+            
+            await updateProfile(firebaseUser, { photoURL: data.url });
+            toast.success("Profile photo updated");
+            window.location.reload(); 
+        } catch (error) {
+            toast.error("Failed to upload photo");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleSaveProfile = async () => {
+        if (!firebaseUser) return;
+        setIsSaving(true);
+        try {
+            await updateProfile(firebaseUser, { displayName: name });
+            // Let the regular user sync catch up or just post to ensure the backend DB is current
+            await fetch('/api/user', { method: 'POST' }); 
+            toast.success("Profile updated");
+            setIsEditing(false);
+            window.location.reload();
+        } catch (error) {
+            toast.error("Failed to update profile");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const initials = name ? name.substring(0,2).toUpperCase() : firebaseUser?.email?.substring(0,2).toUpperCase() || 'U';
+
+    return (
+        <section className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-indigo-600" />
+                    <h2 className="text-xl font-bold text-zinc-900">Profile Information</h2>
+                </div>
+                {!isEditing ? (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit Profile
+                    </Button>
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+                            Cancel
+                        </Button>
+                        <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700" onClick={handleSaveProfile} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                            Save
+                        </Button>
+                    </div>
+                )}
+            </div>
+            <Card className="border-zinc-200/60 shadow-sm bg-white overflow-hidden">
+                <CardContent className="pt-6">
+                    <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
+                        <div className="relative group">
+                            <div className="h-24 w-24 rounded-2xl overflow-hidden ring-4 ring-indigo-50 transition-all group-hover:ring-indigo-100 relative bg-zinc-100 flex items-center justify-center">
+                                {firebaseUser?.photoURL ? (
+                                    <Image
+                                        src={firebaseUser.photoURL}
+                                        alt="Profile"
+                                        layout="fill"
+                                        className="object-cover"
+                                    />
+                                ) : (
+                                    <span className="text-2xl font-bold text-zinc-400">{initials}</span>
+                                )}
+                                
+                                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer text-white">
+                                    {isUploading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Camera className="h-6 w-6" />}
+                                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={isUploading} />
+                                </label>
+                            </div>
+                        </div>
+                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                            <div className="space-y-1.5">
+                                <Label className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Full Name</Label>
+                                <Input 
+                                    value={name} 
+                                    onChange={e => setName(e.target.value)} 
+                                    disabled={!isEditing} 
+                                    className={cn("font-medium", !isEditing && "bg-zinc-50 border-zinc-200 text-zinc-500")} 
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Email Address</Label>
+                                <Input 
+                                    value={firebaseUser?.email || ""} 
+                                    disabled 
+                                    className="bg-zinc-50 border-zinc-200 font-medium text-zinc-500" 
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </section>
+    );
 }
 
 function SettingsForm() {
@@ -268,42 +400,7 @@ function SettingsForm() {
             </div>
 
             {/* Profile Section */}
-            <section className="space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="h-5 w-5 text-indigo-600" />
-                    <h2 className="text-xl font-bold text-zinc-900">Profile Information</h2>
-                </div>
-                <Card className="border-zinc-200/60 shadow-sm bg-white overflow-hidden">
-                    <CardContent className="pt-6">
-                        <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
-                            <div className="relative group">
-                                <div className="h-24 w-24 rounded-2xl overflow-hidden ring-4 ring-indigo-50 transition-all group-hover:ring-indigo-100">
-                                    <Image
-                                        src={user?.imageUrl || "/placeholder-user.png"}
-                                        alt="Profile"
-                                        width={96}
-                                        height={96}
-                                        className="object-cover"
-                                    />
-                                </div>
-                                <div className="absolute -bottom-2 -right-2 bg-white p-1.5 rounded-lg shadow-md border border-zinc-100">
-                                    <Badge className="bg-indigo-600 text-[10px] uppercase font-black tracking-tighter">Pro</Badge>
-                                </div>
-                            </div>
-                            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-                                <div className="space-y-1.5">
-                                    <Label className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Full Name</Label>
-                                    <Input value={user?.fullName || ""} disabled className="bg-zinc-50 border-zinc-200 font-medium" />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <Label className="text-zinc-500 text-xs font-bold uppercase tracking-wider">Email Address</Label>
-                                    <Input value={user?.primaryEmailAddress?.emailAddress || ""} disabled className="bg-zinc-50 border-zinc-200 font-medium" />
-                                </div>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </section>
+            <ProfileSection firebaseUser={firebaseUser} />
 
             {/* Social Integrations Section */}
             <section className="space-y-4">
@@ -683,11 +780,21 @@ function CredentialsManagerModal({
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md bg-white rounded-2xl flex flex-col max-h-[85vh]">
-                <DialogHeader className="shrink-0">
-                    <DialogTitle className="text-xl font-bold flex items-center gap-2 text-zinc-900 border-b border-zinc-100 pb-3">
+                <DialogHeader className="shrink-0 flex flex-row items-center justify-between border-b border-zinc-100 pb-3 pr-8">
+                    <DialogTitle className="text-xl font-bold flex items-center gap-2 text-zinc-900">
                         <ShieldAlert className="h-5 w-5 text-indigo-600" />
                         Manage Custom Apps
                     </DialogTitle>
+                    {platform && (
+                        <Link 
+                            href={platform === 'instagram' ? '/docs/instagram' : `/docs/${platform}`} 
+                            target="_blank" 
+                            className="flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-md transition-colors"
+                        >
+                            <ExternalLink className="h-4 w-4" />
+                            Docs
+                        </Link>
+                    )}
                 </DialogHeader>
 
                 <div className="space-y-6 pt-4 overflow-y-auto pr-2 flex-1 min-h-0">

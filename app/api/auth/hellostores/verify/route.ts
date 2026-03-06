@@ -30,7 +30,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Token missing required field: email' }, { status: 400 });
         }
 
-        // 2. Create or find corresponding VidMaxx Firebase user
+        // 2. Create or find corresponding Agent Elephant Firebase user
         const { password, uid } = await ensureFirebaseUser(email, name || email.split('@')[0]);
 
         // 3. Return the credentials and HelloStores data to the client

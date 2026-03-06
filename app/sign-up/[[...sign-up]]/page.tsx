@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getHelloStoresAuth } from '@/lib/firebase-hellostores';
@@ -89,7 +90,7 @@ export default function SignUpPage() {
             await setSessionCookie(cred.user);
             router.push('/dashboard');
         } catch (err: any) {
-            setError(err.message || 'VidMaxx sign-in failed');
+            setError(err.message || 'Agent Elephant sign-up failed');
         } finally {
             setLoading(false);
         }
@@ -117,10 +118,10 @@ export default function SignUpPage() {
             <div className="relative z-10 w-full max-w-md mx-4">
                 {/* Logo */}
                 <div className="flex items-center justify-center gap-2 mb-8">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-[0_0_20px_rgba(79,70,229,0.5)]">
-                        <Video className="h-6 w-6" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.3)] overflow-hidden">
+                        <Image src="/logo.png" alt="Agent Elephant Logo" width={40} height={40} className="object-cover scale-125" />
                     </div>
-                    <span className="text-2xl font-bold tracking-tight text-white">VidMaxx</span>
+                    <span className="text-2xl font-bold tracking-tight text-white">Agent Elephant</span>
                 </div>
 
                 {/* Card */}

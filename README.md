@@ -1,11 +1,11 @@
-# Vidmaxx: AI Video Generator and Scheduler
+# Agent Elephant: AI Video Generator and Scheduler
 
-Vidmaxx is a premium, high-aesthetic SaaS application that automates the creation and scheduling of short-form videos for social media. Using cutting-edge AI for scriptwriting, image generation, and voiceovers, Vidmaxx handles the entire production pipeline and publishes directly to YouTube, Instagram, and TikTok.
+Agent Elephant is a premium, high-aesthetic SaaS application that automates the creation and scheduling of short-form videos for social media. Using cutting-edge AI for scriptwriting, image generation, and voiceovers, Agent Elephant handles the entire production pipeline and publishes directly to YouTube, Instagram, and TikTok.
 
 ## 🚀 Features
 - **AI-Powered Workflows**: Automatically generates scripts, images, and voiceovers based on your chosen niche.
 - **Premium Video Styling**: High-quality Remotion-based rendering with kinetic typography and cinematic effects.
-- **Automated Scheduling**: Set your publish time and let Vidmaxx handle the daily generation and posting.
+- **Automated Scheduling**: Set your publish time and let Agent Elephant handle the daily generation and posting.
 - **Multi-Platform Support**: Integrated with YouTube (OAuth), Instagram (Graph API), and TikTok (V2 API).
 - **Usage Tracking**: Built-in billing and credit system with real-time usage monitoring.
 
@@ -26,7 +26,7 @@ Vidmaxx is a premium, high-aesthetic SaaS application that automates the creatio
 ### 1. Clone the Repository
 ```bash
 git clone <your-repo-url>
-cd vidmaxx
+cd caco-Marketing-tool
 ```
 
 ### 2. Install Dependencies
@@ -80,7 +80,7 @@ npx inngest-cli@latest dev
     - `FONADA_API_KEY`
 
 ### 6. AWS (Remotion Rendering)
-Vidmaxx uses Remotion Lambda for ultra-fast GPU-based video rendering.
+Agent Elephant uses Remotion Lambda for ultra-fast GPU-based video rendering.
 1.  Create an AWS account and an IAM User with `AdministratorAccess` (for setup).
 2.  Install the [Remotion Lambda CLI](https://www.remotion.dev/docs/lambda/install).
 3.  Deploy your function: `npx remotion lambda functions deploy`.

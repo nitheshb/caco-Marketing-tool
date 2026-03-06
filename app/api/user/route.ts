@@ -21,7 +21,7 @@ export async function POST(req: Request) {
                 name: name || '',
                 org_id: org_id || null,
                 project_id: project_id || null,
-                source_login: source_login || 'vidmaxx',
+                source_login: source_login || 'agent-elephant',
             }, {
                 onConflict: 'email',
                 ignoreDuplicates: false,

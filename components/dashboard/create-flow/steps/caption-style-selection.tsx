@@ -42,7 +42,7 @@ export function CaptionStyleSelection({ data, updateData }: CaptionStyleSelectio
                                 <CaptionPreview
                                     style={style.id}
                                     animation={style.animation}
-                                    text="VIDMAXX"
+                                    text="AGENT ELEPHANT"
                                 />
 
                                 {selectedStyle === style.id && (

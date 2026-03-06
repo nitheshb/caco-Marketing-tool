@@ -143,7 +143,7 @@ export default function BillingPage() {
                 </div>
                 <div>
                     <h3 className="text-xl font-bold text-zinc-900 mb-2">Need help with your plan?</h3>
-                    <p className="text-zinc-500">Our support team is always ready to help you choose the right plan for your business needs. Contact us at support@vidmaxx.ai</p>
+                    <p className="text-zinc-500">Our support team is always ready to help you choose the right plan for your business needs. Contact us at support@agentelephant.ai</p>
                 </div>
             </div>
         </div>
