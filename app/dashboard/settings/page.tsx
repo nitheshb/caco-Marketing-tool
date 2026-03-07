@@ -522,50 +522,7 @@ function SettingsForm() {
 
             </section>
 
-            {/* Danger Zone */}
-            <section className="space-y-4 pt-4 border-t border-zinc-100">
-                <div className="flex items-center gap-2 mb-2 text-rose-600 font-bold">
-                    <ShieldAlert className="h-5 w-5" />
-                    <h2 className="text-xl">Danger Zone</h2>
-                </div>
-                <Card className="border-rose-200 bg-rose-50/30 overflow-hidden">
-                    <CardHeader>
-                        <CardTitle className="text-lg text-rose-900">Delete Account</CardTitle>
-                        <CardDescription className="text-rose-700/70">
-                            Permanently delete your account, your series, and all generated videos. This action is irreversible.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardFooter className="bg-rose-100/30 py-4 px-6">
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" className="bg-rose-600 hover:bg-rose-700 font-bold px-8 shadow-md">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete My Account
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="rounded-2xl border-rose-100">
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle className="text-rose-900">Are you absolutely sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        This will permanently delete your account and remove all your data from our servers.
-                                        All your active video series will be terminated immediately.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                        onClick={handleDeleteAccount}
-                                        disabled={isDeleting}
-                                        className="bg-rose-600 hover:bg-rose-700 rounded-xl"
-                                    >
-                                        Delete Forever
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </CardFooter>
-                </Card>
-            </section>
+
 
             {/* Upgrade Modal */}
             <UpgradeModal
