@@ -5,7 +5,7 @@ import { Footer } from "@/components/landing/footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-indigo-500/30">
+    <main className="min-h-screen bg-[#fafafa] text-zinc-900 selection:bg-indigo-500/30">
       <Navbar />
       <Hero />
       <Features />

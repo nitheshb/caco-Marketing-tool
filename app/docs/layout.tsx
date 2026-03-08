@@ -35,7 +35,7 @@ export default function DocsLayout({
         <li key={idx} className="mt-1">
           <Link
             href={`/docs/${page}`}
-            className="block px-3 py-1.5 text-sm text-zinc-400 hover:text-white hover:bg-white/5 rounded-md transition-colors"
+            className="block px-3 py-1.5 text-sm text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
           >
             {label}
           </Link>
@@ -47,7 +47,7 @@ export default function DocsLayout({
           <div className="px-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
             {page.group}
           </div>
-          <ul className="space-y-0.5 border-l border-white/10 ml-3 pl-2">
+          <ul className="space-y-0.5 border-l border-zinc-200 ml-3 pl-2">
             {page.pages.map((p: any, i: number) => renderPage(p, i))}
           </ul>
         </li>
@@ -56,16 +56,16 @@ export default function DocsLayout({
   };
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-indigo-500/30 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#fafafa] text-zinc-900 selection:bg-indigo-500/30 flex flex-col font-sans">
       <Navbar />
       
       <div className="flex flex-1 pt-16 max-w-[90rem] mx-auto w-full">
         {/* Sidebar */}
-        <aside className="w-64 flex-shrink-0 hidden md:flex flex-col border-r border-white/10 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto hidden-scrollbar py-8 pl-4 pr-6">
+        <aside className="w-64 flex-shrink-0 hidden md:flex flex-col border-r border-zinc-200 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto hidden-scrollbar py-8 pl-4 pr-6">
           <nav className="space-y-6">
             {groups.map((groupObj: any, idx: number) => (
               <div key={idx}>
-                <h3 className="font-semibold text-zinc-100 mb-2 px-3 text-sm tracking-tight">{groupObj.group}</h3>
+                <h3 className="font-semibold text-zinc-900 mb-2 px-3 text-sm tracking-tight">{groupObj.group}</h3>
                 <ul className="space-y-1">
                   {groupObj.pages.map((page: any, i: number) => renderPage(page, i))}
                 </ul>
