@@ -16,42 +16,42 @@ import { usePlanLimits } from '@/hooks/use-plan-limits';
 const sidebarData = [
     {
         name: 'Home',
-        icon: Home,
+        icon: null, // keep empty or remove if Home icon is not provided
         href: '/dashboard',
         hasBorderBottom: true,
     },
     {
         name: 'Postings Calendar',
-        icon: CalendarDays,
+        icon: '/images/sidebare-icons/posting-calender.png',
         href: '/dashboard/calendar'
     },
     {
         name: 'Content Creation',
-        icon: Film,
+        icon: '/images/sidebare-icons/create-new.png',
         defaultExpanded: true,
         items: [
-            { name: 'Series', href: '/dashboard' },
-            { name: 'Videos', href: '/dashboard/videos' },
-            { name: 'Posters', href: '/dashboard/posters' },
+            { name: 'Series', href: '/dashboard/series', icon: '/images/sidebare-icons/series.png' },
+            { name: 'Videos', href: '/dashboard/videos', icon: '/images/sidebare-icons/videos.png' },
+            { name: 'Posters', href: '/dashboard/posters', icon: '/images/sidebare-icons/posters.png' },
             
-            { name: 'Create New', href: '/dashboard/create' },
+            { name: 'Create New', href: '/dashboard/create', icon: '/images/sidebare-icons/create-new.png' },
             // { name: 'Billing', href: '/dashboard/billing' },
         ]
     },
     {
         name: 'Billing',
-        icon: CreditCard,
+        icon: '/images/sidebare-icons/billing.png',
         href: '/dashboard/billing'
     },
     {
         name: 'Whathub',
-        icon: Search,
+        icon: '/images/sidebare-icons/whathub.png',
         href: 'http://146.190.113.104:8080/',
         external: true,
     },
     {
         name: 'CRM',
-        icon: CreditCard,
+        icon: '/images/sidebare-icons/crm.png',
         href: '/dashboard/billing',
         items: [
             { name: 'Contacts', href: '/dashboard/contacts' },
@@ -62,60 +62,60 @@ const sidebarData = [
     },
     {
         name: 'Engage',
-        icon: Send,
+        icon: '/images/sidebare-icons/sequences.png',
         defaultExpanded: true,
         items: [
-            { name: 'Sequences', href: '/dashboard/sequences' },
-            { name: 'Emails', href: '/dashboard/emails' },
-            { name: 'Calls', href: '/dashboard/calls' },
-            { name: 'Tasks', href: '/dashboard/tasks' },
+            { name: 'Sequences', href: '/dashboard/sequences', icon: '/images/sidebare-icons/sequences.png' },
+            { name: 'Emails', href: '/dashboard/emails', icon: '/images/sidebare-icons/email.png' },
+            { name: 'Calls', href: '/dashboard/calls', icon: '/images/sidebare-icons/calls.png' },
+            { name: 'Tasks', href: '/dashboard/tasks', icon: '/images/sidebare-icons/tasks.png' },
         ]
     },
     {
         name: 'Win deals',
-        icon: DollarSign,
+        icon: '/images/sidebare-icons/win-deals.png',
         defaultExpanded: false,
         items: [
-            { name: 'Meetings', href: '/dashboard/meetings' },
-            { name: 'Conversations', href: '/dashboard/conversations' },
-            { name: 'Deals', href: '/dashboard/deals' },
+            { name: 'Meetings', href: '/dashboard/meetings', icon: '/images/sidebare-icons/meetigs.png' },
+            { name: 'Conversations', href: '/dashboard/conversations', icon: '/images/sidebare-icons/conversations.png' },
+            { name: 'Deals', href: '/dashboard/deals', icon: '/images/sidebare-icons/deals.png' },
         ]
     },
     {
         name: 'Tools and automation',
-        icon: Wrench,
+        icon: '/images/sidebare-icons/automation.png',
         defaultExpanded: false,
         items: [
-            { name: 'Workflows', href: '/dashboard/workflows' },
-            { name: 'Analytics', href: '/dashboard/analytics' },
+            { name: 'Workflows', href: '/dashboard/workflows', icon: '/images/sidebare-icons/workflows.png' },
+            { name: 'Analytics', href: '/dashboard/analytics' }, // Assuming no analytics icon uploaded
         ]
     },
     {
         name: 'Inbound',
-        icon: ArrowDownLeft,
+        icon: '/images/sidebare-icons/inbound.png',
         defaultExpanded: false,
         items: [
-            { name: 'Website visitors', href: '/dashboard/website-visitors', badge: 'New' },
-            { name: 'Forms', href: '/dashboard/forms' },
+            { name: 'Website visitors', href: '/dashboard/website-visitors', badge: 'New', icon: '/images/sidebare-icons/website-visitors.png' },
+            { name: 'Forms', href: '/dashboard/forms', icon: '/images/sidebare-icons/forms.png' },
         ]
     },
     {
         name: 'Saved records',
-        icon: Bookmark,
+        icon: '/images/sidebare-icons/save-records.png',
         defaultExpanded: false,
         items: [
-            { name: 'People', href: '/dashboard/saved-people' },
+            { name: 'People', href: '/dashboard/saved-people', icon: '/images/sidebare-icons/people.png' },
         ]
     },
     {
         name: 'Deliverability suite',
-        icon: ShieldCheck,
+        icon: '/images/sidebare-icons/deliverability-suite.png',
         href: '/dashboard/deliverability'
     },
    
     {
         name: 'Admin Settings',
-        icon: Settings,
+        icon: '/images/sidebare-icons/settings.png',
         href: '/dashboard/settings',
         hasArrow: true
     }
@@ -176,13 +176,21 @@ export function Sidebar() {
                                 <button
                                     onClick={() => toggleSection(section.name)}
                                     className={cn(
-                                        "group flex items-center rounded-md px-2 py-1 text-[12px] font-bold text-black hover:bg-zinc-100 transition-colors",
+                                        "group flex items-center rounded-full px-2 py-2 text-[15px] font-extrabold text-[#333333] hover:text-black hover:bg-zinc-100 transition-colors",
                                         isCollapsed ? "justify-center" : "justify-between w-full"
                                     )}
                                     title={isCollapsed ? section.name : undefined}
                                 >
-                                    <div className="flex items-center gap-2.5">
-                                        <Icon className="h-4 w-4 text-black" strokeWidth={2} />
+                                    <div className="flex items-center gap-3">
+                                        {typeof Icon === 'string' ? (
+                                            <Image src={Icon} alt={section.name} width={24} height={24} className="h-6 w-6 transition-opacity drop-shadow-sm" />
+                                        ) : Icon ? (
+                                            <span className="flex items-center justify-center h-6 w-6">
+                                                {(() => { const Element = Icon as any; return <Element className="h-6 w-6 text-zinc-600 group-hover:text-black transition-colors" strokeWidth={2.5} />; })()}
+                                            </span>
+                                        ) : (
+                                            <Home className="h-6 w-6 text-zinc-600 group-hover:text-black transition-colors" opacity={0} /> // Blank fallback
+                                        )}
                                         {!isCollapsed && <span>{section.name}</span>}
                                     </div>
                                     {!isCollapsed && (
@@ -207,11 +215,14 @@ export function Sidebar() {
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className={cn(
-                                                            "flex items-center rounded-md px-3 py-1 text-[12px] transition-colors justify-between",
-                                                            "text-black font-medium hover:bg-zinc-100"
+                                                            "flex items-center rounded-full px-3 py-2 text-[14px] transition-colors justify-between",
+                                                            "text-zinc-700 font-bold hover:text-black hover:bg-zinc-100"
                                                         )}
                                                     >
-                                                        <span className="truncate">{item.name}</span>
+                                                        <div className="flex items-center gap-3 overflow-hidden">
+                                                            {(item as any).icon && <Image src={(item as any).icon} width={20} height={20} alt={item.name} className="flex-shrink-0 drop-shadow-sm h-5 w-5" />}
+                                                            <span className="truncate">{item.name}</span>
+                                                        </div>
                                                     </a>
                                                 );
                                             }
@@ -221,13 +232,16 @@ export function Sidebar() {
                                                     key={item.name}
                                                     href={item.href}
                                                     className={cn(
-                                                        "flex items-center rounded-md px-3 py-1 text-[12px] transition-colors justify-between",
+                                                        "flex items-center rounded-full px-3 py-2 text-[14px] transition-colors justify-between",
                                                         isActive
-                                                            ? "bg-zinc-900 text-white font-bold shadow-sm"
-                                                            : "text-black font-medium hover:bg-zinc-100"
+                                                            ? "bg-zinc-400 text-white font-extrabold shadow-sm"
+                                                            : "text-zinc-700 font-bold hover:text-black hover:bg-zinc-100"
                                                     )}
                                                 >
-                                                    <span className="truncate">{item.name}</span>
+                                                    <div className="flex items-center gap-3 overflow-hidden">
+                                                        {(item as any).icon && <Image src={(item as any).icon} width={20} height={20} alt={item.name} className={cn("flex-shrink-0 drop-shadow-sm h-5 w-5", isActive && "invert opacity-100")} />}
+                                                        <span className="truncate">{item.name}</span>
+                                                    </div>
                                                     {(item as any).badge && (
                                                         <span className="text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-sm font-semibold flex-shrink-0 ml-2">
                                                             {(item as any).badge}
@@ -252,17 +266,25 @@ export function Sidebar() {
                     const linkClasses = cn(
                         "group flex items-center transition-colors my-0",
                         isCollapsed
-                            ? "justify-center p-2 rounded-md"
-                            : "w-full justify-between px-2 py-1 text-[12px] font-bold",
+                            ? "justify-center p-2 rounded-full"
+                            : "w-full justify-between px-2 py-2 text-[15px] font-extrabold",
                         isActive
-                            ? "bg-zinc-900 text-white rounded-md shadow-sm"
-                            : "text-black hover:bg-zinc-100 rounded-md",
+                            ? "bg-zinc-600 text-white shadow-sm rounded-full"
+                            : "text-[#333333] hover:text-black hover:bg-zinc-100 rounded-full",
                     );
 
                     const linkContent = (
                         <>
-                            <div className="flex items-center gap-2.5 overflow-hidden">
-                                <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-black")} strokeWidth={isActive ? 2.5 : 2} />
+                            <div className="flex items-center gap-3 overflow-hidden">
+                                {typeof Icon === 'string' ? (
+                                    <Image src={Icon} alt={section.name} width={24} height={24} className={cn("h-6 w-6 flex-shrink-0 transition-opacity drop-shadow-sm", isActive ? "invert opacity-100" : "")} />
+                                ) : Icon ? (
+                                    <span className="flex items-center justify-center h-6 w-6">
+                                        {(() => { const Element = Icon as any; return <Element className={cn("h-6 w-6 flex-shrink-0 transition-colors", isActive ? "text-white" : "text-zinc-600 group-hover:text-black")} strokeWidth={isActive ? 2.5 : 2} />; })()}
+                                    </span>
+                                ) : (
+                                    <Home className="h-6 w-6 opacity-0" />
+                                )}
                                 {!isCollapsed && <span className="truncate">{section.name}</span>}
                             </div>
                             {!isCollapsed && section.hasArrow && (
