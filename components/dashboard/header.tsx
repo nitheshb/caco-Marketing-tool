@@ -6,6 +6,7 @@ import { app } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -57,8 +58,8 @@ export function Header() {
 
             <div className="flex items-center gap-3">
                 {/* Execute with AI button */}
-                <button className="flex items-center gap-2 rounded-full bg-zinc-800 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-zinc-900">
-                    <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
+                <button className="flex items-center gap-2 rounded-full bg-white border border-zinc-200 px-3.5 py-1.5 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50">
+                    <Image src="/images/sidebare-icons/execute-with-ai.png" alt="Execute with AI" width={14} height={14} className="opacity-90" />
                     <span>Execute with AI</span>
                 </button>
 

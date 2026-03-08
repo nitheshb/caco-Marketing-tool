@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import Image from 'next/image';
 
 function CalendarContent() {
     const { isLoading, displayMode, setDisplayMode, openCreateDialog, currentDate } = useCalendar();
@@ -54,9 +55,9 @@ function CalendarContent() {
 
                     <Button
                         onClick={() => openCreateDialog()}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 shadow-md transition-all active:scale-95 gap-2 rounded-[8px] border-0"
+                        className="bg-white hover:bg-zinc-50 text-zinc-700 font-bold h-11 px-6 shadow-sm transition-all active:scale-95 gap-2 rounded-[8px] border border-zinc-200"
                     >
-                        <Plus className="h-5 w-5" />
+                        <Image src="/images/sidebare-icons/+add-new.png" alt="Add New" width={20} height={20} className="object-contain" />
                         Add New
                     </Button>
                 </div>

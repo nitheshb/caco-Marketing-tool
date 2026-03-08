@@ -6,7 +6,7 @@ import {
     Loader2, Video as VideoIcon, Calendar, Film, PlayCircle, Clock, Download, 
     MoreVertical, Trash2, ExternalLink, Copy, Folder, File, Upload, Plus, 
     ChevronRight, Image as ImageIcon, Music, FileText, Search, LayoutGrid, 
-    List, ArrowUp, HardDrive, Star, Clock3, Home, Settings
+    List, ArrowUp, HardDrive, Star, Clock3, Home, Settings, Command
 } from 'lucide-react';
 import Image from 'next/image';
 import { format } from 'date-fns';
@@ -279,7 +279,7 @@ function MediaLibrary() {
                     <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
                         <DialogTrigger asChild>
                             <Button variant="outline" className="h-8 text-sm gap-2 border-zinc-200 text-zinc-700 bg-white">
-                                <Folder className="w-4 h-4 text-zinc-400" />
+                                <Image src="/images/sidebare-icons/new-folder.png" alt="New Folder" width={16} height={16} className="object-contain" />
                                 New Folder
                             </Button>
                         </DialogTrigger>
@@ -306,11 +306,11 @@ function MediaLibrary() {
 
                     <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e.target.files)} className="hidden" multiple />
                     <Button 
-                        className="h-8 bg-zinc-900 hover:bg-zinc-800 text-white font-medium text-sm gap-2"
+                        className="h-8 bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-700 font-medium text-sm gap-2 px-3 pl-2.5 shadow-sm"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
                     >
-                        {isUploading ? <Loader2 className="w-4 h-4 animate-spin text-zinc-200" /> : <Upload className="w-4 h-4" />}
+                        {isUploading ? <Loader2 className="w-4 h-4 animate-spin text-zinc-500" /> : <Image src="/images/sidebare-icons/upload-media.png" alt="Upload Media" width={14} height={14} className="opacity-90" />}
                         Upload Media
                     </Button>
                 </div>
@@ -332,15 +332,15 @@ function MediaLibrary() {
                                 currentFolder === null ? "bg-indigo-100 text-indigo-900 font-medium" : "text-zinc-700 hover:bg-black/5"
                             )}
                         >
-                            <Home className={cn("w-4 h-4", currentFolder === null ? "text-indigo-600" : "text-zinc-500")} />
+                            <Image src="/images/sidebare-icons/Home.png" alt="Home" width={16} height={16} className={cn("object-contain", currentFolder === null ? "" : "grayscale opacity-50")} />
                             Home
                         </button>
                         <button className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-zinc-700 hover:bg-black/5 transition-colors">
-                            <Star className="w-4 h-4 text-yellow-500" />
+                            <Image src="/images/sidebare-icons/quick-access.png" alt="Quick Access" width={16} height={16} className="object-contain" />
                             Quick Access
                         </button>
                         <button className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-zinc-700 hover:bg-black/5 transition-colors">
-                            <Clock3 className="w-4 h-4 text-zinc-400" />
+                            <Image src="/images/sidebare-icons/recent.png" alt="Recent" width={16} height={16} className="object-contain" />
                             Recent
                         </button>
                     </div>
@@ -352,7 +352,7 @@ function MediaLibrary() {
                         </div>
                         <div className="space-y-0.5 px-2">
                             <button className="w-full pl-8 pr-3 py-1.5 flex items-center gap-2 rounded-md text-sm text-zinc-700 hover:bg-black/5">
-                                <HardDrive className="w-4 h-4 text-zinc-400" />
+                                <Image src="/images/sidebare-icons/cloud-drive.png" alt="Cloud Drive" width={16} height={16} className="object-contain" />
                                 Cloud Drive (C:)
                             </button>
                         </div>
@@ -391,14 +391,18 @@ function MediaLibrary() {
                         </div>
                         
                         <div className="flex items-center gap-4 border-l border-zinc-200 pl-4 ml-4">
-                            <div className="relative w-48">
-                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                            <div className="group flex w-full max-w-[240px] items-center gap-1.5 rounded flex-shrink-0 border border-zinc-200 bg-zinc-50 px-2 py-1 transition-all focus-within:border-zinc-300 focus-within:bg-white focus-within:shadow-sm hover:border-zinc-300">
+                                <Search className="h-3 w-3 text-zinc-400 group-focus-within:text-zinc-500" />
                                 <input 
                                     value={searchQuery} 
                                     onChange={e => setSearchQuery(e.target.value)} 
-                                    placeholder="Filter items..." 
-                                    className="h-8 w-full rounded-md border border-zinc-200 pl-8 pr-3 text-xs bg-zinc-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-300 transition-colors" 
+                                    placeholder="Search items..." 
+                                    className="flex-1 bg-transparent text-xs text-zinc-900 placeholder:text-zinc-500 focus:outline-none" 
                                 />
+                                <div className="flex items-center gap-0.5 rounded bg-white border border-zinc-200 px-1 py-0.5 shadow-sm text-[9px] font-medium text-zinc-500">
+                                    <Command className="h-2.5 w-2.5" />
+                                    <span>K</span>
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-0.5 bg-zinc-100 p-0.5 rounded-md border border-zinc-200">
