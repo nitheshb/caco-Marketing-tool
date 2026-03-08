@@ -46,7 +46,7 @@ const sidebarData = [
     {
         name: 'Whathub',
         icon: Search,
-        href: 'http://146.190.113.104:8080/',
+        href: '/api/whathub/sso',  // SSO auto-login — generates signed token and redirects
         external: true,
     },
     {
