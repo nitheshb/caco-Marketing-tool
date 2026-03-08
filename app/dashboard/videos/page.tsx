@@ -266,12 +266,63 @@ function MediaLibrary() {
     };
 
     return (
-        <div className="flex h-[85vh] -mx-4 -mt-4 border border-zinc-200 rounded-xl overflow-hidden bg-white shadow-sm font-sans tracking-snug">
-            {/* Sidebar (Navigation Pane) */}
-            <div className="w-64 bg-[#f3f3f3] border-r border-zinc-200 flex flex-col shrink-0">
-                <div className="p-4 py-3 border-b border-zinc-200">
-                    <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Navigation</span>
+        <div className="p-6 space-y-5 animate-in fade-in duration-300">
+            {/* Page Header matching Emails/Calls */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-xl font-bold text-zinc-900">Media & Videos</h1>
+                    <p className="text-sm text-zinc-500 mt-0.5">Explore your generated videos, uploaded media, and files</p>
                 </div>
+                
+                {/* Actions moved from old ribbon to top header */}
+                <div className="flex items-center gap-3">
+                    <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="h-8 text-sm gap-2 border-zinc-200 text-zinc-700 bg-white">
+                                <Folder className="w-4 h-4 text-zinc-400" />
+                                New Folder
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Create New Folder</DialogTitle>
+                            </DialogHeader>
+                            <div className="py-4">
+                                <Input 
+                                    placeholder="Folder name" 
+                                    value={newFolderName}
+                                    onChange={(e) => setNewFolderName(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                                    autoFocus
+                                />
+                            </div>
+                            <DialogFooter>
+                                <Button disabled={isCreatingFolder || !newFolderName.trim()} onClick={handleCreateFolder}>
+                                    {isCreatingFolder ? "Creating..." : "Create"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e.target.files)} className="hidden" multiple />
+                    <Button 
+                        className="h-8 bg-zinc-900 hover:bg-zinc-800 text-white font-medium text-sm gap-2"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                    >
+                        {isUploading ? <Loader2 className="w-4 h-4 animate-spin text-zinc-200" /> : <Upload className="w-4 h-4" />}
+                        Upload Media
+                    </Button>
+                </div>
+            </div>
+
+            {/* Redesigned clean Media Library Container */}
+            <div className="flex h-[75vh] border border-zinc-200 rounded-xl overflow-hidden bg-white shadow-sm font-sans">
+                {/* Sidebar (Navigation Pane) */}
+                <div className="w-64 bg-zinc-50/50 border-r border-zinc-200 flex flex-col shrink-0">
+                    <div className="p-4 py-3 border-b border-zinc-100 bg-zinc-50/50">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Navigation</span>
+                    </div>
                 <div className="flex-1 overflow-y-auto py-2">
                     <div className="space-y-0.5 px-2">
                         <button 
@@ -313,111 +364,63 @@ function MediaLibrary() {
                 </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 bg-white">
-                
-                {/* Ribbon / Toolbar */}
-                <div className="bg-[#f9f9f9] border-b border-zinc-200 flex items-center justify-between p-2 px-4 shrink-0">
-                    <div className="flex items-center gap-1">
-                        <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
-                            <DialogTrigger asChild>
-                                <Button variant="ghost" className="h-9 px-3 gap-2 text-sm text-zinc-700 hover:bg-black/5">
-                                    <Folder className="w-4 h-4 text-amber-500 fill-amber-500/20" />
-                                    New folder
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle>Create New Folder</DialogTitle>
-                                </DialogHeader>
-                                <div className="py-4">
-                                    <Input 
-                                        placeholder="Folder name" 
-                                        value={newFolderName}
-                                        onChange={(e) => setNewFolderName(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-                                        autoFocus
-                                    />
-                                </div>
-                                <DialogFooter>
-                                    <Button disabled={isCreatingFolder || !newFolderName.trim()} onClick={handleCreateFolder}>
-                                        {isCreatingFolder ? "Creating..." : "Create"}
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-
-                        <div className="w-px h-5 bg-zinc-300 mx-1"></div>
-
-                        <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e.target.files)} className="hidden" multiple />
-                        <Button 
-                            variant="ghost" 
-                            className="h-9 px-3 gap-2 text-sm text-zinc-700 hover:bg-black/5"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                        >
-                            {isUploading ? <Loader2 className="w-4 h-4 animate-spin text-indigo-600" /> : <Upload className="w-4 h-4 text-blue-500" />}
-                            Upload
-                        </Button>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={cn("h-8 w-8", viewMode === 'list' && "bg-black/5")}
-                            onClick={() => setViewMode('list')}
-                            title="List View"
-                        >
-                            <List className="w-4 h-4 text-zinc-600" />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={cn("h-8 w-8", viewMode === 'grid' && "bg-black/5")}
-                            onClick={() => setViewMode('grid')}
-                            title="Grid View"
-                        >
-                            <LayoutGrid className="w-4 h-4 text-zinc-600" />
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Address Bar & Search */}
-                <div className="p-2 border-b border-zinc-200 flex items-center gap-3 shrink-0">
-                    <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-zinc-500 hover:bg-black/5 disabled:opacity-50" onClick={goUpOneLevel} disabled={breadcrumbs.length === 0}>
-                            <ArrowUp className="w-4 h-4" />
-                        </Button>
-                    </div>
-
-                    {/* Path Bar */}
-                    <div className="flex-1 flex items-center gap-1 px-3 py-1.5 border border-zinc-300 rounded-md bg-white shadow-inner focus-within:ring-1 focus-within:ring-indigo-500 focus-within:border-indigo-500 text-sm overflow-x-auto no-scrollbar">
-                        <Folder className="w-4 h-4 text-amber-500 fill-amber-500/20 shrink-0" />
-                        <button onClick={() => goUp(-1)} className="hover:underline flex items-center gap-1 shrink-0 ml-1">
-                            Home
-                        </button>
-                        {breadcrumbs.map((crumb, idx) => (
-                            <div key={crumb.id} className="flex items-center shrink-0">
-                                <ChevronRight className="w-3.5 h-3.5 text-zinc-400 mx-0.5" />
-                                <button onClick={() => goUp(idx)} className="hover:underline">
-                                    {crumb.name}
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col min-w-0 bg-white">
+                    
+                    {/* Modern Toolbar inside Explorer */}
+                    <div className="bg-white border-b border-zinc-100 flex items-center justify-between p-2 px-4 shrink-0">
+                        {/* Address Bar & Search Replacement */}
+                        <div className="flex items-center gap-2 flex-1">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-zinc-500 hover:bg-zinc-100 disabled:opacity-50" onClick={goUpOneLevel} disabled={breadcrumbs.length === 0}>
+                                <ArrowUp className="w-4 h-4" />
+                            </Button>
+                            
+                            <div className="flex items-center gap-1.5 text-sm font-medium text-zinc-600 overflow-x-auto no-scrollbar">
+                                <button onClick={() => goUp(-1)} className={cn("hover:text-zinc-900 transition-colors", breadcrumbs.length === 0 && "text-zinc-900")}>
+                                    Home
                                 </button>
+                                {breadcrumbs.map((crumb, idx) => (
+                                    <div key={crumb.id} className="flex items-center shrink-0">
+                                        <ChevronRight className="w-3.5 h-3.5 text-zinc-400 mx-1" />
+                                        <button onClick={() => goUp(idx)} className={cn("hover:text-zinc-900 transition-colors max-w-[150px] truncate", idx === breadcrumbs.length - 1 && "text-zinc-900")}>
+                                            {crumb.name}
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 border-l border-zinc-200 pl-4 ml-4">
+                            <div className="relative w-48">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                                <input 
+                                    value={searchQuery} 
+                                    onChange={e => setSearchQuery(e.target.value)} 
+                                    placeholder="Filter items..." 
+                                    className="h-8 w-full rounded-md border border-zinc-200 pl-8 pr-3 text-xs bg-zinc-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-zinc-300 transition-colors" 
+                                />
+                            </div>
 
-                    {/* Search Bar */}
-                    <div className="w-64 relative">
-                        <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-                        <Input 
-                            placeholder={`Search ${currentFolder ? currentFolder.name : 'Home'}`} 
-                            className="h-8 pl-8 rounded-md border-zinc-300 text-sm focus-visible:ring-1 focus-visible:ring-indigo-500"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                            <div className="flex items-center gap-0.5 bg-zinc-100 p-0.5 rounded-md border border-zinc-200">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={cn("h-7 w-7 rounded-sm", viewMode === 'list' ? "bg-white shadow-sm text-zinc-900" : "text-zinc-500 hover:text-zinc-700")}
+                                    onClick={() => setViewMode('list')}
+                                >
+                                    <List className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={cn("h-7 w-7 rounded-sm", viewMode === 'grid' ? "bg-white shadow-sm text-zinc-900" : "text-zinc-500 hover:text-zinc-700")}
+                                    onClick={() => setViewMode('grid')}
+                                >
+                                    <LayoutGrid className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
                 {/* Content Area */}
                 <div 
@@ -630,17 +633,7 @@ function MediaLibrary() {
                     )}
                 </div>
                 
-                {/* Status Bar */}
-                <div className="bg-[#f0f0f0] border-t border-zinc-200 p-1 px-4 flex items-center justify-between text-[11px] text-zinc-500 shrink-0">
-                    <div className="flex gap-4">
-                        <span>{filteredFolders.length + filteredMedia.length + filteredVideos.length} items</span>
-                        {isUploading && <span className="flex items-center gap-1 text-indigo-600"><Loader2 className="w-3 h-3 animate-spin" /> Uploading...</span>}
-                    </div>
-                    <div>
-                        {currentFolder ? 'Directory View' : 'Root Directory'}
-                    </div>
                 </div>
-
             </div>
 
             {/* Media Preview Dialog */}
