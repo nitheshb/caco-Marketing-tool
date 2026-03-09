@@ -39,6 +39,8 @@ export async function GET(req: Request) {
         const scopes = [
             'public_profile',
             'pages_show_list',        // Required to get Facebook Pages and linked IG accounts
+            'business_management',    // Required for Business Suite / Business-owned Pages
+            'ads_read',               // Required when Page role granted via Business Manager (for instagram_business_account)
             'instagram_basic',        // Basic Instagram access
             'instagram_content_publish', // Publish media to Instagram
             'instagram_manage_comments', // Manage comments
@@ -53,8 +55,6 @@ export async function GET(req: Request) {
             state: Buffer.from(stateData).toString('base64'),
             scope: scopes.join(','),
             response_type: 'code',
-            // optional but recommended for ensuring we get IG business accounts
-            config_id: '' // Can be used for Facebook Login for Business later
         });
 
         // We MUST use Facebook Login to get permissions for Instagram Business Publishing.
@@ -63,7 +63,7 @@ export async function GET(req: Request) {
 
         return NextResponse.redirect(url);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Instagram Connect Error:", error);
         return new NextResponse("Internal Error", { status: 500 });
     }

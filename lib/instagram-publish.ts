@@ -76,7 +76,7 @@ async function pollStatus(accessToken: string, creationId: string) {
     while (status !== 'FINISHED' && attempts < maxAttempts) {
         if (attempts > 0) await new Promise(resolve => setTimeout(resolve, 10000));
         
-        const res = await fetch(`https://graph.facebook.com/v21.0/${creationId}?fields=status_code,error_message&access_token=${accessToken}`);
+        const res = await fetch(`https://graph.facebook.com/v21.0/${creationId}?fields=status_code&access_token=${accessToken}`);
         const data = await res.json();
         
         if (res.ok) {
@@ -87,7 +87,7 @@ async function pollStatus(accessToken: string, creationId: string) {
         }
 
         if (status === 'ERROR') {
-            throw new Error(`Media processing failed: ${data.error_message || 'Unknown error'}`);
+            throw new Error('Media processing failed');
         }
         
         attempts++;

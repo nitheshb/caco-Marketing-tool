@@ -66,14 +66,11 @@ export async function GET(req: Request) {
             code: code,
         });
 
-        console.log("📌 Requesting token from graph.facebook.com...");
         const tokenRes = await fetch(
             `https://graph.facebook.com/v21.0/oauth/access_token?${tokenParams.toString()}`,
             { method: 'GET' }
         );
         const tokenData = await tokenRes.json();
-
-        console.log("📌 Facebook API Token Response:", JSON.stringify({ ...tokenData, access_token: tokenData.access_token ? '[REDACTED]' : null }));
 
         if (tokenData.error_type || tokenData.error) {
             console.error("Instagram Token Error:", tokenData);
@@ -87,65 +84,95 @@ export async function GET(req: Request) {
             `https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${accessToken}`
         );
         const meData = await meRes.json();
-        console.log("📌 Facebook Me:", JSON.stringify(meData));
-
         if (meData.error) {
             console.error("Facebook Me Error:", meData);
             return NextResponse.redirect(`${baseUrl}/dashboard/settings?error=instagram_profile_error`);
         }
 
         // 4. Get Linked Instagram Business Account
-        // To publish, we MUST use the deeply nested instagram_business_account.id attached to a Facebook Page
-        console.log("📌 Fetching connected Pages and IG Business Accounts...");
-        const igUserRes = await fetch(
-            `https://graph.facebook.com/v21.0/me/accounts?access_token=${accessToken}&fields=instagram_business_account,name,id,access_token`
+        // Try me/accounts first (personally-owned pages), then me/businesses + owned_pages (Business Suite pages)
+        const fields = 'instagram_business_account,name,id,access_token';
+        let pages: any[] = [];
+
+        // 4a. Try me/accounts (works for personally-owned pages)
+        const accountsRes = await fetch(
+            `https://graph.facebook.com/v21.0/me/accounts?access_token=${accessToken}&fields=${fields}`
         );
-        const igUserData = await igUserRes.json();
-        console.log("📌 Pages Response:", JSON.stringify(igUserData));
+        const accountsData = await accountsRes.json();
+        if (accountsData.data && accountsData.data.length > 0) {
+            pages = accountsData.data;
+        }
+
+        // 4b. If empty, try me/businesses → owned_pages (Business Suite / Business-owned pages)
+        if (pages.length === 0 && !accountsData.error) {
+            const businessesRes = await fetch(
+                `https://graph.facebook.com/v21.0/me/businesses?access_token=${accessToken}&fields=id,name`
+            );
+            const businessesData = await businessesRes.json();
+            if (businessesData.data && businessesData.data.length > 0) {
+                // Check ALL businesses - user may have multiple (e.g. Agent Elephant, Not bio check the stuff)
+                for (const biz of businessesData.data) {
+                    // Try owned_pages (pages the business owns)
+                    const ownedRes = await fetch(
+                        `https://graph.facebook.com/v21.0/${biz.id}/owned_pages?access_token=${accessToken}&fields=${fields}`
+                    );
+                    const ownedData = await ownedRes.json();
+                    if (ownedData.data && ownedData.data.length > 0) {
+                        pages = ownedData.data;
+                        break;
+                    }
+                    // Try client_pages (pages the business has been granted access to)
+                    const clientRes = await fetch(
+                        `https://graph.facebook.com/v21.0/${biz.id}/client_pages?access_token=${accessToken}&fields=${fields}`
+                    );
+                    const clientData = await clientRes.json();
+                    if (clientData.data && clientData.data.length > 0) {
+                        pages = clientData.data;
+                        break;
+                    }
+                }
+            }
+        }
 
         let igAccountId = '';
         let profileName = meData.name || 'Instagram Business';
         let profileImage = '';
-        let pageAccessToken = accessToken; // Fall back to user token, but page token is better
+        let pageAccessToken = accessToken;
 
-        if (igUserData.data && igUserData.data.length > 0) {
-            // Find the first page that actually has an attached IG account
-            const page = igUserData.data.find((p: any) => p.instagram_business_account);
+        if (pages.length > 0) {
+            const page = pages.find((p: any) => p.instagram_business_account);
             
             if (page?.instagram_business_account) {
                 igAccountId = page.instagram_business_account.id;
-                
-                // Pages API often returns a page-specific access token, which is much better for publishing
                 if (page.access_token) {
                     pageAccessToken = page.access_token;
-                    console.log("📌 Discovered Page Access Token - will use this for publishing");
                 }
 
-                console.log(`📌 Found IG Business Account! ID: ${igAccountId} (via Page: ${page.name})`);
-
-                // Fetch Instagram business profile details directly using the IG account ID
                 const igProfileRes = await fetch(
                     `https://graph.facebook.com/v21.0/${igAccountId}?fields=username,name,profile_picture_url&access_token=${pageAccessToken}`
                 );
                 const igProfileData = await igProfileRes.json();
-                console.log("📌 IG Profile Data:", JSON.stringify(igProfileData));
-
                 if (!igProfileData.error) {
                     profileName = igProfileData.username || igProfileData.name || profileName;
                     profileImage = igProfileData.profile_picture_url || '';
                 }
             } else {
-                console.error("📌 Error: Found Facebook Pages, but NONE of them have an Instagram Business Account linked.");
+                console.error("📌 Found Pages but NONE have Instagram Business Account linked.");
                 return NextResponse.redirect(`${baseUrl}/dashboard/settings?error=no_ig_business_account`);
             }
         } else {
-            console.error("📌 Error: User has no Facebook Pages. Publishing requires an IG account linked to an FB Page.");
+            console.error("📌 Error: No Facebook Pages found (tried me/accounts and me/businesses).");
             return NextResponse.redirect(`${baseUrl}/dashboard/settings?error=no_facebook_pages`);
         }
 
         if (!igAccountId) {
             return NextResponse.redirect(`${baseUrl}/dashboard/settings?error=no_ig_account_found`);
         }
+
+        // 4.5. Ensure user exists in users table (required FK for social_connections)
+        await supabaseAdmin
+            .from('users')
+            .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true });
 
         // 5. Store in Supabase
         // Notice we save 'pageAccessToken' which has the required Page/Publish scopes
