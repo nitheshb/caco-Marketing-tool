@@ -170,15 +170,15 @@ export function Sidebar() {
         >
             {/* Header / Logo and Toggle */}
             <div className={cn(
-                "flex items-center px-4 flex-shrink-0 gap-3 border-b border-zinc-100",
-                isCollapsed ? "flex-col h-auto py-4 space-y-4" : "h-14 justify-between"
+                "flex items-center flex-shrink-0 gap-3 border-b border-zinc-100",
+                isCollapsed ? "flex-col h-auto py-4 space-y-4 px-0" : "h-14 justify-between px-4"
             )}>
                 <div className={cn(
-                    "flex items-center gap-3 overflow-hidden min-w-0",
-                    isCollapsed && "justify-center"
+                    "flex items-center gap-3 overflow-hidden min-w-0 transition-all duration-300",
+                    isCollapsed ? "justify-center" : "justify-start"
                 )}>
                     <div className={cn(
-                        "flex items-center justify-center rounded-lg bg-emerald-100 overflow-hidden shrink-0 shadow-sm",
+                        "flex items-center justify-center rounded-lg bg-emerald-100 overflow-hidden shrink-0 shadow-sm transition-all duration-300",
                         isCollapsed ? "h-7 w-7" : "h-8 w-8"
                     )}>
                         <Image 
@@ -186,12 +186,15 @@ export function Sidebar() {
                             alt="Agent Elephant Logo" 
                             width={isCollapsed ? 28 : 32} 
                             height={isCollapsed ? 28 : 32} 
-                            className={cn("object-cover", !isCollapsed && "scale-125")} 
+                            className={cn("transition-all duration-300 object-cover", !isCollapsed && "scale-125")} 
                         />
                     </div>
-                    {!isCollapsed && (
-                        <span className="font-bold text-zinc-900 truncate tracking-tight text-sm">Agent Elephant</span>
-                    )}
+                    <span className={cn(
+                        "font-bold text-zinc-900 truncate tracking-tight text-sm transition-all duration-300",
+                        isCollapsed ? "opacity-0 invisible w-0 -translate-x-2" : "opacity-100 visible w-auto translate-x-0"
+                    )}>
+                        Agent Elephant
+                    </span>
                 </div>
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
@@ -205,7 +208,7 @@ export function Sidebar() {
             {/* Navigation Scroll Area */}
             <div className={cn(
                 "flex-1 overflow-y-auto overflow-x-hidden pb-3 pt-1 space-y-0 custom-scrollbar",
-                isCollapsed ? "px-1" : "px-3"
+                isCollapsed ? "px-2" : "px-3"
             )}>
                 {sidebarData.map((section) => {
                     const Icon = section.icon;
@@ -217,25 +220,35 @@ export function Sidebar() {
                                 onClick={() => toggleSection(section.name)}
                                 className={cn(
                                     "group flex items-center rounded-md text-[12px] font-bold text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer",
-                                    isCollapsed ? "justify-center p-2.5" : "justify-between w-full px-2 py-1.5"
+                                    isCollapsed ? "justify-center w-8 h-8 p-0 mx-auto" : "justify-between w-full px-2 py-2.5 my-0.5"
                                 )}
                             >
-                                <div className="flex items-center gap-2.5">
-                                    <Icon className="h-4 w-4 text-zinc-500 group-hover:text-zinc-900" strokeWidth={2} />
-                                    {!isCollapsed && <span>{section.name}</span>}
+                                <div className={cn("flex items-center overflow-hidden", isCollapsed ? "gap-0" : "gap-2.5")}>
+                                    <Icon className="h-4 w-4 text-zinc-500 group-hover:text-zinc-900 shrink-0" strokeWidth={2} />
+                                    <span className={cn(
+                                        "transition-all duration-300 truncate",
+                                        isCollapsed ? "opacity-0 w-0 invisible -translate-x-2" : "opacity-100 w-auto visible translate-x-0"
+                                    )}>
+                                        {section.name}
+                                    </span>
                                 </div>
-                                {!isCollapsed && (
-                                    isExpanded ? (
+                                <div className={cn(
+                                    "transition-all duration-300 shrink-0",
+                                    isCollapsed ? "opacity-0 scale-0 invisible w-0" : "opacity-100 scale-100 visible w-auto"
+                                )}>
+                                    {isExpanded ? (
                                         <ChevronDown className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600" />
                                     ) : (
                                         <ChevronRight className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600" />
-                                    )
-                                )}
+                                    )}
+                                </div>
                             </button>
 
-                            {!isCollapsed && isExpanded && (
-                                <div className="mt-0.5 flex flex-col space-y-0.5 relative pl-5">
-                                    {section.items.map(item => {
+                            <div className={cn(
+                                "flex flex-col space-y-0.5 relative pl-5 transition-all duration-300 overflow-hidden",
+                                (!isCollapsed && isExpanded) ? "max-h-[500px] opacity-100 mt-0.5" : "max-h-0 opacity-0 mt-0"
+                            )}>
+                                {section.items?.map(item => {
                                         const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
                                         if ((item as any).external) {
@@ -246,11 +259,14 @@ export function Sidebar() {
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className={cn(
-                                                        "flex items-center rounded-md px-3 py-1.5 text-[12px] transition-colors justify-between cursor-pointer",
+                                                        "flex items-center rounded-md px-3 py-1.5 text-[12px] transition-all duration-300 justify-between cursor-pointer",
                                                         "text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900"
                                                     )}
                                                 >
-                                                    <span className="truncate">{item.name}</span>
+                                                    <span className={cn(
+                                                        "truncate transition-all duration-300",
+                                                        isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
+                                                    )}>{item.name}</span>
                                                 </a>
                                             );
                                         }
@@ -260,15 +276,21 @@ export function Sidebar() {
                                                 key={item.name}
                                                 href={item.href}
                                                 className={cn(
-                                                    "flex items-center rounded-md px-3 py-1.5 text-[12px] transition-colors justify-between cursor-pointer",
+                                                    isCollapsed ? "justify-center w-8 h-8 p-0 my-0.5 mx-auto" : "flex items-center rounded-md px-3 py-2 text-[12px] transition-all duration-300 justify-between cursor-pointer my-0.5",
                                                     isActive
                                                         ? "bg-zinc-800 text-white font-bold shadow-sm"
                                                         : "text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900"
                                                 )}
                                             >
-                                                <span className="truncate">{item.name}</span>
+                                                <span className={cn(
+                                                    "truncate transition-all duration-300",
+                                                    isCollapsed ? "opacity-0 invisible w-0" : "opacity-100 visible w-auto"
+                                                )}>{item.name}</span>
                                                 {(item as any).badge && (
-                                                    <span className="text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-sm font-semibold flex-shrink-0 ml-2">
+                                                    <span className={cn(
+                                                        "text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-sm font-semibold flex-shrink-0 ml-2 transition-all duration-300",
+                                                        isCollapsed ? "opacity-0 scale-0 invisible w-0" : "opacity-100 scale-100 visible w-auto"
+                                                    )}>
                                                         {(item as any).badge}
                                                     </span>
                                                 )}
@@ -276,7 +298,6 @@ export function Sidebar() {
                                         );
                                     })}
                                 </div>
-                            )}
                         </div>
                     );
 
@@ -310,8 +331,8 @@ export function Sidebar() {
                     const linkClasses = cn(
                         "group flex items-center transition-colors my-0 cursor-pointer",
                         isCollapsed
-                            ? "justify-center p-2.5 rounded-md"
-                            : "w-full justify-between px-2 py-1.5 text-[12px] font-bold",
+                            ? "justify-center w-8 h-8 p-0 rounded-md my-1 mx-auto"
+                            : "w-full justify-between px-2 py-2.5 text-[12px] font-bold my-0.5",
                         isActive
                             ? "bg-zinc-800 text-white rounded-md shadow-sm"
                             : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 rounded-md",
@@ -319,13 +340,19 @@ export function Sidebar() {
 
                     const linkContent = (
                         <>
-                            <div className="flex items-center gap-2.5 overflow-hidden">
-                                <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-900")} strokeWidth={isActive ? 2.5 : 2} />
-                                {!isCollapsed && <span className="truncate">{section.name}</span>}
+                            <div className={cn("flex items-center overflow-hidden", isCollapsed ? "gap-0" : "gap-2.5")}>
+                                <Icon className={cn("h-4 w-4 flex-shrink-0 transition-all duration-300", isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-900")} strokeWidth={isActive ? 2.5 : 2} />
+                                <span className={cn(
+                                    "transition-all duration-300 truncate",
+                                    isCollapsed ? "opacity-0 invisible w-0 -translate-x-2" : "opacity-100 visible w-auto translate-x-0"
+                                )}>
+                                    {section.name}
+                                </span>
                             </div>
-                            {!isCollapsed && section.hasArrow && (
-                                <ChevronRight className={cn("h-4 w-4 flex-shrink-0 transition-opacity", isActive ? "text-zinc-300 opacity-100" : "text-zinc-400 opacity-0 group-hover:opacity-100")} />
-                            )}
+                            <ChevronRight className={cn(
+                                "h-4 w-4 flex-shrink-0 transition-all duration-300",
+                                (isCollapsed || !section.hasArrow) ? "opacity-0 invisible w-0" : (isActive ? "text-zinc-300 opacity-100" : "text-zinc-400 opacity-0 group-hover:opacity-100")
+                            )} />
                         </>
                     );
 
