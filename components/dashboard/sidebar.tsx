@@ -12,6 +12,12 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { usePlanLimits } from '@/hooks/use-plan-limits';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const WhatsappIcon = ({ className }: { className?: string }) => (
     <svg
@@ -153,22 +159,43 @@ export function Sidebar() {
     };
 
     return (
-        <aside className={cn(
-            "flex h-screen flex-col border-r border-zinc-200 bg-white transition-all duration-300 overflow-hidden font-sans",
-            isCollapsed ? "w-14" : "w-[240px]"
-        )}>
+        <aside 
+            className={cn(
+                "flex h-screen flex-col border-r border-zinc-200 bg-white transition-all duration-300 overflow-hidden",
+                isCollapsed ? "w-14" : "w-[240px]"
+            )}
+            style={{ 
+                fontFamily: '"ABC Diatype", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' 
+            }}
+        >
             {/* Header / Logo and Toggle */}
-            <div className={cn("flex h-14 items-center px-4 flex-shrink-0", isCollapsed ? "justify-center" : "justify-between")}>
-                {!isCollapsed && (
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 overflow-hidden shrink-0">
-                            <Image src="/logo.png" alt="Agent Elephant Logo" width={32} height={32} className="object-cover scale-125" />
-                        </div>
+            <div className={cn(
+                "flex items-center px-4 flex-shrink-0 gap-3 border-b border-zinc-100",
+                isCollapsed ? "flex-col h-auto py-4 space-y-4" : "h-14 justify-between"
+            )}>
+                <div className={cn(
+                    "flex items-center gap-3 overflow-hidden min-w-0",
+                    isCollapsed && "justify-center"
+                )}>
+                    <div className={cn(
+                        "flex items-center justify-center rounded-lg bg-emerald-100 overflow-hidden shrink-0 shadow-sm",
+                        isCollapsed ? "h-7 w-7" : "h-8 w-8"
+                    )}>
+                        <Image 
+                            src="/logo.png" 
+                            alt="Agent Elephant Logo" 
+                            width={isCollapsed ? 28 : 32} 
+                            height={isCollapsed ? 28 : 32} 
+                            className={cn("object-cover", !isCollapsed && "scale-125")} 
+                        />
                     </div>
-                )}
+                    {!isCollapsed && (
+                        <span className="font-bold text-zinc-900 truncate tracking-tight text-sm">Agent Elephant</span>
+                    )}
+                </div>
                 <button
                     onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="p-1 rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 transition-colors"
+                    className="p-1.5 rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer shrink-0"
                     title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
                 >
                     {isCollapsed ? <Menu className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
@@ -176,81 +203,101 @@ export function Sidebar() {
             </div>
 
             {/* Navigation Scroll Area */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 pb-3 pt-1 space-y-0 custom-scrollbar">
+            <div className={cn(
+                "flex-1 overflow-y-auto overflow-x-hidden pb-3 pt-1 space-y-0 custom-scrollbar",
+                isCollapsed ? "px-1" : "px-3"
+            )}>
                 {sidebarData.map((section) => {
                     const Icon = section.icon;
                     const isExpanded = expandedSections[section.name];
 
-                    if (section.items) {
-                        return (
-                            <div key={section.name} className="flex flex-col">
-                                <button
-                                    onClick={() => toggleSection(section.name)}
-                                    className={cn(
-                                        "group flex items-center rounded-md px-2 py-1 text-[12px] font-bold text-black hover:bg-zinc-100 transition-colors",
-                                        isCollapsed ? "justify-center" : "justify-between w-full"
-                                    )}
-                                    title={isCollapsed ? section.name : undefined}
-                                >
-                                    <div className="flex items-center gap-2.5">
-                                        <Icon className="h-4 w-4 text-black" strokeWidth={2} />
-                                        {!isCollapsed && <span>{section.name}</span>}
-                                    </div>
-                                    {!isCollapsed && (
-                                        isExpanded ? (
-                                            <ChevronDown className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600" />
-                                        ) : (
-                                            <ChevronRight className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600" />
-                                        )
-                                    )}
-                                </button>
+                    const sidebarItem = (
+                        <div key={section.name} className="flex flex-col">
+                            <button
+                                onClick={() => toggleSection(section.name)}
+                                className={cn(
+                                    "group flex items-center rounded-md text-[12px] font-bold text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer",
+                                    isCollapsed ? "justify-center p-2.5" : "justify-between w-full px-2 py-1.5"
+                                )}
+                            >
+                                <div className="flex items-center gap-2.5">
+                                    <Icon className="h-4 w-4 text-zinc-500 group-hover:text-zinc-900" strokeWidth={2} />
+                                    {!isCollapsed && <span>{section.name}</span>}
+                                </div>
+                                {!isCollapsed && (
+                                    isExpanded ? (
+                                        <ChevronDown className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600" />
+                                    ) : (
+                                        <ChevronRight className="h-4 w-4 text-zinc-400 group-hover:text-zinc-600" />
+                                    )
+                                )}
+                            </button>
 
-                                {!isCollapsed && isExpanded && (
-                                    <div className="mt-0.5 flex flex-col space-y-0.5 relative pl-[16px]">
-                                        {section.items.map(item => {
-                                            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
-                                            
-                                            if ((item as any).external) {
-                                                return (
-                                                    <a
-                                                        key={item.name}
-                                                        href={item.href}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className={cn(
-                                                            "flex items-center rounded-md px-3 py-1 text-[12px] transition-colors justify-between",
-                                                            "text-black font-medium hover:bg-zinc-100"
-                                                        )}
-                                                    >
-                                                        <span className="truncate">{item.name}</span>
-                                                    </a>
-                                                );
-                                            }
-                                            
+                            {!isCollapsed && isExpanded && (
+                                <div className="mt-0.5 flex flex-col space-y-0.5 relative pl-5">
+                                    {section.items.map(item => {
+                                        const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+
+                                        if ((item as any).external) {
                                             return (
-                                                <Link
+                                                <a
                                                     key={item.name}
                                                     href={item.href}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
                                                     className={cn(
-                                                        "flex items-center rounded-md px-3 py-1 text-[12px] transition-colors justify-between",
-                                                        isActive
-                                                            ? "bg-zinc-900 text-white font-bold shadow-sm"
-                                                            : "text-black font-medium hover:bg-zinc-100"
+                                                        "flex items-center rounded-md px-3 py-1.5 text-[12px] transition-colors justify-between cursor-pointer",
+                                                        "text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900"
                                                     )}
                                                 >
                                                     <span className="truncate">{item.name}</span>
-                                                    {(item as any).badge && (
-                                                        <span className="text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-sm font-semibold flex-shrink-0 ml-2">
-                                                            {(item as any).badge}
-                                                        </span>
-                                                    )}
-                                                </Link>
+                                                </a>
                                             );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        );
+                                        }
+
+                                        return (
+                                            <Link
+                                                key={item.name}
+                                                href={item.href}
+                                                className={cn(
+                                                    "flex items-center rounded-md px-3 py-1.5 text-[12px] transition-colors justify-between cursor-pointer",
+                                                    isActive
+                                                        ? "bg-zinc-800 text-white font-bold shadow-sm"
+                                                        : "text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900"
+                                                )}
+                                            >
+                                                <span className="truncate">{item.name}</span>
+                                                {(item as any).badge && (
+                                                    <span className="text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-sm font-semibold flex-shrink-0 ml-2">
+                                                        {(item as any).badge}
+                                                    </span>
+                                                )}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    );
+
+                    if (section.items) {
+                        return isCollapsed ? (
+                            <TooltipProvider key={section.name} delayDuration={100}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        {sidebarItem}
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                        side="right"
+                                        sideOffset={4}
+                                        showArrow={false}
+                                        className="bg-white text-zinc-600 border border-zinc-200 shadow-sm px-3 py-1.5 text-xs font-medium rounded-md animate-in fade-in zoom-in-95 duration-500"
+                                    >
+                                        {section.name}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        ) : sidebarItem;
                     }
 
                     // Single link items
@@ -261,19 +308,19 @@ export function Sidebar() {
                     );
 
                     const linkClasses = cn(
-                        "group flex items-center transition-colors my-0",
+                        "group flex items-center transition-colors my-0 cursor-pointer",
                         isCollapsed
-                            ? "justify-center p-2 rounded-md"
-                            : "w-full justify-between px-2 py-1 text-[12px] font-bold",
+                            ? "justify-center p-2.5 rounded-md"
+                            : "w-full justify-between px-2 py-1.5 text-[12px] font-bold",
                         isActive
-                            ? "bg-zinc-900 text-white rounded-md shadow-sm"
-                            : "text-black hover:bg-zinc-100 rounded-md",
+                            ? "bg-zinc-800 text-white rounded-md shadow-sm"
+                            : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 rounded-md",
                     );
 
                     const linkContent = (
                         <>
                             <div className="flex items-center gap-2.5 overflow-hidden">
-                                <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-black")} strokeWidth={isActive ? 2.5 : 2} />
+                                <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-900")} strokeWidth={isActive ? 2.5 : 2} />
                                 {!isCollapsed && <span className="truncate">{section.name}</span>}
                             </div>
                             {!isCollapsed && section.hasArrow && (
@@ -282,14 +329,13 @@ export function Sidebar() {
                         </>
                     );
 
-                    return (
+                    const singleLinkItem = (
                         <div key={section.name} className={cn("flex flex-col", section.hasBorderBottom && "border-b border-zinc-200 pb-2 mb-2")}>
                             {(section as any).external ? (
                                 <a
                                     href={section.href!}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    title={isCollapsed ? section.name : undefined}
                                     className={linkClasses}
                                 >
                                     {linkContent}
@@ -297,7 +343,6 @@ export function Sidebar() {
                             ) : (
                                 <Link
                                     href={section.href!}
-                                    title={isCollapsed ? section.name : undefined}
                                     className={linkClasses}
                                 >
                                     {linkContent}
@@ -305,6 +350,24 @@ export function Sidebar() {
                             )}
                         </div>
                     );
+
+                    return isCollapsed ? (
+                        <TooltipProvider key={section.name} delayDuration={100}>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    {singleLinkItem}
+                                </TooltipTrigger>
+                                <TooltipContent
+                                    side="right"
+                                    sideOffset={4}
+                                    showArrow={false}
+                                    className="bg-white text-zinc-600 border border-zinc-200 shadow-sm px-3 py-1.5 text-xs font-medium rounded-md animate-in fade-in zoom-in-95 duration-500"
+                                >
+                                    {section.name}
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    ) : singleLinkItem;
                 })}
 
             </div>
