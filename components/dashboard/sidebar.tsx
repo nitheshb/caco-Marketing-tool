@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import {
     Home, Search, Send, DollarSign, Wrench, ArrowDownLeft,
     Bookmark, ShieldCheck, Settings, ChevronDown, ChevronRight,
@@ -140,6 +140,7 @@ const sidebarData = [
 
 export function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
     const { currentPlan } = usePlanLimits();
     const showUpgrade = false; // All features enabled
 
@@ -153,10 +154,32 @@ export function Sidebar() {
         }, {} as Record<string, boolean>)
     );
 
-    const toggleSection = (name: string) => {
-        if (isCollapsed) setIsCollapsed(false);
+    const toggleSection = (name: string, items?: any[]) => {
+        if (isCollapsed) {
+            setIsCollapsed(false);
+            if (items && items.length > 0) {
+                const firstItem = items.find(item => !item.external);
+                if (firstItem) {
+                    router.push(firstItem.href);
+                }
+            }
+        }
         setExpandedSections(prev => ({ ...prev, [name]: !prev[name] }));
     };
+
+    // Auto-expand section if a sub-item is active
+    useEffect(() => {
+        sidebarData.forEach(section => {
+            if (section.items) {
+                const hasActiveChild = section.items.some(item => 
+                    pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+                );
+                if (hasActiveChild) {
+                    setExpandedSections(prev => ({ ...prev, [section.name]: true }));
+                }
+            }
+        });
+    }, [pathname]);
 
     return (
         <aside 
@@ -217,10 +240,10 @@ export function Sidebar() {
                     const sidebarItem = (
                         <div key={section.name} className="flex flex-col">
                             <button
-                                onClick={() => toggleSection(section.name)}
+                                onClick={() => toggleSection(section.name, section.items)}
                                 className={cn(
                                     "group flex items-center rounded-md text-[12px] font-bold text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer",
-                                    isCollapsed ? "justify-center w-8 h-8 p-0 mx-auto" : "justify-between w-full px-2 py-2.5 my-0.5"
+                                    isCollapsed ? "justify-center w-8 h-8 p-0 mx-auto" : "justify-between w-full px-1 py-1 my-1"
                                 )}
                             >
                                 <div className={cn("flex items-center overflow-hidden", isCollapsed ? "gap-0" : "gap-2.5")}>
@@ -276,7 +299,7 @@ export function Sidebar() {
                                                 key={item.name}
                                                 href={item.href}
                                                 className={cn(
-                                                    isCollapsed ? "justify-center w-8 h-8 p-0 my-0.5 mx-auto" : "flex items-center rounded-md px-3 py-2 text-[12px] transition-all duration-300 justify-between cursor-pointer my-0.5",
+                                                    isCollapsed ? "justify-center w-8 h-8 p-0 my-0.5 mx-auto" : "flex items-center rounded-md px-3 py-1.5 text-[12px] transition-all duration-300 justify-between cursor-pointer my-0.5",
                                                     isActive
                                                         ? "bg-zinc-800 text-white font-bold shadow-sm"
                                                         : "text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900"
@@ -322,9 +345,13 @@ export function Sidebar() {
                     }
 
                     // Single link items
+                    const isAnySubItemActive = sidebarData.some(s => 
+                        s.items?.some(i => i.href === pathname)
+                    );
+
                     const isActive = !section.external && (
                         section.href === '/dashboard'
-                            ? pathname === '/dashboard'
+                            ? (pathname === '/dashboard' && !isAnySubItemActive)
                             : pathname.startsWith(section.href!)
                     );
 
@@ -332,7 +359,7 @@ export function Sidebar() {
                         "group flex items-center transition-colors my-0 cursor-pointer",
                         isCollapsed
                             ? "justify-center w-8 h-8 p-0 rounded-md my-1 mx-auto"
-                            : "w-full justify-between px-2 py-2.5 text-[12px] font-bold my-0.5",
+                            : "w-full justify-between px-2 py-2 text-[12px] font-bold my-1",
                         isActive
                             ? "bg-zinc-800 text-white rounded-md shadow-sm"
                             : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 rounded-md",
