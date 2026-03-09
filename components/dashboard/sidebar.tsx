@@ -274,7 +274,7 @@ export function Sidebar() {
                                 onClick={() => toggleSection(section.name, section.items)}
                                 className={cn(
                                     "group flex items-center rounded-md text-[12px] font-bold transition-colors cursor-pointer",
-                                    isCollapsed ? "justify-center w-8 h-8 p-0 mx-auto" : "justify-between w-full px-1 py-1 my-1",
+                                    isCollapsed ? "justify-center w-8 h-8 p-0 mx-auto" : "justify-between w-full px-2 py-2 my-1",
                                     (isCollapsed && activeSectionName === section.name && showSecondary) 
                                         ? "bg-zinc-900 text-white shadow-md" 
                                         : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
@@ -514,7 +514,7 @@ export function Sidebar() {
                                     key={item.name}
                                     href={item.href}
                                     className={cn(
-                                        "flex items-center rounded-md px-3 py-1.5 text-[12px] transition-all duration-200 cursor-pointer my-0.5",
+                                        "flex items-center rounded-md px-3 py-2 text-[12px] transition-all duration-200 cursor-pointer my-1",
                                         isActive
                                             ? "bg-zinc-800 text-white font-bold shadow-sm"
                                             : "text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900"
