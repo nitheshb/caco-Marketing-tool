@@ -219,7 +219,7 @@ export function Sidebar() {
                 isCollapsed ? "w-14" : "w-[240px]"
             )}
             style={{ 
-                fontFamily: '"ABC Diatype", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' 
+                fontFamily: '"Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' 
             }}
         >
             {/* Header / Logo and Toggle */}
