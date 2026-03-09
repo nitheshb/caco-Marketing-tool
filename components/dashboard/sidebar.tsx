@@ -198,12 +198,29 @@ export function Sidebar() {
     }, [pathname]);
 
     // Close secondary sidebar when expanding main sidebar
+    // useEffect(() => {
+    //     if (!isCollapsed) {
+    //         setShowSecondary(false);
+    //         setActiveSectionName(null);
+    //     }
+    // }, [isCollapsed]);
+
     useEffect(() => {
         if (!isCollapsed) {
             setShowSecondary(false);
             setActiveSectionName(null);
+        } else {
+            // When collapsing, highlight the parent section that owns the active route
+            const activeParent = sidebarData.find(section =>
+                section.items?.some(item =>
+                    pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+                )
+            );
+            if (activeParent) {
+                setActiveSectionName(activeParent.name);
+            }
         }
-    }, [isCollapsed]);
+    }, [isCollapsed, pathname]);
 
     // Handle clicking a link that has sub-links when collapsed
     const activeSection = sidebarData.find(s => s.name === activeSectionName);
@@ -274,8 +291,15 @@ export function Sidebar() {
                                 onClick={() => toggleSection(section.name, section.items)}
                                 className={cn(
                                     "group flex items-center rounded-md text-[12px] font-bold transition-colors cursor-pointer",
-                                    isCollapsed ? "justify-center w-8 h-8 p-0 mx-auto" : "justify-between w-full px-2 py-2 my-1",
-                                    (isCollapsed && activeSectionName === section.name && showSecondary) 
+                                    // isCollapsed ? "justify-center w-8 h-8 p-0 mx-auto" : "justify-between w-full px-2 py-2 my-1",
+                                    isCollapsed ? "justify-center w-8 h-8 p-0 mx-auto my-1.5" : "justify-between w-full px-2 py-2 my-1",
+                                    // (isCollapsed && activeSectionName === section.name && showSecondary) 
+                                    //     ? "bg-zinc-900 text-white shadow-md"
+                                    //     : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                                    (isCollapsed && (
+                                        activeSectionName === section.name && showSecondary ||
+                                        section.items?.some(item => pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)))
+                                    ))
                                         ? "bg-zinc-900 text-white shadow-md" 
                                         : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                                 )}
@@ -283,7 +307,13 @@ export function Sidebar() {
                                 <div className={cn("flex items-center overflow-hidden", isCollapsed ? "gap-0" : "gap-2.5")}>
                                     <Icon className={cn(
                                         "h-4 w-4 shrink-0 transition-colors",
-                                        (isCollapsed && activeSectionName === section.name && showSecondary)
+                                        // (isCollapsed && activeSectionName === section.name && showSecondary)
+                                        //     ? "text-white"
+                                        //     : "text-zinc-500 group-hover:text-zinc-900"
+                                        (isCollapsed && (
+                                            (activeSectionName === section.name && showSecondary) ||
+                                            section.items?.some(item => pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href)))
+                                        ))
                                             ? "text-white"
                                             : "text-zinc-500 group-hover:text-zinc-900"
                                     )} strokeWidth={2} />
@@ -396,8 +426,11 @@ export function Sidebar() {
 
                     const linkClasses = cn(
                         "group flex items-center transition-colors my-0 cursor-pointer",
+                        // isCollapsed
+                        //     ? "justify-center w-8 h-8 p-0 rounded-md my-1 mx-auto"
+                        //     : "w-full justify-between px-2 py-2 text-[12px] font-bold my-1",
                         isCollapsed
-                            ? "justify-center w-8 h-8 p-0 rounded-md my-1 mx-auto"
+                            ? "justify-center w-8 h-8 p-0 rounded-md my-1.5 mx-auto"
                             : "w-full justify-between px-2 py-2 text-[12px] font-bold my-1",
                         isActive
                             ? "bg-zinc-800 text-white rounded-md shadow-sm"
