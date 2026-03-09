@@ -193,12 +193,12 @@ export function Sidebar() {
         >
             {/* Header / Logo and Toggle */}
             <div className={cn(
-                "flex items-center flex-shrink-0 gap-3 border-b border-zinc-100",
-                isCollapsed ? "flex-col h-auto py-4 space-y-4 px-0" : "h-14 justify-between px-4"
+                "flex items-center flex-shrink-0 border-b border-zinc-100",
+                isCollapsed ? "flex-col h-auto py-4 space-y-4 px-0 items-center justify-center" : "h-14 justify-between px-4 gap-3"
             )}>
                 <div className={cn(
-                    "flex items-center gap-3 overflow-hidden min-w-0 transition-all duration-300",
-                    isCollapsed ? "justify-center" : "justify-start"
+                    "flex items-center overflow-hidden min-w-0 transition-all duration-300",
+                    isCollapsed ? "justify-center gap-0" : "justify-start gap-3"
                 )}>
                     <div className={cn(
                         "flex items-center justify-center rounded-lg bg-emerald-100 overflow-hidden shrink-0 shadow-sm transition-all duration-300",
