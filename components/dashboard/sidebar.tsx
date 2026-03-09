@@ -145,6 +145,9 @@ export function Sidebar() {
     const showUpgrade = false; // All features enabled
 
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [activeSectionName, setActiveSectionName] = useState<string | null>(null);
+    const [showSecondary, setShowSecondary] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(
         sidebarData.reduce((acc, section) => {
             if (section.items) {
@@ -156,12 +159,25 @@ export function Sidebar() {
 
     const toggleSection = (name: string, items?: any[]) => {
         if (isCollapsed) {
-            setIsCollapsed(false);
             if (items && items.length > 0) {
-                const firstItem = items.find(item => !item.external);
-                if (firstItem) {
-                    router.push(firstItem.href);
+                // Always open/keep open the secondary sidebar when clicking a parent icon
+                setActiveSectionName(name);
+                setShowSecondary(true);
+                setSearchTerm("");
+                
+                // Navigate to the first internal sub-item
+                const firstInternalItem = items.find(item => !item.external);
+                if (firstInternalItem) {
+                    const isFirstActive = pathname === firstInternalItem.href || (firstInternalItem.href !== '/dashboard' && pathname.startsWith(firstInternalItem.href));
+                    if (!isFirstActive) {
+                        router.push(firstInternalItem.href);
+                    }
                 }
+                
+                return; // Don't expand main sidebar when collapsed
+            } else {
+                // For single items without children when collapsed
+                setIsCollapsed(false);
             }
         }
         setExpandedSections(prev => ({ ...prev, [name]: !prev[name] }));
@@ -181,8 +197,23 @@ export function Sidebar() {
         });
     }, [pathname]);
 
+    // Close secondary sidebar when expanding main sidebar
+    useEffect(() => {
+        if (!isCollapsed) {
+            setShowSecondary(false);
+            setActiveSectionName(null);
+        }
+    }, [isCollapsed]);
+
+    // Handle clicking a link that has sub-links when collapsed
+    const activeSection = sidebarData.find(s => s.name === activeSectionName);
+    const filteredItems = activeSection?.items?.filter(item => 
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || [];
+
     return (
-        <aside 
+        <div className="flex">
+            <aside 
             className={cn(
                 "flex h-screen flex-col border-r border-zinc-200 bg-white transition-all duration-300 overflow-hidden",
                 isCollapsed ? "w-14" : "w-[240px]"
@@ -242,12 +273,20 @@ export function Sidebar() {
                             <button
                                 onClick={() => toggleSection(section.name, section.items)}
                                 className={cn(
-                                    "group flex items-center rounded-md text-[12px] font-bold text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer",
-                                    isCollapsed ? "justify-center w-8 h-8 p-0 mx-auto" : "justify-between w-full px-1 py-1 my-1"
+                                    "group flex items-center rounded-md text-[12px] font-bold transition-colors cursor-pointer",
+                                    isCollapsed ? "justify-center w-8 h-8 p-0 mx-auto" : "justify-between w-full px-1 py-1 my-1",
+                                    (isCollapsed && activeSectionName === section.name && showSecondary) 
+                                        ? "bg-zinc-900 text-white shadow-md" 
+                                        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                                 )}
                             >
                                 <div className={cn("flex items-center overflow-hidden", isCollapsed ? "gap-0" : "gap-2.5")}>
-                                    <Icon className="h-4 w-4 text-zinc-500 group-hover:text-zinc-900 shrink-0" strokeWidth={2} />
+                                    <Icon className={cn(
+                                        "h-4 w-4 shrink-0 transition-colors",
+                                        (isCollapsed && activeSectionName === section.name && showSecondary)
+                                            ? "text-white"
+                                            : "text-zinc-500 group-hover:text-zinc-900"
+                                    )} strokeWidth={2} />
                                     <span className={cn(
                                         "transition-all duration-300 truncate",
                                         isCollapsed ? "opacity-0 w-0 invisible -translate-x-2" : "opacity-100 w-auto visible translate-x-0"
@@ -391,6 +430,7 @@ export function Sidebar() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={linkClasses}
+                                    onClick={() => setShowSecondary(false)}
                                 >
                                     {linkContent}
                                 </a>
@@ -398,6 +438,7 @@ export function Sidebar() {
                                 <Link
                                     href={section.href!}
                                     className={linkClasses}
+                                    onClick={() => setShowSecondary(false)}
                                 >
                                     {linkContent}
                                 </Link>
@@ -423,17 +464,75 @@ export function Sidebar() {
                         </TooltipProvider>
                     ) : singleLinkItem;
                 })}
-
             </div>
 
-            <div className="h-4 border-t border-zinc-200 mt-auto bg-zinc-50" />
+                <div className="h-4 border-t border-zinc-200 mt-auto bg-zinc-50" />
 
-            <style jsx global>{`
-                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 4px; }
-                .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #d4d4d8; }
-            `}</style>
-        </aside>
+                <style jsx global>{`
+                    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 4px; }
+                    .custom-scrollbar:hover::-webkit-scrollbar-thumb { background: #d4d4d8; }
+                `}</style>
+            </aside>
+
+            {/* Secondary Sidebar */}
+            {isCollapsed && showSecondary && activeSection && (
+                <div 
+                    className={cn(
+                        "w-[240px] border-r border-zinc-200 bg-white h-screen flex flex-col transition-all duration-300 animate-in slide-in-from-left-4",
+                    )}
+                >
+                    {/* Secondary Header */}
+                    <div className="h-14 flex items-center px-6 border-b border-zinc-100 flex-shrink-0">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-zinc-400">
+                            {activeSection.name}
+                        </span>
+                    </div>
+
+                    {/* Secondary Search */}
+                    <div className="px-4 py-4 flex-shrink-0">
+                        <div className="relative group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Search..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-zinc-50 border-none rounded-md py-2 pl-9 pr-3 text-[12px] focus:ring-1 focus:ring-zinc-200 transition-all placeholder:text-zinc-400"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Secondary Links Scroll Area */}
+                    <div className="flex-1 overflow-y-auto px-3 space-y-0.5 custom-scrollbar pb-6">
+                        {filteredItems.map((item) => {
+                            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                            
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    className={cn(
+                                        "flex items-center rounded-md px-3 py-1.5 text-[12px] transition-all duration-200 cursor-pointer my-0.5",
+                                        isActive
+                                            ? "bg-zinc-800 text-white font-bold shadow-sm"
+                                            : "text-zinc-500 font-medium hover:bg-zinc-100 hover:text-zinc-900"
+                                    )}
+                                >
+                                    <span className="truncate">{item.name}</span>
+                                    {isActive && <div className="ml-auto w-1 h-1 rounded-full bg-white/40" />}
+                                </Link>
+                            );
+                        })}
+                        {filteredItems.length === 0 && (
+                            <div className="px-3 py-8 text-center">
+                                <p className="text-[11px] text-zinc-400">No items found</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
