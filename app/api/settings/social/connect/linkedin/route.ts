@@ -36,8 +36,9 @@ export async function GET(req: Request) {
         const baseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
         const redirectUri = `${baseUrl}/api/settings/social/callback/linkedin`;
 
-        // w_member_social = personal profile posts. w_organization_social requires extra LinkedIn app approval.
-        const scopes = ['openid', 'profile', 'email', 'w_member_social'];
+        // w_member_social = personal posts; w_organization_social = page/company posts (Hello Stores)
+        // App must be verified in LinkedIn Developer Portal for w_organization_social to work
+        const scopes = ['openid', 'profile', 'email', 'w_member_social', 'w_organization_social'];
 
         const stateData = JSON.stringify({ userId, integrationId });
 
