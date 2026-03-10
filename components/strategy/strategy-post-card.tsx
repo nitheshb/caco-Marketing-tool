@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Pencil, Trash2, Copy } from 'lucide-react';
+import { Pencil, Trash2, Copy, Share2 } from 'lucide-react';
 import { Instagram, Linkedin, Youtube, Video, Facebook } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StrategyPost } from './edit-strategy-post-modal';
@@ -32,6 +32,7 @@ interface StrategyPostCardProps {
     post: StrategyPost;
     onEdit: () => void;
     onClone: () => void;
+    onPostToPlatforms: () => void;
     onDelete: () => void;
     onIncludeChange: (checked: boolean) => void;
 }
@@ -40,6 +41,7 @@ export function StrategyPostCard({
     post,
     onEdit,
     onClone,
+    onPostToPlatforms,
     onDelete,
     onIncludeChange,
 }: StrategyPostCardProps) {
@@ -88,6 +90,15 @@ export function StrategyPostCard({
                             title="Clone to another day"
                         >
                             <Copy className="h-3 w-3" />
+                        </Button>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 shrink-0 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                            onClick={onPostToPlatforms}
+                            title="Post to more platforms"
+                        >
+                            <Share2 className="h-3 w-3" />
                         </Button>
                         <Button
                             size="icon"

@@ -8,6 +8,7 @@ import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { StrategyColumn } from '@/components/strategy/strategy-column';
 import { EditStrategyPostModal } from '@/components/strategy/edit-strategy-post-modal';
+import { PostToPlatformsModal } from '@/components/strategy/post-to-platforms-modal';
 import type { StrategyPost } from '@/components/strategy/edit-strategy-post-modal';
 import { toast } from 'sonner';
 
@@ -31,6 +32,8 @@ export default function StrategyBoardPage() {
     const [editingPost, setEditingPost] = useState<StrategyPost | null>(null);
     const [addDay, setAddDay] = useState<number | null>(null);
     const [cloneFrom, setCloneFrom] = useState<StrategyPost | null>(null);
+    const [postToPlatformsOpen, setPostToPlatformsOpen] = useState(false);
+    const [postForPlatforms, setPostForPlatforms] = useState<StrategyPost | null>(null);
 
     const fetchStrategy = useCallback(async () => {
         try {
@@ -91,6 +94,11 @@ export default function StrategyBoardPage() {
         setEditingPost(null);
         setAddDay(post.day);
         setEditModalOpen(true);
+    };
+
+    const handlePostToPlatforms = (post: StrategyPost) => {
+        setPostForPlatforms(post);
+        setPostToPlatformsOpen(true);
     };
 
     const handleDeletePost = async (post: StrategyPost) => {
@@ -200,12 +208,25 @@ export default function StrategyBoardPage() {
                             onAddPost={() => handleAddPost(day)}
                             onEditPost={handleEditPost}
                             onClonePost={handleClonePost}
+                            onPostToPlatforms={handlePostToPlatforms}
                             onDeletePost={handleDeletePost}
                             onIncludeChange={handleIncludeChange}
                         />
                     ))}
                 </div>
             </div>
+
+            <PostToPlatformsModal
+                open={postToPlatformsOpen}
+                onOpenChange={setPostToPlatformsOpen}
+                post={postForPlatforms}
+                strategyId={id}
+                allPosts={strategy?.posts ?? []}
+                onSuccess={() => {
+                    fetchStrategy();
+                    toast.success('Added to more platforms');
+                }}
+            />
 
             <EditStrategyPostModal
                 open={editModalOpen}
