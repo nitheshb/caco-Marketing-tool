@@ -4,6 +4,11 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(req: Request) {
+    // Use forwarded headers (ngrok/proxy) so redirect goes to ngrok URL, not localhost
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+    const proto = req.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
+    const origin = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+
     try {
         const { searchParams } = new URL(req.url);
         const code = searchParams.get('code');
@@ -40,10 +45,7 @@ export async function GET(req: Request) {
             return new NextResponse("Invalid integration", { status: 400 });
         }
 
-        const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/settings/social/callback/youtube`;
-        console.log("DEBUG: YouTube Callback Hit");
-        console.log("DEBUG: Code:", code?.substring(0, 10) + "...");
-        console.log("DEBUG: Redirect URI used:", redirectUri);
+        const redirectUri = `${origin}/api/settings/social/callback/youtube`;
 
         const oauth2Client = new google.auth.OAuth2(
             integration.client_id,
@@ -56,7 +58,6 @@ export async function GET(req: Request) {
         try {
             const response = await oauth2Client.getToken(code);
             tokens = response.tokens;
-            console.log("DEBUG: Tokens acquired successfully");
         } catch (err: any) {
             console.error("DEBUG: getToken failed. Error details:", err.response?.data || err.message);
             throw err;
@@ -98,19 +99,16 @@ export async function GET(req: Request) {
             return new NextResponse("Failed to save connection", { status: 500 });
         }
 
-        // Redirect back to settings with success
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/settings?connected=youtube`);
+        return NextResponse.redirect(`${origin}/dashboard/settings?connected=youtube`);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("YouTube Callback Error:", error);
 
         let errorType = 'unknown';
-        if (error.message?.includes('suspended')) {
-            errorType = 'suspended';
-        } else if (error.message?.includes('invalid_grant')) {
-            errorType = 'invalid_grant';
-        }
+        const msg = error instanceof Error ? error.message : String(error);
+        if (msg.includes('suspended')) errorType = 'suspended';
+        else if (msg.includes('invalid_grant')) errorType = 'invalid_grant';
 
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/settings?error=${errorType}`);
+        return NextResponse.redirect(`${origin}/dashboard/settings?error=${errorType}`);
     }
 }

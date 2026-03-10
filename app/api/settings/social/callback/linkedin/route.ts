@@ -2,17 +2,19 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export async function GET(req: Request) {
+    // Use forwarded headers (ngrok/proxy) so redirect goes to ngrok URL, not localhost
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+    const proto = req.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
+    const origin = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
     try {
         const { searchParams } = new URL(req.url);
         const code = searchParams.get('code');
-        const state = searchParams.get('state'); // userId passed from connect route
+        const state = searchParams.get('state');
         const error = searchParams.get('error');
 
         if (error) {
             console.error("LinkedIn OAuth error:", error, searchParams.get('error_description'));
-            return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/settings?error=linkedin_denied`
-            );
+            return NextResponse.redirect(`${origin}/dashboard/settings?error=linkedin_denied`);
         }
 
         if (!code || !state) {
@@ -47,8 +49,7 @@ export async function GET(req: Request) {
             return new NextResponse("Invalid integration", { status: 400 });
         }
 
-        const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/settings/social/callback/linkedin`;
-        console.log("[LinkedIn] Callback hit. Exchanging code for tokens...");
+        const redirectUri = `${origin}/api/settings/social/callback/linkedin`;
 
         // 1. Exchange code for tokens
         const tokenResponse = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
@@ -66,15 +67,10 @@ export async function GET(req: Request) {
         if (!tokenResponse.ok) {
             const errBody = await tokenResponse.text();
             console.error("[LinkedIn] Token exchange failed:", tokenResponse.status, errBody);
-            return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/settings?error=linkedin_token`
-            );
+            return NextResponse.redirect(`${origin}/dashboard/settings?error=linkedin_token`);
         }
 
         const tokenData = await tokenResponse.json();
-        console.log("[LinkedIn] Token exchange succeeded. Has access_token:", !!tokenData.access_token);
-        console.log("[LinkedIn] Has refresh_token:", !!tokenData.refresh_token);
-        console.log("[LinkedIn] expires_in:", tokenData.expires_in);
 
         // 2. Fetch user profile via OpenID Connect userinfo endpoint
         // The `sub` field from userinfo IS the LinkedIn member ID needed for author URN
@@ -91,7 +87,6 @@ export async function GET(req: Request) {
             profileName = userInfo.name || `${userInfo.given_name || ''} ${userInfo.family_name || ''}`.trim() || 'LinkedIn User';
             profileImage = userInfo.picture || '';
             linkedinId = userInfo.sub || ''; // OpenID Connect `sub` = LinkedIn member ID
-            console.log("[LinkedIn] User profile fetched:", profileName, "| Member ID:", linkedinId);
         } else {
             console.warn("[LinkedIn] Failed to fetch userinfo, using defaults");
         }
@@ -121,8 +116,6 @@ export async function GET(req: Request) {
         if (upsertError) {
             console.error("[LinkedIn] Supabase upsert error (Personal):", upsertError);
             // Optionally continue to pages even if personal profile fails
-        } else {
-             console.log("[LinkedIn] Personal Connection saved successfully");
         }
 
         // 5. Fetch Managed Organizations (Pages)
@@ -176,8 +169,6 @@ export async function GET(req: Request) {
 
                         if (orgUpsertError) {
                             console.error(`[LinkedIn] Failed to save Organization ${orgUrn}:`, orgUpsertError);
-                        } else {
-                            console.log(`[LinkedIn] Saved Organization Page: ${orgName}`);
                         }
                 }
 
@@ -188,14 +179,10 @@ export async function GET(req: Request) {
              console.error("[LinkedIn] Error executing Organization ACL fetch:", orgFetchErr);
         }
 
-        return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/settings?connected=linkedin`
-        );
+        return NextResponse.redirect(`${origin}/dashboard/settings?connected=linkedin`);
 
     } catch (error: unknown) {
         console.error("[LinkedIn] Callback error:", error instanceof Error ? error.message : error);
-        return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard/settings?error=linkedin_unknown`
-        );
+        return NextResponse.redirect(`${origin}/dashboard/settings?error=linkedin_unknown`);
     }
 }
