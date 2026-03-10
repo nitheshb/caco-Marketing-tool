@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { SlidePanel } from '@/components/ui/slide-panel';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -145,18 +140,35 @@ export function PostToPlatformsModal({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md rounded-xl border border-zinc-200 bg-white p-0 text-zinc-900 shadow-xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader className="border-b border-zinc-200 px-6 py-4">
-                    <DialogTitle className="text-lg font-black">
-                        Post to more platforms
-                    </DialogTitle>
-                    <p className="text-sm text-zinc-500 mt-1">
-                        Add this content to more platforms. Each platform can have its own content type (e.g. Reel for Instagram, Video for YouTube).
-                    </p>
-                </DialogHeader>
-
-                <div className="px-6 py-4 space-y-3">
+        <SlidePanel
+            open={open}
+            onClose={() => onOpenChange(false)}
+            title="Post to more platforms"
+            subtitle="Add this content to more platforms. Each platform can have its own content type (e.g. Reel for Instagram, Video for YouTube)."
+            size="half"
+            footer={
+                <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting || selected.length === 0}
+                        className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Adding...
+                            </>
+                        ) : (
+                            `Add to ${selected.length} platform${selected.length !== 1 ? 's' : ''}`
+                        )}
+                    </Button>
+                </div>
+            }
+        >
+            <div className="px-6 py-4 space-y-3">
                     {availablePlatforms.length === 0 ? (
                         <p className="text-sm text-zinc-500">
                             This post is already on all platforms.
@@ -215,28 +227,7 @@ export function PostToPlatformsModal({
                             ))}
                         </div>
                     )}
-                </div>
-
-                <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
-                    <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting || selected.length === 0}
-                        className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Adding...
-                            </>
-                        ) : (
-                            `Add to ${selected.length} platform${selected.length !== 1 ? 's' : ''}`
-                        )}
-                    </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
+            </div>
+        </SlidePanel>
     );
 }

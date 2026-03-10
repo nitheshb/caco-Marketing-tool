@@ -1,12 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { SlidePanel } from '@/components/ui/slide-panel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -113,15 +108,38 @@ export function GenerateStrategyModal({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-lg rounded-xl border border-zinc-200 bg-white p-0 text-zinc-900 shadow-xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader className="border-b border-zinc-200 px-6 py-4">
-                    <DialogTitle className="text-lg font-black text-zinc-900">
-                        Generate AI Strategy
-                    </DialogTitle>
-                </DialogHeader>
-
-                <div className="space-y-5 px-6 py-4">
+        <SlidePanel
+            open={open}
+            onClose={() => onOpenChange(false)}
+            title="Generate AI Strategy"
+            size="half"
+            footer={
+                <div className="flex justify-end gap-3">
+                    <Button
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                        className="rounded-xl font-bold border-zinc-200"
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting || !brandName.trim() || platforms.length === 0}
+                        className="rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Generating...
+                            </>
+                        ) : (
+                            'Generate Strategy'
+                        )}
+                    </Button>
+                </div>
+            }
+        >
+            <div className="space-y-5 px-6 py-4">
                     <div>
                         <Label className="text-sm font-bold text-zinc-600">Business Type</Label>
                         <Select value={businessType} onValueChange={setBusinessType}>
@@ -221,31 +239,6 @@ export function GenerateStrategyModal({
                         </Select>
                     </div>
                 </div>
-
-                <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
-                    <Button
-                        variant="outline"
-                        onClick={() => onOpenChange(false)}
-                        className="rounded-xl font-bold border-zinc-200"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={isSubmitting || !brandName.trim() || platforms.length === 0}
-                        className="rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
-                    >
-                        {isSubmitting ? (
-                            <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Generating...
-                            </>
-                        ) : (
-                            'Generate Strategy'
-                        )}
-                    </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
+        </SlidePanel>
     );
 }

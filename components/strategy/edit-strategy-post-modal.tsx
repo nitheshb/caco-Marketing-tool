@@ -1,12 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { SlidePanel } from '@/components/ui/slide-panel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -109,7 +105,33 @@ export function EditStrategyPostModal({
     const handleSave = async () => {
         setIsSubmitting(true);
         try {
-            if (isCreate || cloneFrom) {
+            const isClone = !!cloneFrom && !post;
+
+            // If cloning and nothing changed (same day, platform, content, idea, etc.), do nothing
+            if (isClone && cloneFrom) {
+                const trimmedIdea = idea.trim();
+                const trimmedDescription = description.trim();
+                const trimmedCaption = caption.trim();
+                const trimmedTheme = theme.trim();
+
+                const noChanges =
+                    day === cloneFrom.day &&
+                    platform === cloneFrom.platform &&
+                    contentType === cloneFrom.content_type &&
+                    (trimmedIdea || '') === (cloneFrom.idea || '') &&
+                    (trimmedDescription || '') === (cloneFrom.description || '') &&
+                    (trimmedCaption || '') === (cloneFrom.caption || '') &&
+                    goal === cloneFrom.goal &&
+                    (trimmedTheme || '') === (cloneFrom.theme || '');
+
+                if (noChanges) {
+                    toast.message('No changes detected. Duplicate post was not created.');
+                    onOpenChange(false);
+                    return;
+                }
+            }
+
+            if (isCreate || isClone) {
                 const res = await fetch(`/api/strategy/${strategyId}/posts`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -151,16 +173,34 @@ export function EditStrategyPostModal({
         }
     };
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-lg rounded-xl border border-zinc-200 bg-white p-0 text-zinc-900 shadow-xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader className="border-b border-zinc-200 px-6 py-4">
-                    <DialogTitle className="text-lg font-black">
-                        {cloneFrom ? 'Clone to Another Day' : isCreate ? 'Add Post' : 'Edit Post'}
-                    </DialogTitle>
-                </DialogHeader>
+    const title = cloneFrom ? 'Clone to Another Day' : isCreate ? 'Add Post' : 'Edit Post';
 
-                <div className="space-y-4 px-6 py-4">
+    return (
+        <SlidePanel
+            open={open}
+            onClose={() => onOpenChange(false)}
+            title={title}
+            size="half"
+            footer={
+                <div className="flex justify-end gap-3">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleSave}
+                        disabled={isSubmitting}
+                        className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
+                    >
+                        {isSubmitting ? (
+                            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
+                        ) : (
+                            'Save'
+                        )}
+                    </Button>
+                </div>
+            }
+        >
+            <div className="space-y-4 px-6 py-4">
                     <div>
                         <Label className="text-sm font-bold text-zinc-600">Day</Label>
                         <Select value={String(day)} onValueChange={(v) => setDay(Number(v))}>
@@ -265,24 +305,6 @@ export function EditStrategyPostModal({
                         />
                     </div>
                 </div>
-
-                <div className="flex justify-end gap-3 border-t border-zinc-200 px-6 py-4">
-                    <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={isSubmitting}
-                        className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
-                    >
-                        {isSubmitting ? (
-                            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
-                        ) : (
-                            'Save'
-                        )}
-                    </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
+        </SlidePanel>
     );
 }

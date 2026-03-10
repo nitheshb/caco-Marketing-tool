@@ -13,8 +13,8 @@ interface SlidePanelProps {
     title?: string;
     /** Optional subtitle under the title */
     subtitle?: string;
-    /** Width of the panel – defaults to "md" (480 px) */
-    size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+    /** Width of the panel – defaults to "md" (480 px). "half" = 50% of viewport */
+    size?: 'sm' | 'md' | 'lg' | 'xl' | 'half' | 'full';
     /** Content rendered inside the scrollable body */
     children: React.ReactNode;
     /** Optional sticky footer content (actions, save buttons, etc.) */
@@ -28,6 +28,7 @@ const sizeClass = {
     md: 'max-w-md',
     lg: 'max-w-lg',
     xl: 'max-w-2xl',
+    half: 'w-full max-w-[50vw]',
     full: 'max-w-full',
 };
 
@@ -74,7 +75,7 @@ export function SlidePanel({
             {/* Backdrop */}
             <div
                 className={cn(
-                    'fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px] transition-opacity duration-300',
+                    'fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300',
                     open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                 )}
                 aria-hidden="true"
