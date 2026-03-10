@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -133,7 +134,9 @@ export function PostToPlatformsModal({
             onSuccess();
             onOpenChange(false);
         } catch (err) {
-            console.error(err);
+            const message =
+                err instanceof Error ? err.message : 'Failed to add to more platforms';
+            toast.error(message);
         } finally {
             setIsSubmitting(false);
         }

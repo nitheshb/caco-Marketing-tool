@@ -125,7 +125,7 @@ export function EditStrategyPostModal({
                     (trimmedTheme || '') === (cloneFrom.theme || '');
 
                 if (noChanges) {
-                    toast.message('No changes detected. Duplicate post was not created.');
+                    toast.info('No changes detected. Duplicate post was not created.');
                     onOpenChange(false);
                     return;
                 }
@@ -147,6 +147,7 @@ export function EditStrategyPostModal({
                     }),
                 });
                 if (!res.ok) throw new Error((await res.json()).error);
+                toast.success(isClone ? 'Post cloned to new day.' : 'Post created.');
             } else if (post) {
                 const res = await fetch(`/api/strategy/${strategyId}/posts/${post.id}`, {
                     method: 'PATCH',
@@ -163,11 +164,14 @@ export function EditStrategyPostModal({
                     }),
                 });
                 if (!res.ok) throw new Error((await res.json()).error);
+                toast.success('Post updated.');
             }
             onSave();
             onOpenChange(false);
         } catch (err) {
-            console.error(err);
+            const message =
+                err instanceof Error ? err.message : 'Something went wrong while saving the post';
+            toast.error(message);
         } finally {
             setIsSubmitting(false);
         }
