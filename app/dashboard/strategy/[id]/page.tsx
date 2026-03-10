@@ -30,6 +30,7 @@ export default function StrategyBoardPage() {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<StrategyPost | null>(null);
     const [addDay, setAddDay] = useState<number | null>(null);
+    const [cloneFrom, setCloneFrom] = useState<StrategyPost | null>(null);
 
     const fetchStrategy = useCallback(async () => {
         try {
@@ -74,12 +75,21 @@ export default function StrategyBoardPage() {
     const handleAddPost = (day: number) => {
         setAddDay(day);
         setEditingPost(null);
+        setCloneFrom(null);
         setEditModalOpen(true);
     };
 
     const handleEditPost = (post: StrategyPost) => {
         setEditingPost(post);
         setAddDay(null);
+        setCloneFrom(null);
+        setEditModalOpen(true);
+    };
+
+    const handleClonePost = (post: StrategyPost) => {
+        setCloneFrom(post);
+        setEditingPost(null);
+        setAddDay(post.day);
         setEditModalOpen(true);
     };
 
@@ -189,6 +199,7 @@ export default function StrategyBoardPage() {
                             posts={postsByDay[day] || []}
                             onAddPost={() => handleAddPost(day)}
                             onEditPost={handleEditPost}
+                            onClonePost={handleClonePost}
                             onDeletePost={handleDeletePost}
                             onIncludeChange={handleIncludeChange}
                         />
@@ -200,14 +211,18 @@ export default function StrategyBoardPage() {
                 open={editModalOpen}
                 onOpenChange={(open) => {
                     setEditModalOpen(open);
-                    if (!open) setAddDay(null);
+                    if (!open) {
+                        setAddDay(null);
+                        setCloneFrom(null);
+                    }
                 }}
                 post={editingPost}
                 strategyId={id}
                 durationDays={duration}
                 onSave={handleModalSave}
-                isCreate={!!addDay}
-                initialDay={addDay ?? 1}
+                isCreate={!!addDay || !!cloneFrom}
+                initialDay={cloneFrom ? cloneFrom.day : (addDay ?? 1)}
+                cloneFrom={cloneFrom}
             />
         </div>
     );

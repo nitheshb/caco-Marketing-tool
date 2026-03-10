@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Copy } from 'lucide-react';
 import { Instagram, Linkedin, Youtube, Video, Facebook } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StrategyPost } from './edit-strategy-post-modal';
@@ -31,6 +31,7 @@ function formatLabel(s: string) {
 interface StrategyPostCardProps {
     post: StrategyPost;
     onEdit: () => void;
+    onClone: () => void;
     onDelete: () => void;
     onIncludeChange: (checked: boolean) => void;
 }
@@ -38,6 +39,7 @@ interface StrategyPostCardProps {
 export function StrategyPostCard({
     post,
     onEdit,
+    onClone,
     onDelete,
     onIncludeChange,
 }: StrategyPostCardProps) {
@@ -45,43 +47,56 @@ export function StrategyPostCard({
     const statusColor = STATUS_COLORS[post.status] || STATUS_COLORS.planned;
 
     return (
-        <Card className="rounded-lg border border-zinc-200 p-3 bg-white shadow-sm hover:shadow-md transition-shadow">
+        <Card className="rounded-lg border border-zinc-200 p-3 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
             <div className="space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
                         <Checkbox
                             checked={post.include_in_calendar}
                             onCheckedChange={(c) => onIncludeChange(c === true)}
+                            className="shrink-0"
                         />
-                        <Badge
-                            variant="outline"
+                        <span
                             className={cn(
-                                'text-[10px] font-bold gap-1 capitalize',
-                                post.platform === 'instagram' && 'border-pink-200 text-pink-700',
-                                post.platform === 'linkedin' && 'border-blue-200 text-blue-700',
-                                post.platform === 'youtube' && 'border-red-200 text-red-700'
+                                'flex items-center justify-center w-7 h-7 rounded-md border shrink-0',
+                                post.platform === 'instagram' && 'border-pink-200 text-pink-600',
+                                post.platform === 'linkedin' && 'border-blue-200 text-blue-600',
+                                post.platform === 'youtube' && 'border-red-200 text-red-600',
+                                post.platform === 'facebook' && 'border-blue-200 text-blue-600',
+                                (!post.platform || !PLATFORM_ICONS[post.platform?.toLowerCase()]) && 'border-zinc-200 text-zinc-600'
                             )}
+                            title={formatLabel(post.platform)}
                         >
-                            <PlatformIcon className="h-3 w-3" />
-                            {formatLabel(post.platform)}
-                        </Badge>
+                            <PlatformIcon className="h-3.5 w-3.5" />
+                        </span>
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-0.5 shrink-0">
                         <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7"
+                            className="h-6 w-6 shrink-0"
                             onClick={onEdit}
+                            title="Edit"
                         >
-                            <Pencil className="h-3.5 w-3.5" />
+                            <Pencil className="h-3 w-3" />
                         </Button>
                         <Button
                             size="icon"
                             variant="ghost"
-                            className="h-7 w-7 text-red-600 hover:bg-red-50 hover:text-red-700"
-                            onClick={onDelete}
+                            className="h-6 w-6 shrink-0 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
+                            onClick={onClone}
+                            title="Clone to another day"
                         >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Copy className="h-3 w-3" />
+                        </Button>
+                        <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-6 w-6 shrink-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            onClick={onDelete}
+                            title="Delete"
+                        >
+                            <Trash2 className="h-3 w-3" />
                         </Button>
                     </div>
                 </div>

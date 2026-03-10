@@ -50,6 +50,8 @@ interface EditStrategyPostModalProps {
     onSave: () => void;
     isCreate?: boolean;
     initialDay?: number;
+    /** Pre-fill form from this post and create a new one (clone) */
+    cloneFrom?: StrategyPost | null;
 }
 
 export function EditStrategyPostModal({
@@ -61,6 +63,7 @@ export function EditStrategyPostModal({
     onSave,
     isCreate = false,
     initialDay = 1,
+    cloneFrom = null,
 }: EditStrategyPostModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [day, setDay] = useState(1);
@@ -82,6 +85,15 @@ export function EditStrategyPostModal({
             setCaption(post.caption || '');
             setGoal(post.goal);
             setTheme(post.theme || '');
+        } else if (cloneFrom) {
+            setDay(initialDay);
+            setPlatform(cloneFrom.platform);
+            setContentType(cloneFrom.content_type);
+            setIdea(cloneFrom.idea || '');
+            setDescription(cloneFrom.description || '');
+            setCaption(cloneFrom.caption || '');
+            setGoal(cloneFrom.goal);
+            setTheme(cloneFrom.theme || '');
         } else if (isCreate) {
             setDay(initialDay);
             setPlatform('instagram');
@@ -92,12 +104,12 @@ export function EditStrategyPostModal({
             setGoal('engagement');
             setTheme('');
         }
-    }, [post, isCreate, open, initialDay]);
+    }, [post, isCreate, open, initialDay, cloneFrom]);
 
     const handleSave = async () => {
         setIsSubmitting(true);
         try {
-            if (isCreate) {
+            if (isCreate || cloneFrom) {
                 const res = await fetch(`/api/strategy/${strategyId}/posts`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -144,7 +156,7 @@ export function EditStrategyPostModal({
             <DialogContent className="max-w-lg rounded-xl border border-zinc-200 bg-white p-0 text-zinc-900 shadow-xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader className="border-b border-zinc-200 px-6 py-4">
                     <DialogTitle className="text-lg font-black">
-                        {isCreate ? 'Add Post' : 'Edit Post'}
+                        {cloneFrom ? 'Clone to Another Day' : isCreate ? 'Add Post' : 'Edit Post'}
                     </DialogTitle>
                 </DialogHeader>
 
