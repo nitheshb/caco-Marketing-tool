@@ -23,7 +23,7 @@ export function StrategyColumn({
     onIncludeChange,
 }: StrategyColumnProps) {
     return (
-        <div className="flex flex-col w-[260px] shrink-0 rounded-xl border border-zinc-200 bg-zinc-50/50">
+        <div className="flex flex-col min-w-0 w-full rounded-xl border border-zinc-200 bg-zinc-50/50">
             <div className="flex items-center justify-between gap-2 p-3 border-b border-zinc-200 bg-white rounded-t-xl">
                 <h3 className="font-bold text-zinc-900">Day {day}</h3>
                 <Button
