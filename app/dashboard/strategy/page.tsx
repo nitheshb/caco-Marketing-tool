@@ -17,6 +17,8 @@ interface Strategy {
     platforms: string[];
     duration_days: number;
     created_at: string;
+    start_date?: string | null;
+    image_url?: string | null;
 }
 
 const LANDING_BTN =
@@ -132,7 +134,10 @@ export default function StrategyPage() {
                             platforms={s.platforms || []}
                             durationDays={s.duration_days}
                             createdAt={s.created_at}
+                            startDate={s.start_date}
+                            imageUrl={s.image_url}
                             onDelete={handleDelete}
+                            onImageUpdate={fetchStrategies}
                         />
                     ))}
                 </div>

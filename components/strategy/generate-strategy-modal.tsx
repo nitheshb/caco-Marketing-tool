@@ -15,7 +15,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BUSINESS_TYPES = ['Ecommerce', 'SaaS', 'Restaurant', 'Personal Brand', 'Agency', 'Other'];
@@ -54,14 +54,18 @@ export function GenerateStrategyModal({
     const [theme, setTheme] = useState('');
     const [durationDays, setDurationDays] = useState(30);
     const [startDate, setStartDate] = useState<string>('');
+    const [coverImage, setCoverImage] = useState<File | null>(null);
 
     useEffect(() => {
-        if (open && prefill) {
-            if (prefill.businessType) setBusinessType(prefill.businessType);
-            if (prefill.goal) setGoal(prefill.goal);
-            if (prefill.theme) setTheme(prefill.theme);
-            if (prefill.platforms?.length) setPlatforms(prefill.platforms);
-            if (prefill.durationDays) setDurationDays(prefill.durationDays);
+        if (open) {
+            setCoverImage(null);
+            if (prefill) {
+                if (prefill.businessType) setBusinessType(prefill.businessType);
+                if (prefill.goal) setGoal(prefill.goal);
+                if (prefill.theme) setTheme(prefill.theme);
+                if (prefill.platforms?.length) setPlatforms(prefill.platforms);
+                if (prefill.durationDays) setDurationDays(prefill.durationDays);
+            }
         }
     }, [open, prefill]);
 
@@ -107,6 +111,19 @@ export function GenerateStrategyModal({
                 throw new Error(data.error || 'Failed to generate strategy');
             }
 
+            if (coverImage && data.strategy?.id) {
+                const formData = new FormData();
+                formData.append('file', coverImage);
+                const imgRes = await fetch(`/api/strategy/${data.strategy.id}/image`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                const imgData = await imgRes.json().catch(() => ({}));
+                if (!imgRes.ok) {
+                    toast.warning(imgData.error || 'Strategy created, but cover image upload failed');
+                }
+            }
+
             toast.success('Strategy generated successfully!');
             onSuccess(data.strategy);
             onOpenChange(false);
@@ -120,6 +137,7 @@ export function GenerateStrategyModal({
             setTheme('');
             setDurationDays(30);
             setStartDate('');
+            setCoverImage(null);
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Failed to generate strategy');
         } finally {
@@ -267,6 +285,44 @@ export function GenerateStrategyModal({
                             onChange={(e) => setStartDate(e.target.value)}
                             className="mt-1.5 h-11 rounded-xl border-zinc-200"
                         />
+                    </div>
+
+                    <div>
+                        <Label className="text-sm font-bold text-zinc-600">Cover Image (optional)</Label>
+                        <div
+                            onClick={() => document.getElementById('cover-image-input')?.click()}
+                            className="mt-1.5 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-zinc-200 bg-zinc-50/50 p-6 cursor-pointer hover:border-zinc-300 hover:bg-zinc-50 transition-colors"
+                        >
+                            <input
+                                id="cover-image-input"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f && f.type.startsWith('image/')) setCoverImage(f);
+                                    e.target.value = '';
+                                }}
+                            />
+                            {coverImage ? (
+                                <>
+                                    <div className="relative w-full h-24 rounded-lg overflow-hidden bg-zinc-100">
+                                        <img
+                                            src={URL.createObjectURL(coverImage)}
+                                            alt=""
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                    <p className="text-sm text-zinc-500">{coverImage.name}</p>
+                                    <p className="text-xs text-zinc-400">Click to change</p>
+                                </>
+                            ) : (
+                                <>
+                                    <ImagePlus className="h-8 w-8 text-zinc-400" strokeWidth={1.5} />
+                                    <p className="text-sm text-zinc-500">Click to upload cover image</p>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
         </SlidePanel>
