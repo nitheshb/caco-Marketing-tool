@@ -7,7 +7,8 @@ import { useState, useEffect } from 'react';
 import {
     Home, Search, Send, DollarSign, Wrench, ArrowDownLeft,
     Bookmark, ShieldCheck, Settings, ChevronDown, ChevronRight,
-    ChevronsLeft, Menu, Film, Video, CalendarDays, Plus, CreditCard, User
+    ChevronsLeft, Menu, Film, Video, CalendarDays, Plus, CreditCard, User,
+    LayoutGrid
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,11 @@ const sidebarData = [
         icon: Home,
         href: '/dashboard',
         hasBorderBottom: true,
+    },
+    {
+        name: 'Strategy Planner',
+        icon: LayoutGrid,
+        href: '/dashboard/strategy'
     },
     {
         name: 'Postings Calendar',
