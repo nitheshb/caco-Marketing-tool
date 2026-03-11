@@ -30,9 +30,15 @@ export async function GET(req: Request) {
 
         const clientId = integration.client_id;
 
-        const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/settings/social/callback/linkedin`;
+        // Build redirect from request host (works with ngrok, localhost, production)
+        const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+        const protocol = host?.includes('localhost') ? 'http' : 'https';
+        const baseUrl = host ? `${protocol}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+        const redirectUri = `${baseUrl}/api/settings/social/callback/linkedin`;
 
-        const scopes = ['openid', 'profile', 'email', 'w_member_social'];
+        // w_member_social = personal posts; w_organization_social = page/company posts (Hello Stores)
+        // App must be verified in LinkedIn Developer Portal for w_organization_social to work
+        const scopes = ['openid', 'profile', 'email', 'w_member_social', 'w_organization_social'];
 
         const stateData = JSON.stringify({ userId, integrationId });
 
@@ -48,7 +54,7 @@ export async function GET(req: Request) {
 
         return NextResponse.redirect(url);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("LinkedIn Connect Error:", error);
         return new NextResponse("Internal Error", { status: 500 });
     }

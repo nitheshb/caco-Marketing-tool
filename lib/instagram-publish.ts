@@ -28,7 +28,7 @@ async function createContainer(
         isCarouselItem?: boolean;
     }
 ) {
-    const containerUrl = `https://graph.instagram.com/v21.0/${igUserId}/media`;
+    const containerUrl = `https://graph.facebook.com/v21.0/${igUserId}/media`;
     
     const containerParams: any = {
         access_token: accessToken,
@@ -76,7 +76,7 @@ async function pollStatus(accessToken: string, creationId: string) {
     while (status !== 'FINISHED' && attempts < maxAttempts) {
         if (attempts > 0) await new Promise(resolve => setTimeout(resolve, 10000));
         
-        const res = await fetch(`https://graph.instagram.com/v21.0/${creationId}?fields=status_code,error_message&access_token=${accessToken}`);
+        const res = await fetch(`https://graph.facebook.com/v21.0/${creationId}?fields=status_code&access_token=${accessToken}`);
         const data = await res.json();
         
         if (res.ok) {
@@ -87,7 +87,7 @@ async function pollStatus(accessToken: string, creationId: string) {
         }
 
         if (status === 'ERROR') {
-            throw new Error(`Media processing failed: ${data.error_message || 'Unknown error'}`);
+            throw new Error('Media processing failed');
         }
         
         attempts++;
@@ -169,7 +169,7 @@ export async function publishToInstagram({ connectionId, text, mediaUrl, mediaUr
         }
 
         // Step 3: Create parent carousel container
-        const parentUrl = `https://graph.instagram.com/v21.0/${igUserId}/media`;
+        const parentUrl = `https://graph.facebook.com/v21.0/${igUserId}/media`;
         const parentRes = await fetch(parentUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -196,7 +196,7 @@ export async function publishToInstagram({ connectionId, text, mediaUrl, mediaUr
 
     // 4. Publish Final Container
     console.log('[Instagram] Publishing...');
-    const publishUrl = `https://graph.instagram.com/v21.0/${igUserId}/media_publish`;
+    const publishUrl = `https://graph.facebook.com/v21.0/${igUserId}/media_publish`;
     const publishRes = await fetch(publishUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

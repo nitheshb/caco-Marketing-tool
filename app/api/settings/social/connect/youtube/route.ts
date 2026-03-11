@@ -29,10 +29,16 @@ export async function GET(req: Request) {
             return new NextResponse("Invalid integration", { status: 400 });
         }
 
+        // Build redirect from request host (works with ngrok, localhost, production)
+        const host = req.headers.get('x-forwarded-host') || req.headers.get('host');
+        const proto = req.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
+        const baseUrl = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
+        const redirectUri = `${baseUrl}/api/settings/social/callback/youtube`;
+
         const oauth2Client = new google.auth.OAuth2(
             integration.client_id,
             integration.client_secret,
-            `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/settings/social/callback/youtube`
+            redirectUri
         );
 
         const scopes = [
@@ -54,7 +60,7 @@ export async function GET(req: Request) {
 
         return NextResponse.redirect(url);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("YouTube Connect Error:", error);
         return new NextResponse("Internal Error", { status: 500 });
     }

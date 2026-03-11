@@ -37,28 +37,33 @@ export async function GET(req: Request) {
         const redirectUri = `${baseUrl}/api/settings/social/callback/instagram`;
 
         const scopes = [
-            'instagram_business_basic',
-            'instagram_business_content_publish',
-            'instagram_business_manage_comments',
-            'instagram_business_manage_insights'
+            'public_profile',
+            'pages_show_list',        // Required to get Facebook Pages and linked IG accounts
+            'business_management',    // Required for Business Suite / Business-owned Pages
+            'ads_read',               // Required when Page role granted via Business Manager (for instagram_business_account)
+            'instagram_basic',        // Basic Instagram access
+            'instagram_content_publish', // Publish media to Instagram
+            'instagram_manage_comments', // Manage comments
+            'instagram_manage_insights', // Read insights
         ];
 
         const stateData = JSON.stringify({ userId, integrationId });
 
         const params = new URLSearchParams({
-            enable_fb_login: '0',
             client_id: clientId,
             redirect_uri: redirectUri,
             state: Buffer.from(stateData).toString('base64'),
             scope: scopes.join(','),
-            response_type: 'code'
+            response_type: 'code',
         });
 
-        const url = `https://www.instagram.com/oauth/authorize?${params.toString()}`;
+        // We MUST use Facebook Login to get permissions for Instagram Business Publishing.
+        // instagram.com/oauth/authorize is only for the read-only Basic Display API.
+        const url = `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`;
 
         return NextResponse.redirect(url);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Instagram Connect Error:", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
