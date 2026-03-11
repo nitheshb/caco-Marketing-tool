@@ -141,8 +141,8 @@ export function StrategyTemplateCard({ template, onClick }: StrategyTemplateCard
             <div className={cn('flex h-10 w-10 items-center justify-center rounded-lg mb-3', template.iconBg)}>
                 <Icon className="h-5 w-5" strokeWidth={2} />
             </div>
-            <h3 className="font-bold text-zinc-900 text-sm sm:text-base">{template.title}</h3>
-            <p className="text-xs text-zinc-500 mt-0.5">{template.subtitle}</p>
+            <h3 className="text-lg font-semibold tracking-tight text-zinc-900">{template.title}</h3>
+            <p className="text-sm text-zinc-500 mt-0.5">{template.subtitle}</p>
         </button>
     );
 }

@@ -138,14 +138,14 @@ export function GenerateStrategyModal({
                     <Button
                         variant="outline"
                         onClick={() => onOpenChange(false)}
-                        className="rounded-full font-bold border-zinc-200"
+                        className="rounded-full font-medium text-[15px] border-zinc-200"
                     >
                         Cancel
                     </Button>
                     <Button
                         onClick={handleSubmit}
                         disabled={isSubmitting || !brandName.trim() || platforms.length === 0}
-                        className="rounded-full font-bold bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900"
+                        className="rounded-full font-medium text-[15px] bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900"
                     >
                         {isSubmitting ? (
                             <>

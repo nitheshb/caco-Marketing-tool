@@ -195,7 +195,7 @@ export function EditStrategyPostModal({
                     <Button
                         onClick={handleSave}
                         disabled={isSubmitting}
-                        className="rounded-full bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900"
+                        className="rounded-full font-medium text-[15px] bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900"
                     >
                         {isSubmitting ? (
                             <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>

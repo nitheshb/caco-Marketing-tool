@@ -59,7 +59,7 @@ export function StrategyCard({
         <>
             <Card className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
                 <div className="space-y-3">
-                    <h3 className="font-bold text-zinc-900 line-clamp-2">{name}</h3>
+                    <h3 className="text-lg font-semibold tracking-tight text-zinc-900 line-clamp-2">{name}</h3>
                     <p className="text-sm text-zinc-500">
                         <span className="font-medium">Platforms:</span> {platformLabels}
                     </p>
@@ -73,7 +73,7 @@ export function StrategyCard({
                         <Link href={`/dashboard/strategy/${id}`}>
                             <Button
                                 size="sm"
-                                className="rounded-full bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900 font-bold gap-1.5"
+                                className="rounded-full bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900 font-medium text-[15px] gap-1.5"
                             >
                                 <ExternalLink className="h-3.5 w-3.5" />
                                 Open Strategy

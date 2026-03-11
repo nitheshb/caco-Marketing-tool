@@ -153,7 +153,7 @@ export default function StrategyBoardPage() {
         return (
             <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
                 <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-                <p className="text-zinc-500 font-medium">Loading strategy...</p>
+                <p className="text-base text-zinc-500">Loading strategy...</p>
             </div>
         );
     }
@@ -161,9 +161,9 @@ export default function StrategyBoardPage() {
     if (!strategy) {
         return (
             <div className="flex flex-col items-center justify-center gap-4 py-16">
-                <p className="text-zinc-500">Strategy not found.</p>
+                <p className="text-base text-zinc-500">Strategy not found.</p>
                 <Link href="/dashboard/strategy">
-                    <Button variant="outline" className="rounded-xl">
+                    <Button variant="outline" className="rounded-full font-medium text-[15px]">
                         Back to Strategies
                     </Button>
                 </Link>
@@ -204,7 +204,7 @@ export default function StrategyBoardPage() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             onBlur={handleNameBlur}
-                            className="text-xl font-black border-0 border-b-2 border-transparent hover:border-zinc-200 focus:border-indigo-500 bg-transparent px-0 h-auto py-1 focus-visible:ring-0 rounded-none max-w-md"
+                            className="text-xl font-semibold tracking-tight border-0 border-b-2 border-transparent hover:border-zinc-200 focus:border-zinc-400 bg-transparent px-0 h-auto py-1 focus-visible:ring-0 rounded-none max-w-md"
                         />
                         {isSavingName && (
                             <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
