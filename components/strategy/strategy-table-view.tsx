@@ -17,7 +17,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Pencil, Trash2, Copy, Share2, MoreVertical, Plus } from 'lucide-react';
+import { Pencil, Trash2, Copy, Share2, MoreVertical, Plus, ImagePlus } from 'lucide-react';
 import { Instagram, Linkedin, Youtube, Video, Facebook } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StrategyPost } from './edit-strategy-post-modal';
@@ -55,6 +55,7 @@ interface StrategyTableViewProps {
     onEdit: (post: StrategyPost) => void;
     onClone: (post: StrategyPost) => void;
     onPostToPlatforms: (post: StrategyPost) => void;
+    onContent: (post: StrategyPost) => void;
     onDelete: (post: StrategyPost) => void;
     onIncludeChange: (post: StrategyPost, checked: boolean) => void;
     onAddPost: () => void;
@@ -67,6 +68,7 @@ export function StrategyTableView({
     onEdit,
     onClone,
     onPostToPlatforms,
+    onContent,
     onDelete,
     onIncludeChange,
     onAddPost,
@@ -202,6 +204,13 @@ export function StrategyTableView({
                                                 >
                                                     <Share2 className="h-3.5 w-3.5" />
                                                     Post to more
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={(e) => { e.stopPropagation(); onContent(post); }}
+                                                    className="gap-2 rounded-md"
+                                                >
+                                                    <ImagePlus className="h-3.5 w-3.5" />
+                                                    Create / Upload content
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     onClick={(e) => { e.stopPropagation(); onDelete(post); }}

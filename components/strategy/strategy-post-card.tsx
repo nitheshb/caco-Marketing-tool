@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Pencil, Trash2, Copy, Share2, MoreVertical } from 'lucide-react';
+import { Pencil, Trash2, Copy, Share2, MoreVertical, ImagePlus } from 'lucide-react';
 import { Instagram, Linkedin, Youtube, Video, Facebook } from 'lucide-react';
 import {
     DropdownMenu,
@@ -16,7 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { StrategyPost } from './edit-strategy-post-modal';
 
-const PLATFORM_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const PLATFORM_ICONS: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
     instagram: Instagram,
     linkedin: Linkedin,
     youtube: Youtube,
@@ -47,6 +47,7 @@ interface StrategyPostCardProps {
     onEdit: () => void;
     onClone: () => void;
     onPostToPlatforms: () => void;
+    onContent: () => void;
     onDelete: () => void;
     onIncludeChange: (checked: boolean) => void;
 }
@@ -56,6 +57,7 @@ export function StrategyPostCard({
     onEdit,
     onClone,
     onPostToPlatforms,
+    onContent,
     onDelete,
     onIncludeChange,
 }: StrategyPostCardProps) {
@@ -69,7 +71,7 @@ export function StrategyPostCard({
             {/* Platform logo header */}
             <div className="relative flex flex-col items-center pt-4 pb-2 px-3 bg-zinc-50/80">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800 text-white shrink-0">
-                    <PlatformIcon className="h-6 w-6" strokeWidth={2} />
+                    <PlatformIcon className="h-6 w-6" />
                 </div>
                 <p className="mt-1.5 text-xs font-semibold text-zinc-700">{platformLabel}</p>
                 <div className="absolute top-2 right-2 flex items-center gap-0.5">
@@ -102,6 +104,10 @@ export function StrategyPostCard({
                             <DropdownMenuItem onClick={() => { onPostToPlatforms(); setMenuOpen(false); }} className="gap-2 rounded-md">
                                 <Share2 className="h-3.5 w-3.5" />
                                 Post to more
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { onContent(); setMenuOpen(false); }} className="gap-2 rounded-md">
+                                <ImagePlus className="h-3.5 w-3.5" />
+                                Create / Upload content
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => { onDelete(); setMenuOpen(false); }}

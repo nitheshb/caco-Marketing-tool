@@ -4,7 +4,7 @@ import { addDays, format } from 'date-fns';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Instagram, Linkedin, Youtube, Video, Facebook, Pencil } from 'lucide-react';
+import { Instagram, Linkedin, Youtube, Video, Facebook, Pencil, ImagePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StrategyPost } from './edit-strategy-post-modal';
 
@@ -48,6 +48,7 @@ interface StrategyPostDetailSidebarProps {
     onClose: () => void;
     startDate?: string | null;
     onEdit: () => void;
+    onContent?: () => void;
 }
 
 export function StrategyPostDetailSidebar({
@@ -56,6 +57,7 @@ export function StrategyPostDetailSidebar({
     onClose,
     startDate,
     onEdit,
+    onContent,
 }: StrategyPostDetailSidebarProps) {
     if (!post) return null;
 
@@ -77,7 +79,17 @@ export function StrategyPostDetailSidebar({
             title={post.idea || 'Untitled'}
             size="md"
             footer={
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-2">
+                    {onContent && (
+                        <Button
+                            variant="outline"
+                            onClick={() => { onClose(); onContent(); }}
+                            className="rounded-full font-medium text-[15px] gap-2 border-zinc-200"
+                        >
+                            <ImagePlus className="h-4 w-4" />
+                            Content
+                        </Button>
+                    )}
                     <Button
                         onClick={() => {
                             onClose();

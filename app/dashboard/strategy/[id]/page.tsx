@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { StrategyColumn } from '@/components/strategy/strategy-column';
 import { StrategyTableView } from '@/components/strategy/strategy-table-view';
 import { StrategyPostDetailSidebar } from '@/components/strategy/strategy-post-detail-sidebar';
+import { StrategyPostContentModal } from '@/components/strategy/strategy-post-content-modal';
 import { EditStrategyPostModal } from '@/components/strategy/edit-strategy-post-modal';
 import { PostToPlatformsModal } from '@/components/strategy/post-to-platforms-modal';
 import type { StrategyPost } from '@/components/strategy/edit-strategy-post-modal';
@@ -41,6 +42,7 @@ export default function StrategyBoardPage() {
     const [postForPlatforms, setPostForPlatforms] = useState<StrategyPost | null>(null);
     const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
     const [sidebarPost, setSidebarPost] = useState<StrategyPost | null>(null);
+    const [contentPost, setContentPost] = useState<StrategyPost | null>(null);
 
     const fetchStrategy = useCallback(async () => {
         try {
@@ -257,6 +259,7 @@ export default function StrategyBoardPage() {
                                 onEditPost={handleEditPost}
                                 onClonePost={handleClonePost}
                                 onPostToPlatforms={handlePostToPlatforms}
+                                onContent={(post) => setContentPost(post)}
                                 onDeletePost={handleDeletePost}
                                 onIncludeChange={handleIncludeChange}
                             />
@@ -270,6 +273,7 @@ export default function StrategyBoardPage() {
                         onEdit={handleEditPost}
                         onClone={handleClonePost}
                         onPostToPlatforms={handlePostToPlatforms}
+                        onContent={(post) => setContentPost(post)}
                         onDelete={handleDeletePost}
                         onIncludeChange={handleIncludeChange}
                         onAddPost={() => handleAddPost(1)}
@@ -289,6 +293,14 @@ export default function StrategyBoardPage() {
                 }}
             />
 
+            <StrategyPostContentModal
+                post={contentPost}
+                open={!!contentPost}
+                onClose={() => setContentPost(null)}
+                strategyId={id}
+                onSuccess={() => { fetchStrategy(); setContentPost(null); }}
+            />
+
             <StrategyPostDetailSidebar
                 post={sidebarPost}
                 open={!!sidebarPost}
@@ -297,6 +309,12 @@ export default function StrategyBoardPage() {
                 onEdit={() => {
                     if (sidebarPost) {
                         handleEditPost(sidebarPost);
+                        setSidebarPost(null);
+                    }
+                }}
+                onContent={() => {
+                    if (sidebarPost) {
+                        setContentPost(sidebarPost);
                         setSidebarPost(null);
                     }
                 }}

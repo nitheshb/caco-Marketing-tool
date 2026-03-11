@@ -13,6 +13,7 @@ interface StrategyColumnProps {
     onEditPost: (post: StrategyPost) => void;
     onClonePost: (post: StrategyPost) => void;
     onPostToPlatforms: (post: StrategyPost) => void;
+    onContent: (post: StrategyPost) => void;
     onDeletePost: (post: StrategyPost) => void;
     onIncludeChange: (post: StrategyPost, checked: boolean) => void;
 }
@@ -25,6 +26,7 @@ export function StrategyColumn({
     onEditPost,
     onClonePost,
     onPostToPlatforms,
+    onContent,
     onDeletePost,
     onIncludeChange,
 }: StrategyColumnProps) {
@@ -55,6 +57,7 @@ export function StrategyColumn({
                         onEdit={() => onEditPost(post)}
                         onClone={() => onClonePost(post)}
                         onPostToPlatforms={() => onPostToPlatforms(post)}
+                        onContent={() => onContent(post)}
                         onDelete={() => onDeletePost(post)}
                         onIncludeChange={(c) => onIncludeChange(post, c)}
                     />
