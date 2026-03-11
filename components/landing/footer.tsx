@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export function Footer() {
     return (
-        <footer className="bg-black border-t border-white/10" aria-labelledby="footer-heading">
+        <footer className="bg-zinc-50 border-t border-black/10" aria-labelledby="footer-heading">
             <h2 id="footer-heading" className="sr-only">
                 Footer
             </h2>
@@ -15,9 +15,9 @@ export function Footer() {
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 overflow-hidden">
                                 <Image src="/logo.png" alt="Agent Elephant Logo" width={32} height={32} className="object-cover scale-125" />
                             </div>
-                            <span className="text-xl font-bold text-white">Agent Elephant</span>
+                            <span className="text-xl font-bold text-zinc-900">Agent Elephant</span>
                         </Link>
-                        <p className="text-sm leading-6 text-zinc-400">
+                        <p className="text-sm leading-6 text-zinc-600">
                             Transforming how creators make and schedule short-form content.
                         </p>
                         <div className="flex space-x-6">
@@ -27,40 +27,40 @@ export function Footer() {
                     <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
                         <div className="md:grid md:grid-cols-2 md:gap-8">
                             <div>
-                                <h3 className="text-sm font-semibold leading-6 text-white">Product</h3>
+                                <h3 className="text-sm font-semibold leading-6 text-zinc-900">Product</h3>
                                 <ul role="list" className="mt-6 space-y-4">
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             Features
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             Integration
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             Pricing
                                         </a>
                                     </li>
                                 </ul>
                             </div>
                             <div className="mt-10 md:mt-0">
-                                <h3 className="text-sm font-semibold leading-6 text-white">Support</h3>
+                                <h3 className="text-sm font-semibold leading-6 text-zinc-900">Support</h3>
                                 <ul role="list" className="mt-6 space-y-4">
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             Documentation
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             Guides
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             API Status
                                         </a>
                                     </li>
@@ -69,35 +69,35 @@ export function Footer() {
                         </div>
                         <div className="md:grid md:grid-cols-2 md:gap-8">
                             <div>
-                                <h3 className="text-sm font-semibold leading-6 text-white">Company</h3>
+                                <h3 className="text-sm font-semibold leading-6 text-zinc-900">Company</h3>
                                 <ul role="list" className="mt-6 space-y-4">
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             About
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             Blog
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             Careers
                                         </a>
                                     </li>
                                 </ul>
                             </div>
                             <div className="mt-10 md:mt-0">
-                                <h3 className="text-sm font-semibold leading-6 text-white">Legal</h3>
+                                <h3 className="text-sm font-semibold leading-6 text-zinc-900">Legal</h3>
                                 <ul role="list" className="mt-6 space-y-4">
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             Privacy
                                         </a>
                                     </li>
                                     <li>
-                                        <a href="#" className="text-sm leading-6 text-zinc-400 hover:text-white">
+                                        <a href="#" className="text-sm leading-6 text-zinc-600 hover:text-zinc-900">
                                             Terms
                                         </a>
                                     </li>
@@ -106,7 +106,7 @@ export function Footer() {
                         </div>
                     </div>
                 </div>
-                <div className="mt-16 border-t border-white/10 pt-8 sm:mt-20 lg:mt-24">
+                <div className="mt-16 border-t border-black/10 pt-8 sm:mt-20 lg:mt-24">
                     <p className="text-xs leading-5 text-zinc-500">
                         &copy; 2024 Agent Elephant Inc. All rights reserved.
                     </p>

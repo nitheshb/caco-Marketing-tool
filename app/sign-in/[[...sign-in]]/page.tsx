@@ -137,17 +137,17 @@ export default function SignInPage() {
 
     if (crossAppEmail && crossAppPass) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-black">
+            <div className="flex min-h-screen items-center justify-center bg-zinc-50">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-                    <p className="text-zinc-400 text-sm font-medium">Completing sign in...</p>
+                    <p className="text-zinc-600 text-sm font-medium">Completing sign in...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-black">
+        <div className="flex min-h-screen items-center justify-center bg-zinc-50">
             {/* Background effects */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px]" />
@@ -160,16 +160,16 @@ export default function SignInPage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.3)] overflow-hidden">
                         <Image src="/logo.png" alt="Agent Elephant Logo" width={40} height={40} className="object-cover scale-125" />
                     </div>
-                    <span className="text-2xl font-bold tracking-tight text-white">Agent Elephant</span>
+                    <span className="text-2xl font-bold tracking-tight text-zinc-900">Agent Elephant</span>
                 </div>
 
                 {/* Card */}
-                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 shadow-2xl">
-                    <h1 className="text-2xl font-bold text-white text-center mb-1">Welcome back</h1>
-                    <p className="text-zinc-400 text-center text-sm mb-6">Sign in to your account to continue</p>
+                <div className="rounded-2xl border border-black/10 bg-white/70 backdrop-blur-xl p-8 shadow-2xl">
+                    <h1 className="text-2xl font-bold text-zinc-900 text-center mb-1">Welcome back</h1>
+                    <p className="text-zinc-600 text-center text-sm mb-6">Sign in to your account to continue</p>
 
                     {error && (
-                        <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+                        <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-700">
                             {error}
                         </div>
                     )}
@@ -184,7 +184,7 @@ export default function SignInPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full h-11 pl-10 pr-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all text-sm"
+                                className="w-full h-11 pl-10 pr-4 rounded-xl bg-white border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 transition-all text-sm"
                             />
                         </div>
                         <div className="relative">
@@ -195,7 +195,7 @@ export default function SignInPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full h-11 pl-10 pr-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all text-sm"
+                                className="w-full h-11 pl-10 pr-4 rounded-xl bg-white border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 transition-all text-sm"
                             />
                         </div>
                         <button
@@ -210,10 +210,10 @@ export default function SignInPage() {
                     {/* Divider */}
                     <div className="relative mb-6">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-white/10"></div>
+                            <div className="w-full border-t border-black/10"></div>
                         </div>
                         <div className="relative flex justify-center text-xs">
-                            <span className="bg-[#0c0c14] px-3 text-zinc-500 font-medium">OR CONTINUE WITH</span>
+                            <span className="bg-zinc-50 px-3 text-zinc-500 font-medium">OR CONTINUE WITH</span>
                         </div>
                     </div>
 
@@ -222,7 +222,7 @@ export default function SignInPage() {
                         {/* Google */}
                         <button
                             onClick={handleGoogleSignIn}
-                            className="w-full h-11 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-medium text-sm transition-all flex items-center justify-center gap-3"
+                            className="w-full h-11 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-900 font-medium text-sm transition-all flex items-center justify-center gap-3"
                         >
                             <svg className="h-5 w-5" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -238,7 +238,7 @@ export default function SignInPage() {
                             <button
                                 key={provider.id}
                                 onClick={() => handleCrossAppLogin(provider.id)}
-                                className="w-full h-11 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-medium text-sm transition-all flex items-center justify-center gap-3 group"
+                                className="w-full h-11 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-900 font-medium text-sm transition-all flex items-center justify-center gap-3 group"
                             >
                                 <div
                                     className="h-6 w-6 rounded-lg flex items-center justify-center text-white text-xs font-black transition-transform group-hover:scale-110"
@@ -254,7 +254,7 @@ export default function SignInPage() {
                     {/* Sign Up Link */}
                     <p className="text-center text-sm text-zinc-500 mt-6">
                         Don&apos;t have an account?{' '}
-                        <Link href="/sign-up" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+                        <Link href="/sign-up" className="text-indigo-600 hover:text-indigo-500 font-medium transition-colors">
                             Sign up
                         </Link>
                     </p>
