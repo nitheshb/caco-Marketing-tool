@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import type { StrategyTemplatePrefill } from './strategy-template-card';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,12 +36,14 @@ interface GenerateStrategyModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSuccess: (strategy: { id: string; name: string }) => void;
+    prefill?: StrategyTemplatePrefill | null;
 }
 
 export function GenerateStrategyModal({
     open,
     onOpenChange,
     onSuccess,
+    prefill,
 }: GenerateStrategyModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [businessType, setBusinessType] = useState('');
@@ -51,6 +54,16 @@ export function GenerateStrategyModal({
     const [theme, setTheme] = useState('');
     const [durationDays, setDurationDays] = useState(30);
     const [startDate, setStartDate] = useState<string>('');
+
+    useEffect(() => {
+        if (open && prefill) {
+            if (prefill.businessType) setBusinessType(prefill.businessType);
+            if (prefill.goal) setGoal(prefill.goal);
+            if (prefill.theme) setTheme(prefill.theme);
+            if (prefill.platforms?.length) setPlatforms(prefill.platforms);
+            if (prefill.durationDays) setDurationDays(prefill.durationDays);
+        }
+    }, [open, prefill]);
 
     const togglePlatform = (id: string) => {
         setPlatforms((prev) =>
@@ -125,14 +138,14 @@ export function GenerateStrategyModal({
                     <Button
                         variant="outline"
                         onClick={() => onOpenChange(false)}
-                        className="rounded-xl font-bold border-zinc-200"
+                        className="rounded-full font-bold border-zinc-200"
                     >
                         Cancel
                     </Button>
                     <Button
                         onClick={handleSubmit}
                         disabled={isSubmitting || !brandName.trim() || platforms.length === 0}
-                        className="rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                        className="rounded-full font-bold bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900"
                     >
                         {isSubmitting ? (
                             <>

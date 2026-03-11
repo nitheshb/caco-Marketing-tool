@@ -157,7 +157,7 @@ export function PostToPlatformsModal({
                     <Button
                         onClick={handleSubmit}
                         disabled={isSubmitting || selected.length === 0}
-                        className="rounded-xl bg-indigo-600 hover:bg-indigo-700"
+                        className="rounded-full bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900"
                     >
                         {isSubmitting ? (
                             <>

@@ -5,6 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Sparkles } from 'lucide-react';
 import { StrategyCard } from '@/components/strategy/strategy-card';
 import { GenerateStrategyModal } from '@/components/strategy/generate-strategy-modal';
+import {
+    STRATEGY_TEMPLATES,
+    StrategyTemplateCard,
+    type StrategyTemplatePrefill,
+} from '@/components/strategy/strategy-template-card';
 
 interface Strategy {
     id: string;
@@ -14,10 +19,14 @@ interface Strategy {
     created_at: string;
 }
 
+const LANDING_BTN =
+    'bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900 rounded-full font-bold shadow-md transition-all';
+
 export default function StrategyPage() {
     const [strategies, setStrategies] = useState<Strategy[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
+    const [prefill, setPrefill] = useState<StrategyTemplatePrefill | null>(null);
 
     const fetchStrategies = async () => {
         try {
@@ -48,22 +57,43 @@ export default function StrategyPage() {
 
     return (
         <div className="space-y-6 w-full max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[10px] border border-zinc-200 shadow-sm">
-                <div className="space-y-1">
+            <div className="bg-white p-6 rounded-[10px] border border-zinc-200 shadow-sm">
+                <div className="space-y-1 mb-6">
                     <h1 className="text-3xl font-black tracking-tight text-zinc-900">
                         Strategy Planner
                     </h1>
-                    <p className="text-zinc-500 font-medium text-sm">
+                    <p className="text-zinc-500 font-medium text-sm max-w-2xl">
                         AI-powered social media strategy. Generate a plan, review, edit, then convert to calendar events.
                     </p>
                 </div>
-                <Button
-                    onClick={() => setModalOpen(true)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 shadow-md transition-all active:scale-95 gap-2 rounded-[8px] border-0"
-                >
-                    <Sparkles className="h-5 w-5" />
-                    Generate AI Strategy
-                </Button>
+
+                <div className="space-y-4">
+                    <p className="text-sm font-semibold text-zinc-700">
+                        Choose a strategy template or create your own
+                    </p>
+                    <div className="flex gap-4 overflow-x-auto pb-2 -mx-1">
+                        {STRATEGY_TEMPLATES.map((t) => (
+                            <StrategyTemplateCard
+                                key={t.id}
+                                template={t}
+                                onClick={() => {
+                                    setPrefill(t.prefill);
+                                    setModalOpen(true);
+                                }}
+                            />
+                        ))}
+                    </div>
+                    <Button
+                        onClick={() => {
+                            setPrefill(null);
+                            setModalOpen(true);
+                        }}
+                        variant="outline"
+                        className="h-11 px-6 rounded-full font-bold border-zinc-300 hover:bg-zinc-50"
+                    >
+                        Generate your own AI strategy
+                    </Button>
+                </div>
             </div>
 
             {isLoading ? (
@@ -83,11 +113,14 @@ export default function StrategyPage() {
                         </p>
                     </div>
                     <Button
-                        onClick={() => setModalOpen(true)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 rounded-xl"
+                        onClick={() => {
+                            setPrefill(null);
+                            setModalOpen(true);
+                        }}
+                        className={`h-11 px-6 gap-2 ${LANDING_BTN}`}
                     >
-                        <Sparkles className="h-5 w-5 mr-2" />
-                        Generate AI Strategy
+                        <Sparkles className="h-5 w-5" />
+                        Generate your own AI strategy
                     </Button>
                 </div>
             ) : (
@@ -110,6 +143,7 @@ export default function StrategyPage() {
                 open={modalOpen}
                 onOpenChange={setModalOpen}
                 onSuccess={() => fetchStrategies()}
+                prefill={prefill}
             />
         </div>
     );

@@ -73,7 +73,7 @@ export function StrategyCard({
                         <Link href={`/dashboard/strategy/${id}`}>
                             <Button
                                 size="sm"
-                                className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-1.5"
+                                className="rounded-full bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900 font-bold gap-1.5"
                             >
                                 <ExternalLink className="h-3.5 w-3.5" />
                                 Open Strategy
