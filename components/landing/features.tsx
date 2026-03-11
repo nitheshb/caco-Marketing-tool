@@ -32,7 +32,7 @@ const features = [
 export function Features() {
     return (
         <section id="features" className="relative bg-white pt-12 pb-8 sm:pt-16 sm:pb-10">
-            <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto max-w-352 px-6 lg:px-10">
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8 sm:mb-10">
                     <div className="max-w-2xl">
                         <p className="text-sm font-bold tracking-widest uppercase text-[#239047] mb-3">
@@ -83,23 +83,64 @@ export function Features() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-                    {features.map((feature, i) => (
-                        <div
-                            key={feature.name}
-                            className={`rounded-xl text-zinc-900  bg-zinc-100/80 p-6 sm:p-8 text-center animate-fade-up stagger-${i + 1}`}
-                        >
+                {/* Mobile/tablet: 2x2 grid. Desktop: card | arrow | card | arrow | card | + | card */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row lg:items-stretch gap-4 lg:gap-4">
+                    {/* Card 1 */}
+                    <div className="lg:flex-1 lg:min-w-[280px]">
+                        <div className="rounded-xl text-zinc-900 bg-zinc-100/80 p-6 sm:p-8 text-center min-h-[200px] flex flex-col justify-center h-full">
                             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-800 mb-5 mx-auto">
-                                <feature.icon className="h-6 w-6 text-white" strokeWidth={2} />
+                                <Target className="h-6 w-6 text-white" strokeWidth={2} />
                             </div>
-                            <h3 className="text-lg font-semibold text-zinc-900 mb-4">
-                                {feature.name}
-                            </h3>
-                            <p className="text-[12px] leading-relaxed text-zinc-500">
-                                {feature.description}
-                            </p>
+                            <h3 className="text-lg font-semibold text-zinc-900 mb-4">{features[0].name}</h3>
+                            <p className="text-[12px] leading-relaxed text-zinc-500">{features[0].description}</p>
                         </div>
-                    ))}
+                    </div>
+                    <div className="hidden lg:flex shrink-0 w-12 items-center justify-center self-center">
+                        <svg viewBox="0 0 60 40" className="w-full h-6 text-zinc-800">
+                            <defs><marker id="arr1" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="currentColor" /></marker></defs>
+                            <path d="M 0 20 Q 25 5, 50 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" markerEnd="url(#arr1)" />
+                        </svg>
+                    </div>
+                    {/* Card 2 */}
+                    <div className="lg:flex-1 lg:min-w-[280px]">
+                        <div className="rounded-xl text-zinc-900 bg-zinc-100/80 p-6 sm:p-8 text-center min-h-[200px] flex flex-col justify-center h-full">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-800 mb-5 mx-auto">
+                                <Calendar className="h-6 w-6 text-white" strokeWidth={2} />
+                            </div>
+                            <h3 className="text-lg font-semibold text-zinc-900 mb-4">{features[1].name}</h3>
+                            <p className="text-[12px] leading-relaxed text-zinc-500">{features[1].description}</p>
+                        </div>
+                    </div>
+                    <div className="hidden lg:flex shrink-0 w-12 items-center justify-center self-center">
+                        <svg viewBox="0 0 60 40" className="w-full h-6 text-zinc-800">
+                            <defs><marker id="arr2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="currentColor" /></marker></defs>
+                            <path d="M 0 20 Q 25 5, 50 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" markerEnd="url(#arr2)" />
+                        </svg>
+                    </div>
+                    {/* Card 3 */}
+                    <div className="lg:flex-1 lg:min-w-[280px]">
+                        <div className="rounded-xl text-zinc-900 bg-zinc-100/80 p-6 sm:p-8 text-center min-h-[200px] flex flex-col justify-center h-full">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-800 mb-5 mx-auto">
+                                <Share2 className="h-6 w-6 text-white" strokeWidth={2} />
+                            </div>
+                            <h3 className="text-lg font-semibold text-zinc-900 mb-4">{features[2].name}</h3>
+                            <p className="text-[12px] leading-relaxed text-zinc-500">{features[2].description}</p>
+                        </div>
+                    </div>
+                    {/* + centered between card 3 and card 4 */}
+                    <div className="hidden lg:flex shrink-0 w-12 h-12 items-center justify-center self-center rounded-full bg-zinc-200/80 text-zinc-800 text-2xl font-semibold leading-none">
+                        <span className="block leading-none -translate-y-0.5">+</span>
+                    </div>
+                    {/* Card 4 */}
+                    <div className="lg:flex-1 lg:min-w-[280px]">
+                        <div className="rounded-xl text-zinc-900 bg-zinc-100/80 p-6 sm:p-8 text-center min-h-[200px] flex flex-col justify-center h-full">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-800 mb-5 mx-auto">
+                                <Sparkles className="h-6 w-6 text-white" strokeWidth={2} />
+                            </div>
+                            <h3 className="text-lg font-semibold text-zinc-900 mb-4">{features[3].name}</h3>
+                            <p className="text-[12px] leading-relaxed text-zinc-500">{features[3].description}</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
