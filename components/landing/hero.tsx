@@ -1,14 +1,21 @@
 'use client';
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Sparkles } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
 import { app } from "@/lib/firebase";
 import Link from "next/link";
 
+const metrics = [
+    { value: "10k+", label: "Strategies Created" },
+    { value: "4.9", label: "Avg. rating" },
+    { value: "50k+", label: "Postings done" },
+    { value: "99.9%", label: "Uptime" },
+];
+
 export function Hero() {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
@@ -21,66 +28,73 @@ export function Hero() {
     }, []);
 
     return (
-        <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black pt-16">
-            {/* Background Effects */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
-                <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[120px] mix-blend-screen" />
-                <div className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px] mix-blend-screen" />
+        <section className="relative overflow-hidden bg-zinc-50 landing-grain">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-6xl pointer-events-none">
+                <div className="absolute -top-40 -left-20 w-[600px] h-[600px] bg-indigo-100 rounded-full blur-[140px] opacity-60" />
+                <div className="absolute top-60 -right-40 w-[500px] h-[500px] bg-violet-100 rounded-full blur-[140px] opacity-50" />
+                <div className="absolute bottom-0 left-1/3 w-[400px] h-[400px] bg-rose-100 rounded-full blur-[140px] opacity-30" />
             </div>
 
-            <div className="container relative z-10 px-4 md:px-6">
-                <div className="flex flex-col items-center text-center space-y-8">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm font-medium text-indigo-300 backdrop-blur-sm">
-                        <Sparkles className="h-4 w-4" />
-                        <span>AI-Powered Video Generation</span>
-                    </div>
-
-                    <h1 className="max-w-4xl text-5xl font-bold tracking-tight text-white sm:text-7xl">
-                        Generate & Schedule <br />
-                        <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                            AI Shorts Videos
-                        </span>
-                    </h1>
-
-                    <p className="max-w-2xl text-lg text-zinc-400 sm:text-xl">
-                        Create engaging shorts for YouTube, Instagram, and TikTok in seconds.
-                        Automate your content calendar with our intelligent scheduler.
+            <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8 pt-24 pb-16 sm:pt-28 sm:pb-20">
+                <div className="max-w-3xl mx-auto text-center">
+                    <p className="animate-fade-up text-sm font-bold tracking-widest uppercase text-[#239047] mb-4">
+                        Built for creators who mean business
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                    <h1 className="animate-fade-up stagger-1 text-[49px] font-medium leading-[1.2] tracking-tight text-zinc-900">
+                        The AI e-com marketing platform for
+                        <br />
+                         smarter, faster revenue growth
+                    </h1>
+
+                    <p className="animate-fade-up stagger-2 mt-6 max-w-2xl mx-auto text-base leading-relaxed text-zinc-900">
+                        Build smarter strategy, auto AI postings, auto scheduling,
+                        <br />
+                        with a unified platform built for modern sales and marketing teams.
+                    </p>
+
+                    <div className="animate-fade-up stagger-3 mt-10 flex flex-wrap items-center justify-center gap-4">
                         {isLoaded && !user && (
                             <Link href="/sign-up">
-                                <Button size="lg" className="h-12 px-8 text-base bg-white text-black hover:bg-zinc-200 transition-all hover:scale-105">
-                                    Start Creating for Free
+                                <Button
+                                    size="lg"
+                                    className="h-12 px-7 text-[15px] font-medium bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900 rounded-full shadow-lg shadow-[#ebf212]/30 transition-all hover:-translate-y-0.5"
+                                >
+                                    Get started free
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </Link>
                         )}
                         {isLoaded && user && (
                             <Link href="/dashboard">
-                                <Button size="lg" className="h-12 px-8 text-base bg-white text-black hover:bg-zinc-200 transition-all hover:scale-105">
+                                <Button
+                                    size="lg"
+                                    className="h-12 px-7 text-[15px] font-medium bg-[#f2d412] text-zinc-900 hover:bg-[#f2c112] rounded-full shadow-lg shadow-[#ebf212]/30 transition-all hover:-translate-y-0.5"
+                                >
                                     Go to Dashboard
                                     <ArrowRight className="ml-2 h-4 w-4" />
                                 </Button>
                             </Link>
                         )}
-                        <Button size="lg" variant="outline" className="h-12 px-8 text-base border-white/10 text-white bg-white/10 ">
-                            <Play className="mr-2 h-4 w-4" />
-                            Watch Demo
+                        <Button
+                            size="lg"
+                            variant="outline"
+                            className="h-12 px-7 text-[15px] font-medium text-zinc-900 hover:text-zinc-900 hover:bg-[#f2c112]/25 border-zinc-300 rounded-full"
+                        >
+                            <Play className="mr-2 h-4 w-4 fill-current" />
+                            Watch demo
                         </Button>
                     </div>
+                </div>
 
-                    {/* Social Proof / Platforms */}
-                    <div className="pt-12 flex flex-col items-center gap-4">
-                        <p className="text-sm font-medium text-zinc-500 uppercase tracking-wider">
-                            Trusted by creators on
-                        </p>
-                        <div className="flex items-center gap-8 opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-                            <span className="text-xl font-bold text-white">YouTube Shorts</span>
-                            <span className="text-xl font-bold text-white">Instagram Reels</span>
-                            <span className="text-xl font-bold text-white">TikTok</span>
+                {/* Metrics cards */}
+                <div className="animate-fade-up stagger-5 mt-10 flex flex-wrap justify-center gap-3 sm:gap-4">
+                    {metrics.map((m) => (
+                        <div key={m.label} className="bg-white rounded-xl border border-zinc-200/80 px-6 py-5 shadow-sm min-w-[140px] sm:min-w-[160px] text-center">
+                            <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-zinc-900">{m.value}</p>
+                            <p className="mt-0.5 text-sm text-zinc-500">{m.label}</p>
                         </div>
-                    </div>
+                    ))}
                 </div>
             </div>
         </section>

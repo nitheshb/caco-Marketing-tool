@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleSignOut = async () => {
     await firebaseSignOut(auth);
     document.cookie = '__session=; path=/; max-age=0';
-    window.location.href = '/sign-in'; // Redirect using window.location to strictly clear all client state
+    window.location.href = '/'; // Redirect using window.location to strictly clear all client state
   };
 
   const getIdToken = async () => {

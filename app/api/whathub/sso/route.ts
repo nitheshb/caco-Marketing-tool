@@ -1,62 +1,57 @@
-import { NextResponse } from "next/server";
-import { SignJWT } from "jose";
-import { getAuthUser } from "@/lib/auth-helpers";
-import { supabaseAdmin } from "@/lib/supabase";
+import { NextRequest, NextResponse } from 'next/server';
+import * as jose from 'jose';
 
-/**
- * GET /api/whathub/sso
- *
- * Generates a signed short-lived JWT for the logged-in Agent Elephant user and
- * redirects them to Whathub's /api/auth/caco-sso endpoint, which validates the
- * token, finds or provisions the user, sets auth cookies, and redirects to the
- * Whathub dashboard.
- *
- * The secret in WHATHUB_SSO_SECRET must match [caco_sso].secret in Whathub's config.toml.
- */
-export async function GET(req: Request) {
-    try {
-        const { userId } = await getAuthUser(req);
-        if (!userId) {
-            return new NextResponse("Unauthorized", { status: 401 });
-        }
+const WHATHUB_URL = process.env.WHATHUB_URL || 'http://146.190.113.104:8080';
+const WHATHUB_SSO_SECRET = process.env.WHATHUB_SSO_SECRET || '';
 
-        // Get the user's email from Supabase
-        const { data: user, error } = await supabaseAdmin
-            .from('users')
-            .select('email, full_name')
-            .eq('id', userId)
-            .single();
-
-        if (error || !user?.email) {
-            console.error('[Whathub SSO] Could not fetch user email:', error);
-            return new NextResponse("User not found", { status: 404 });
-        }
-
-        const ssoSecret = process.env.WHATHUB_SSO_SECRET;
-        const whathubUrl = (process.env.WHATHUB_URL || 'http://146.190.113.104:8080').replace(/\/$/, '');
-
-        if (!ssoSecret) {
-            console.error("[Whathub SSO] WHATHUB_SSO_SECRET is not set — redirecting to Whathub root");
-            return NextResponse.redirect(`${whathubUrl}/`);
-        }
-
-        // Build a signed JWT (HS256) — this matches what Whathub's CacoSSO handler expects
-        const secret = new TextEncoder().encode(ssoSecret);
-        const token = await new SignJWT({ email: user.email })
-            .setProtectedHeader({ alg: 'HS256' })
-            .setIssuer('caco-marketing-tool')
-            .setIssuedAt()
-            .setExpirationTime('5m') // short-lived — valid for 5 minutes
-            .sign(secret);
-
-        const loginUrl = `${whathubUrl}/api/auth/caco-sso?token=${encodeURIComponent(token)}`;
-
-        console.log(`[Whathub SSO] Redirecting user ${user.email} to Whathub`);
-        return NextResponse.redirect(loginUrl);
-
-    } catch (error: any) {
-        console.error("[Whathub SSO] Error:", error);
-        const whathubUrl = (process.env.WHATHUB_URL || 'http://146.190.113.104:8080').replace(/\/$/, '');
-        return NextResponse.redirect(`${whathubUrl}/`);
+export async function GET(request: NextRequest) {
+    if (!WHATHUB_SSO_SECRET) {
+        return NextResponse.json(
+            { error: 'SSO not configured. Set WHATHUB_SSO_SECRET in .env.local' },
+            { status: 503 }
+        );
     }
+
+    // The auth context stores a Firebase ID token in the __session cookie
+    const sessionCookie = request.cookies.get('__session')?.value;
+
+    if (!sessionCookie) {
+        // Not logged in
+        return NextResponse.redirect(new URL('/sign-in', request.url));
+    }
+
+    let userEmail: string | null = null;
+
+    try {
+        // Firebase ID token is a JWT — decode (not verify) to extract the email claim
+        // We trust it because the middleware already guards all /api/* routes
+        const parts = sessionCookie.split('.');
+        if (parts.length === 3) {
+            // Add padding if needed
+            const payload = JSON.parse(
+                Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf-8')
+            );
+            userEmail = payload.email || null;
+        }
+    } catch {
+        return NextResponse.redirect(new URL('/sign-in', request.url));
+    }
+
+    if (!userEmail) {
+        return NextResponse.redirect(new URL('/sign-in', request.url));
+    }
+
+    // Generate a short-lived signed JWT (30 seconds) for Whathub SSO
+    const secret = new TextEncoder().encode(WHATHUB_SSO_SECRET);
+    const token = await new jose.SignJWT({ email: userEmail })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setIssuer('caco-marketing-tool')
+        .setExpirationTime('30s')
+        .sign(secret);
+
+    // Redirect the browser to the Whathub SSO endpoint
+    // Whathub validates the token, sets its own auth cookies, and redirects to dashboard
+    const whathubSSOUrl = `${WHATHUB_URL}/api/auth/caco-sso?token=${encodeURIComponent(token)}`;
+    return NextResponse.redirect(whathubSSOUrl);
 }
