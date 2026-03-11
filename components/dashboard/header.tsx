@@ -30,7 +30,7 @@ export function Header() {
         const auth = getAuth(app);
         await signOut(auth);
         document.cookie = '__session=; path=/; max-age=0';
-        router.push('/sign-in');
+        router.push('/');
     };
 
     const initials = user?.displayName
