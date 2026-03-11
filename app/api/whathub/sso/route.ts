@@ -49,7 +49,7 @@ export async function GET(req: Request) {
             .setExpirationTime('5m') // short-lived — valid for 5 minutes
             .sign(secret);
 
-        const loginUrl = `${whathubUrl}/api/auth/caco-sso?token=${token}`;
+        const loginUrl = `${whathubUrl}/api/auth/caco-sso?token=${encodeURIComponent(token)}`;
 
         console.log(`[Whathub SSO] Redirecting user ${user.email} to Whathub`);
         return NextResponse.redirect(loginUrl);
