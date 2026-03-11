@@ -50,6 +50,7 @@ export function GenerateStrategyModal({
     const [platforms, setPlatforms] = useState<string[]>([]);
     const [theme, setTheme] = useState('');
     const [durationDays, setDurationDays] = useState(30);
+    const [startDate, setStartDate] = useState<string>('');
 
     const togglePlatform = (id: string) => {
         setPlatforms((prev) =>
@@ -66,6 +67,10 @@ export function GenerateStrategyModal({
             toast.error('Select at least one platform');
             return;
         }
+        if (!startDate) {
+            toast.error('Start date is required');
+            return;
+        }
 
         setIsSubmitting(true);
         try {
@@ -80,6 +85,7 @@ export function GenerateStrategyModal({
                     platforms,
                     theme: theme.trim() || undefined,
                     durationDays,
+                    startDate,
                 }),
             });
 
@@ -100,6 +106,7 @@ export function GenerateStrategyModal({
             setPlatforms([]);
             setTheme('');
             setDurationDays(30);
+            setStartDate('');
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Failed to generate strategy');
         } finally {
@@ -237,6 +244,16 @@ export function GenerateStrategyModal({
                                 ))}
                             </SelectContent>
                         </Select>
+                    </div>
+
+                    <div>
+                        <Label className="text-sm font-bold text-zinc-600">Start Date *</Label>
+                        <Input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="mt-1.5 h-11 rounded-xl border-zinc-200"
+                        />
                     </div>
                 </div>
         </SlidePanel>

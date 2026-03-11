@@ -19,11 +19,12 @@ export async function POST(req: NextRequest) {
             platforms,
             theme,
             durationDays,
+            startDate,
         } = body;
 
-        if (!brandName || !platforms?.length || !durationDays) {
+        if (!brandName || !platforms?.length || !durationDays || !startDate) {
             return NextResponse.json(
-                { error: 'Brand name, platforms, and duration are required' },
+                { error: 'Brand name, platforms, duration, and start date are required' },
                 { status: 400 }
             );
         }
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
                 platforms: platforms || [],
                 theme: theme || null,
                 duration_days: Number(durationDays) || 30,
+                start_date: startDate,
             })
             .select()
             .single();

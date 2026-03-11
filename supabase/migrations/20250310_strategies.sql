@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS public.strategies (
   platforms TEXT[],
   theme TEXT,
   duration_days INTEGER NOT NULL DEFAULT 30,
+  start_date DATE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

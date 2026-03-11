@@ -43,6 +43,7 @@ interface EditStrategyPostModalProps {
     post: StrategyPost | null;
     strategyId: string;
     durationDays: number;
+    startDate?: string | null;
     onSave: () => void;
     isCreate?: boolean;
     initialDay?: number;
@@ -56,6 +57,7 @@ export function EditStrategyPostModal({
     post,
     strategyId,
     durationDays,
+    startDate: strategyStartDate = null,
     onSave,
     isCreate = false,
     initialDay = 1,
@@ -207,18 +209,35 @@ export function EditStrategyPostModal({
             <div className="space-y-4 px-6 py-4">
                     <div>
                         <Label className="text-sm font-bold text-zinc-600">Day</Label>
-                        <Select value={String(day)} onValueChange={(v) => setDay(Number(v))}>
-                            <SelectTrigger className="mt-1.5 h-11 rounded-xl border-zinc-200">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Array.from({ length: durationDays }, (_, i) => i + 1).map((d) => (
-                                    <SelectItem key={d} value={String(d)}>
-                                        Day {d}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <div className="mt-1.5 flex items-center gap-3">
+                            <Select value={String(day)} onValueChange={(v) => setDay(Number(v))}>
+                                <SelectTrigger className="h-11 rounded-xl border-zinc-200 w-28">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.from({ length: durationDays }, (_, i) => i + 1).map((d) => (
+                                        <SelectItem key={d} value={String(d)}>
+                                            Day {d}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {strategyStartDate && (
+                                <span className="text-xs text-zinc-500">
+                                    {(() => {
+                                        const base = new Date(strategyStartDate);
+                                        if (Number.isNaN(base.getTime())) return null;
+                                        const date = new Date(base);
+                                        date.setDate(base.getDate() + (day - 1));
+                                        return new Intl.DateTimeFormat('en-GB', {
+                                            day: '2-digit',
+                                            month: '2-digit',
+                                            year: '2-digit',
+                                        }).format(date);
+                                    })()}
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     <div>

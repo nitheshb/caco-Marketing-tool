@@ -8,6 +8,7 @@ import type { StrategyPost } from './edit-strategy-post-modal';
 interface StrategyColumnProps {
     day: number;
     posts: StrategyPost[];
+    dateLabel?: string;
     onAddPost: () => void;
     onEditPost: (post: StrategyPost) => void;
     onClonePost: (post: StrategyPost) => void;
@@ -19,6 +20,7 @@ interface StrategyColumnProps {
 export function StrategyColumn({
     day,
     posts,
+    dateLabel,
     onAddPost,
     onEditPost,
     onClonePost,
@@ -29,7 +31,12 @@ export function StrategyColumn({
     return (
         <div className="flex flex-col min-w-0 w-full rounded-xl border border-zinc-200 bg-zinc-50/50">
             <div className="flex items-center justify-between gap-2 p-3 border-b border-zinc-200 bg-white rounded-t-xl">
-                <h3 className="font-bold text-zinc-900">Day {day}</h3>
+                <div className="flex flex-col">
+                    <h3 className="font-bold text-zinc-900">Day {day}</h3>
+                    {dateLabel && (
+                        <span className="text-xs text-zinc-500">{dateLabel}</span>
+                    )}
+                </div>
                 <Button
                     size="sm"
                     variant="ghost"

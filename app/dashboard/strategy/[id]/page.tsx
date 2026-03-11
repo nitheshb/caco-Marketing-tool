@@ -10,12 +10,14 @@ import { StrategyColumn } from '@/components/strategy/strategy-column';
 import { EditStrategyPostModal } from '@/components/strategy/edit-strategy-post-modal';
 import { PostToPlatformsModal } from '@/components/strategy/post-to-platforms-modal';
 import type { StrategyPost } from '@/components/strategy/edit-strategy-post-modal';
+import { addDays, format } from 'date-fns';
 import { toast } from 'sonner';
 
 interface Strategy {
     id: string;
     name: string;
     duration_days: number;
+    start_date?: string | null;
     posts: StrategyPost[];
 }
 
@@ -171,8 +173,21 @@ export default function StrategyBoardPage() {
 
     const duration = strategy.duration_days || 30;
     const postsByDay: Record<number, StrategyPost[]> = {};
+    const dateLabels: Record<number, string | null> = {};
+
+    let baseDate: Date | null = null;
+    if (strategy.start_date) {
+        baseDate = new Date(strategy.start_date);
+    }
+
     for (let d = 1; d <= duration; d++) {
         postsByDay[d] = (strategy.posts || []).filter((p) => p.day === d);
+        if (baseDate) {
+            const date = addDays(baseDate, d - 1);
+            dateLabels[d] = format(date, 'dd/MM/yy');
+        } else {
+            dateLabels[d] = null;
+        }
     }
 
     return (
@@ -205,6 +220,7 @@ export default function StrategyBoardPage() {
                             key={day}
                             day={day}
                             posts={postsByDay[day] || []}
+                            dateLabel={dateLabels[day] || undefined}
                             onAddPost={() => handleAddPost(day)}
                             onEditPost={handleEditPost}
                             onClonePost={handleClonePost}
@@ -240,6 +256,7 @@ export default function StrategyBoardPage() {
                 post={editingPost}
                 strategyId={id}
                 durationDays={duration}
+                startDate={strategy.start_date ?? null}
                 onSave={handleModalSave}
                 isCreate={!!addDay || !!cloneFrom}
                 initialDay={cloneFrom ? cloneFrom.day : (addDay ?? 1)}
