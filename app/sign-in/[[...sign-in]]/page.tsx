@@ -5,14 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getHelloStoresAuth } from '@/lib/firebase-hellostores';
-import { getRedefineAuth } from '@/lib/firebase-redefine';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Image from "next/image";
 import { HelloStoresLoginModal } from '@/components/hellostores-login-modal';
 import { RedefineLoginModal } from '@/components/redefine-login-modal';
 import { CROSS_APP_PROVIDERS } from '@/lib/cross-app-providers';
-import { Video, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
 
 export default function SignInPage() {
     const [email, setEmail] = useState('');
@@ -28,7 +25,6 @@ export default function SignInPage() {
     const crossAppPass = searchParams.get('crossAppPass');
     const crossAppError = searchParams.get('error');
 
-    // Handle cross-app login callback with generated credentials
     useEffect(() => {
         if (crossAppEmail && crossAppPass) {
             setLoading(true);
@@ -36,7 +32,6 @@ export default function SignInPage() {
                 .then(async (cred) => {
                     const token = await cred.user.getIdToken();
                     document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax`;
-                    // Check if we are inside a popup
                     if (window.opener && !window.opener.closed) {
                         window.opener.postMessage('cross_app_login_success', window.location.origin);
                         window.close();
@@ -67,13 +62,14 @@ export default function SignInPage() {
             const cred = await signInWithEmailAndPassword(auth, email, password);
             await setSessionCookie(cred.user);
             router.push(redirect);
-        } catch (err: any) {
-            if (err.code === 'auth/invalid-credential') {
+        } catch (err: unknown) {
+            const error = err as { code?: string; message?: string };
+            if (error.code === 'auth/invalid-credential') {
                 setError('Invalid email or password');
-            } else if (err.code === 'auth/user-not-found') {
+            } else if (error.code === 'auth/user-not-found') {
                 setError('No account found with this email');
             } else {
-                setError(err.message || 'Failed to sign in');
+                setError(error.message || 'Failed to sign in');
             }
         } finally {
             setLoading(false);
@@ -87,142 +83,130 @@ export default function SignInPage() {
             const cred = await signInWithPopup(auth, provider);
             await setSessionCookie(cred.user);
             router.push(redirect);
-        } catch (err: any) {
-            setError(err.message || 'Google sign-in failed');
+        } catch (err: unknown) {
+            setError((err as { message?: string }).message || 'Google sign-in failed');
         }
     };
 
-    const handleHelloStoresLogin = () => {
-        setIsHelloStoresModalOpen(true);
-    };
+    const handleHelloStoresLogin = () => setIsHelloStoresModalOpen(true);
+    const handleRedefineLogin = () => setIsRedefineModalOpen(true);
 
-    const handleRedefineLogin = () => {
-        setIsRedefineModalOpen(true);
-    };
-
-    const handleLoginSuccess = async (email: string, pass: string, extraData?: any) => {
+    const handleLoginSuccess = async (email: string, pass: string, extraData?: { org_id?: string; project_id?: string; source_login?: string }) => {
         setIsHelloStoresModalOpen(false);
         setIsRedefineModalOpen(false);
         setLoading(true);
         try {
-            // Store partner data for UserSync to pick up
             if (extraData) {
-                localStorage.setItem('partner_auth_info', JSON.stringify({
-                    org_id: extraData.org_id,
-                    project_id: extraData.project_id,
-                    source_login: extraData.source_login
-                }));
+                localStorage.setItem('partner_auth_info', JSON.stringify(extraData));
             }
-
             const cred = await signInWithEmailAndPassword(auth, email, pass);
             await setSessionCookie(cred.user);
             router.push(redirect);
-        } catch (err: any) {
-            setError(err.message || 'Agent Elephant sign-in failed');
+        } catch (err: unknown) {
+            setError((err as { message?: string }).message || 'Agent Elephant sign-in failed');
         } finally {
             setLoading(false);
         }
     };
 
     const handleCrossAppLogin = (providerId: string) => {
-        if (providerId === 'hellostores') {
-            handleHelloStoresLogin();
-            return;
-        }
-        if (providerId === 'redefine') {
-            handleRedefineLogin();
-            return;
-        }
+        if (providerId === 'hellostores') handleHelloStoresLogin();
+        else if (providerId === 'redefine') handleRedefineLogin();
     };
 
     if (crossAppEmail && crossAppPass) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-zinc-50">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-                    <p className="text-zinc-600 text-sm font-medium">Completing sign in...</p>
+            <div className="flex min-h-screen items-center justify-center bg-zinc-50 landing-grain">
+                <div className="flex flex-col items-center gap-5 animate-fade-in">
+                    <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+                    <p className="text-zinc-500 text-sm font-medium">Completing sign in...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-50">
-            {/* Background effects */}
+        <div className="relative flex min-h-screen items-start justify-center bg-zinc-50 landing-grain pt-8 pb-12">
+            {/* Background */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[120px]" />
+                <div className="absolute -top-40 -left-20 w-[600px] h-[600px] bg-indigo-100 rounded-full blur-[140px] opacity-60" />
+                <div className="absolute top-1/2 -right-40 w-[500px] h-[500px] bg-violet-100 rounded-full blur-[140px] opacity-50" />
             </div>
 
-            <div className="relative z-10 w-full max-w-md mx-4">
-                {/* Logo */}
-                <div className="flex items-center justify-center gap-2 mb-8">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.3)] overflow-hidden">
-                        <Image src="/logo.png" alt="Agent Elephant Logo" width={40} height={40} className="object-cover scale-125" />
+            <div className="relative z-10 w-full max-w-[420px] mx-4">
+                <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors mb-6"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to home
+                </Link>
+
+                <div className="flex items-center gap-2.5 mb-8">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 overflow-hidden">
+                        <Image src="/logo.png" alt="Agent Elephant" width={40} height={40} className="object-cover scale-125" />
                     </div>
-                    <span className="text-2xl font-bold tracking-tight text-zinc-900">Agent Elephant</span>
+                    <span className="text-xl font-bold tracking-tight text-zinc-900">Agent Elephant</span>
                 </div>
 
-                {/* Card */}
-                <div className="rounded-2xl border border-black/10 bg-white/70 backdrop-blur-xl p-8 shadow-2xl">
-                    <h1 className="text-2xl font-bold text-zinc-900 text-center mb-1">Welcome back</h1>
-                    <p className="text-zinc-600 text-center text-sm mb-6">Sign in to your account to continue</p>
+                <div className="rounded-2xl border border-zinc-200/80 bg-white p-8 sm:p-10 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+                    <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900">Welcome back</h1>
+                    <p className="mt-1.5 text-[15px] text-zinc-500">Sign in to your account to continue</p>
 
                     {error && (
-                        <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-700">
+                        <div className="mt-6 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-700">
                             {error}
                         </div>
                     )}
 
-                    {/* Email/Password Form */}
-                    <form onSubmit={handleEmailSignIn} className="space-y-4 mb-6">
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                    <form onSubmit={handleEmailSignIn} className="mt-6 space-y-4">
+                        <div>
+                            <label htmlFor="email" className="sr-only">Email</label>
                             <input
+                                id="email"
                                 type="email"
                                 placeholder="Email address"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="w-full h-11 pl-10 pr-4 rounded-xl bg-white border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 transition-all text-sm"
+                                className="w-full h-12 pl-4 pr-4 rounded-xl border border-zinc-200 bg-zinc-50/50 text-zinc-900 placeholder:text-zinc-400 text-[15px] focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-300 transition-all"
                             />
                         </div>
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                        <div>
+                            <label htmlFor="password" className="sr-only">Password</label>
                             <input
+                                id="password"
                                 type="password"
                                 placeholder="Password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="w-full h-11 pl-10 pr-4 rounded-xl bg-white border border-zinc-200 text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 transition-all text-sm"
+                                className="w-full h-12 pl-4 pr-4 rounded-xl border border-zinc-200 bg-zinc-50/50 text-zinc-900 placeholder:text-zinc-400 text-[15px] focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-300 transition-all"
                             />
                         </div>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-11 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-all hover:shadow-[0_0_20px_rgba(79,70,229,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full h-12 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-[15px] transition-all hover:-translate-y-px shadow-lg shadow-zinc-900/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center justify-center gap-2"
                         >
-                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Sign In <ArrowRight className="h-4 w-4" /></>}
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Sign in <ArrowRight className="h-4 w-4" /></>}
                         </button>
                     </form>
 
-                    {/* Divider */}
-                    <div className="relative mb-6">
+                    <div className="relative my-8">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-black/10"></div>
+                            <div className="w-full border-t border-zinc-200" />
                         </div>
-                        <div className="relative flex justify-center text-xs">
-                            <span className="bg-zinc-50 px-3 text-zinc-500 font-medium">OR CONTINUE WITH</span>
+                        <div className="relative flex justify-center">
+                            <span className="bg-white px-3 text-xs font-medium tracking-widest uppercase text-zinc-400">Or continue with</span>
                         </div>
                     </div>
 
-                    {/* Social Logins */}
                     <div className="space-y-3">
-                        {/* Google */}
                         <button
                             onClick={handleGoogleSignIn}
-                            className="w-full h-11 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-900 font-medium text-sm transition-all flex items-center justify-center gap-3"
+                            type="button"
+                            className="w-full h-12 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-900 font-medium text-[15px] transition-all flex items-center justify-center gap-3"
                         >
                             <svg className="h-5 w-5" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -233,15 +217,15 @@ export default function SignInPage() {
                             Continue with Google
                         </button>
 
-                        {/* Cross-App Login Buttons */}
                         {CROSS_APP_PROVIDERS.map((provider) => (
                             <button
                                 key={provider.id}
                                 onClick={() => handleCrossAppLogin(provider.id)}
-                                className="w-full h-11 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-900 font-medium text-sm transition-all flex items-center justify-center gap-3 group"
+                                type="button"
+                                className="w-full h-12 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-900 font-medium text-[15px] transition-all flex items-center justify-center gap-3 group"
                             >
                                 <div
-                                    className="h-6 w-6 rounded-lg flex items-center justify-center text-white text-xs font-black transition-transform group-hover:scale-110"
+                                    className="h-6 w-6 rounded-lg flex items-center justify-center text-white text-xs font-black"
                                     style={{ backgroundColor: provider.color }}
                                 >
                                     {provider.name.charAt(0)}
@@ -251,27 +235,17 @@ export default function SignInPage() {
                         ))}
                     </div>
 
-                    {/* Sign Up Link */}
-                    <p className="text-center text-sm text-zinc-500 mt-6">
+                    <p className="mt-8 text-center text-sm text-zinc-500">
                         Don&apos;t have an account?{' '}
-                        <Link href="/sign-up" className="text-indigo-600 hover:text-indigo-500 font-medium transition-colors">
+                        <Link href="/sign-up" className="font-semibold text-zinc-900 hover:underline">
                             Sign up
                         </Link>
                     </p>
                 </div>
             </div>
 
-            <HelloStoresLoginModal 
-                isOpen={isHelloStoresModalOpen}
-                onClose={() => setIsHelloStoresModalOpen(false)}
-                onSuccess={handleLoginSuccess}
-            />
-
-            <RedefineLoginModal 
-                isOpen={isRedefineModalOpen}
-                onClose={() => setIsRedefineModalOpen(false)}
-                onSuccess={handleLoginSuccess}
-            />
+            <HelloStoresLoginModal isOpen={isHelloStoresModalOpen} onClose={() => setIsHelloStoresModalOpen(false)} onSuccess={handleLoginSuccess} />
+            <RedefineLoginModal isOpen={isRedefineModalOpen} onClose={() => setIsRedefineModalOpen(false)} onSuccess={handleLoginSuccess} />
         </div>
     );
 }
