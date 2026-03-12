@@ -105,7 +105,7 @@ export default function StrategyPage() {
                     <div className="flex items-center justify-between">
                         <Skeleton className="h-4 w-40" />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
                             <StrategyCardSkeleton key={i} />
                         ))}
@@ -142,7 +142,7 @@ export default function StrategyPage() {
                             {strategies.length === 1 ? ' strategy' : ' strategies'}
                         </p>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {strategies.map((s) => (
                             <StrategyCard
                                 key={s.id}

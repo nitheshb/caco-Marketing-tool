@@ -5,22 +5,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export function StrategyCardSkeleton() {
     return (
-        <Card className="rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm p-0 gap-0">
-            <Skeleton className="h-28 w-full rounded-none" />
-            <div className="p-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                    <Skeleton className="h-5 flex-1 max-w-[80%]" />
-                    <Skeleton className="h-7 w-7 shrink-0 rounded-full" />
+        <Card className="overflow-hidden rounded-xl border border-zinc-200 bg-white p-0 shadow-sm">
+            {/* 16:9 thumbnail */}
+            <Skeleton className="aspect-video w-full rounded-none" />
+            <div className="flex gap-3 px-3 pt-2 pb-3">
+                <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                    <Skeleton className="h-4 w-[85%]" />
+                    <Skeleton className="h-3 w-2/3" />
                 </div>
-                <div className="space-y-2">
-                    <Skeleton className="h-4 w-[75%]" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <Skeleton className="h-4 w-2/3" />
-                </div>
-                <div className="flex gap-2 pt-2">
-                    <Skeleton className="h-9 w-28 rounded-full" />
-                    <Skeleton className="h-9 w-20 rounded-lg" />
-                </div>
+                <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+            </div>
+            <div className="px-3 pb-3">
+                <Skeleton className="h-9 w-full rounded-full" />
             </div>
         </Card>
     );

@@ -2,9 +2,8 @@
 
 import Link from 'next/link';
 import { useRef } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Trash2, ExternalLink, ImagePlus } from 'lucide-react';
+import { Trash2, ImagePlus, MoreVertical, FolderOpen } from 'lucide-react';
 import { format } from 'date-fns';
 import {
     AlertDialog,
@@ -16,6 +15,13 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -93,89 +99,136 @@ export function StrategyCard({
         ?.map((p) => p.charAt(0).toUpperCase() + p.slice(1))
         .join(', ') || '—';
 
+    const metadata = [
+        platformLabels,
+        `${durationDays}d`,
+        format(new Date(createdAt), 'dd MMM'),
+        startDate ? format(new Date(startDate), 'dd MMM') : null,
+    ]
+        .filter(Boolean)
+        .join(' · ');
+
     return (
         <>
-            <Card className="rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm transition-shadow hover:shadow-md p-0 gap-0">
-                <div
-                    className="relative h-28 bg-zinc-100 flex items-center justify-center cursor-pointer group"
-                    onClick={() => fileInputRef.current?.click()}
-                >
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageSelect}
-                        disabled={isUploading}
-                    />
-                    {displayImageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                            src={displayImageUrl}
-                            alt=""
-                            className="absolute inset-0 w-full h-full object-cover"
+            <Card className="group overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md p-0">
+                {/* Thumbnail - 16:9 aspect ratio for consistent alignment */}
+                <Link href={`/dashboard/strategy/${id}`} className="block relative group/thumb">
+                    <div className="relative aspect-video w-full overflow-hidden bg-zinc-100">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageSelect}
+                            disabled={isUploading}
                         />
-                    ) : (
-                        <div className="flex flex-col items-center gap-1.5 text-zinc-400">
-                            <ImagePlus className="h-8 w-8" strokeWidth={1.5} />
-                            <span className="text-sm font-medium">No image</span>
-                            <span className="text-xs">Click to upload</span>
-                        </div>
-                    )}
-                    {isUploading && (
-                        <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-                            <span className="text-sm font-medium text-zinc-600">Uploading...</span>
-                        </div>
-                    )}
-                </div>
-                <div className="p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                        <h3 className="text-lg font-semibold tracking-tight text-zinc-900 line-clamp-2 flex-1 min-w-0">{name}</h3>
-                        <span className="shrink-0 inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full bg-zinc-100 text-zinc-700 text-xs font-semibold">
-                            {postsCount}
-                        </span>
-                    </div>
-                    <div className="space-y-1.5 text-sm text-zinc-500">
-                        <p>
-                            <span className="font-medium text-zinc-700">Platforms:</span> {platformLabels}
-                        </p>
-                        <p>
-                            <span className="font-medium text-zinc-700">Duration:</span> {durationDays} days
-                        </p>
-                        <p>
-                            <span className="font-medium text-zinc-700">Created:</span>{' '}
-                            {format(new Date(createdAt), 'dd MMM yyyy')}
-                        </p>
-                        {startDate && (
-                            <p>
-                                <span className="font-medium text-zinc-700">Start:</span>{' '}
-                                {format(new Date(startDate), 'dd MMM yyyy')}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex gap-2 pt-1">
-                        <Link href={`/dashboard/strategy/${id}`}>
-                            <Button
-                                size="sm"
-                                className="rounded-full bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900 font-medium text-[15px] gap-1.5"
-                            >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                                Open Strategy
-                            </Button>
-                        </Link>
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="rounded-lg border-zinc-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                        {/* Hover overlay for change cover; when no image, always clickable for upload */}
+                        <button
+                            type="button"
+                            className={`absolute inset-0 z-10 flex items-center justify-center transition-opacity ${
+                                displayImageUrl
+                                    ? 'bg-black/40 opacity-0 pointer-events-none group-hover/thumb:opacity-100 group-hover/thumb:pointer-events-auto'
+                                    : 'bg-transparent opacity-100 pointer-events-auto'
+                            }`}
                             onClick={(e) => {
                                 e.preventDefault();
-                                setDeleteOpen(true);
+                                e.stopPropagation();
+                                fileInputRef.current?.click();
                             }}
+                            aria-label="Change cover image"
                         >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            Delete
-                        </Button>
+                            {displayImageUrl ? (
+                                <span className="rounded bg-white/90 px-2 py-1 text-xs font-medium text-zinc-800">
+                                    Change cover
+                                </span>
+                            ) : null}
+                        </button>
+                        {displayImageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                src={displayImageUrl}
+                                alt=""
+                                className="absolute inset-0 h-full w-full object-cover"
+                            />
+                        ) : (
+                            <div className="flex h-full flex-col items-center justify-center gap-1.5 text-zinc-400">
+                                <ImagePlus className="h-8 w-8" strokeWidth={1.5} />
+                                <span className="text-sm font-medium">No image</span>
+                                <span className="text-xs">Click to upload</span>
+                            </div>
+                        )}
+                        {/* Post count badge - YouTube-style duration overlay */}
+                        <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-xs font-medium text-white">
+                            {postsCount} posts
+                        </span>
+                        {isUploading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/80">
+                                <span className="text-sm font-medium text-zinc-600">Uploading...</span>
+                            </div>
+                        )}
                     </div>
+                </Link>
+
+                {/* Details block - YouTube-style layout */}
+                <div className="flex gap-3 px-3 pt-2 pb-3">
+                    {/* Avatar */}
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-100">
+                        <FolderOpen className="h-4 w-4 text-zinc-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <Link href={`/dashboard/strategy/${id}`} className="block">
+                            <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-zinc-900 group-hover:text-zinc-700">
+                                {name}
+                            </h3>
+                        </Link>
+                        <p className="mt-0.5 line-clamp-1 text-xs text-zinc-500">{metadata}</p>
+                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0 rounded-full text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700"
+                                onClick={(e) => e.preventDefault()}
+                            >
+                                <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 rounded-lg border border-zinc-200">
+                            <DropdownMenuItem
+                                variant="destructive"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setDeleteOpen(true);
+                                }}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    fileInputRef.current?.click();
+                                }}
+                            >
+                                <ImagePlus className="h-4 w-4" />
+                                Change cover
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
+                {/* Open button */}
+                <div className="px-3 pb-3">
+                    <Link href={`/dashboard/strategy/${id}`}>
+                        <Button
+                            size="sm"
+                            className="w-full rounded-full bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900 font-medium text-[15px] gap-1.5"
+                        >
+                            <FolderOpen className="h-3.5 w-3.5" />
+                            Open Strategy
+                        </Button>
+                    </Link>
                 </div>
             </Card>
 
