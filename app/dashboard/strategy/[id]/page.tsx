@@ -206,7 +206,7 @@ export default function StrategyBoardPage() {
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         <Input
                             value={name}
                             onChange={(e) => setName(e.target.value)}
@@ -216,9 +216,13 @@ export default function StrategyBoardPage() {
                         {isSavingName && (
                             <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
                         )}
+                        <span className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-sm font-semibold">
+                            {strategy.posts?.length ?? 0} {strategy.posts?.length === 1 ? 'post' : 'posts'}
+                        </span>
                     </div>
                 </div>
-                <div className="flex items-center gap-1 rounded-lg border border-zinc-200 bg-zinc-50/50 p-1">
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 rounded-lg border border-zinc-200 bg-zinc-50/50 p-1">
                     <Button
                         variant={viewMode === 'cards' ? 'secondary' : 'ghost'}
                         size="sm"
@@ -243,6 +247,7 @@ export default function StrategyBoardPage() {
                         <Table2 className="h-4 w-4" />
                         Table
                     </Button>
+                </div>
                 </div>
             </div>
 

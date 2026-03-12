@@ -19,6 +19,7 @@ interface Strategy {
     created_at: string;
     start_date?: string | null;
     image_url?: string | null;
+    posts_count?: number;
 }
 
 const LANDING_BTN =
@@ -125,22 +126,32 @@ export default function StrategyPage() {
                     </Button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {strategies.map((s) => (
-                        <StrategyCard
-                            key={s.id}
-                            id={s.id}
-                            name={s.name}
-                            platforms={s.platforms || []}
-                            durationDays={s.duration_days}
-                            createdAt={s.created_at}
-                            startDate={s.start_date}
-                            imageUrl={s.image_url}
-                            onDelete={handleDelete}
-                            onImageUpdate={fetchStrategies}
-                        />
-                    ))}
-                </div>
+                <>
+                    <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-zinc-500">
+                            You have total of{' '}
+                            <span className="font-semibold text-zinc-700">{strategies.length}</span>
+                            {strategies.length === 1 ? ' strategy' : ' strategies'}
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {strategies.map((s) => (
+                            <StrategyCard
+                                key={s.id}
+                                id={s.id}
+                                name={s.name}
+                                platforms={s.platforms || []}
+                                durationDays={s.duration_days}
+                                createdAt={s.created_at}
+                                startDate={s.start_date}
+                                imageUrl={s.image_url}
+                                postsCount={s.posts_count ?? 0}
+                                onDelete={handleDelete}
+                                onImageUpdate={fetchStrategies}
+                            />
+                        ))}
+                    </div>
+                </>
             )}
 
             <GenerateStrategyModal

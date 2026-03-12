@@ -86,7 +86,9 @@ export function StrategyTableView({
     return (
         <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 bg-zinc-50/50">
-                <span className="text-sm font-medium text-zinc-700">All posts</span>
+                <span className="text-sm font-medium text-zinc-700">
+                    All posts <span className="ml-1.5 inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full bg-zinc-200 text-zinc-700 text-xs font-semibold">{posts.length}</span>
+                </span>
                 <Button
                     size="sm"
                     onClick={onAddPost}

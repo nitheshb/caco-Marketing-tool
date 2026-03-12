@@ -27,6 +27,7 @@ interface StrategyCardProps {
     createdAt: string;
     startDate?: string | null;
     imageUrl?: string | null;
+    postsCount?: number;
     onDelete: (id: string) => Promise<void>;
     onImageUpdate?: () => void;
 }
@@ -39,6 +40,7 @@ export function StrategyCard({
     createdAt,
     startDate,
     imageUrl,
+    postsCount = 0,
     onDelete,
     onImageUpdate,
 }: StrategyCardProps) {
@@ -127,7 +129,12 @@ export function StrategyCard({
                     )}
                 </div>
                 <div className="p-4 space-y-3">
-                    <h3 className="text-lg font-semibold tracking-tight text-zinc-900 line-clamp-2">{name}</h3>
+                    <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-lg font-semibold tracking-tight text-zinc-900 line-clamp-2 flex-1 min-w-0">{name}</h3>
+                        <span className="shrink-0 inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-full bg-zinc-100 text-zinc-700 text-xs font-semibold">
+                            {postsCount}
+                        </span>
+                    </div>
                     <div className="space-y-1.5 text-sm text-zinc-500">
                         <p>
                             <span className="font-medium text-zinc-700">Platforms:</span> {platformLabels}
