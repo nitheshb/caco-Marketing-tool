@@ -206,6 +206,8 @@ export function PostersWorkbench({
         setOutputUrl(null);
         setLastGeneration(null);
         setCurrentGenerations([]);
+        setDescription('');
+        setRequirements('');
     }
 
     useEffect(() => {
