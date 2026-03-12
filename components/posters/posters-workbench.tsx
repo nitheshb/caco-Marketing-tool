@@ -4,15 +4,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { PostersAiHelpSheet, type AiHelpSelection } from './posters-ai-help-sheet';
 import { toast } from 'sonner';
 import {
     Download,
@@ -27,7 +20,7 @@ import {
 const LANDING_BTN =
     'bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900 rounded-full font-medium text-[15px] shadow-md transition-all';
 
-type WorkbenchType = 'image' | 'video';
+export type WorkbenchType = 'image' | 'video';
 
 function StepHeader({
     step,
@@ -93,22 +86,34 @@ function UploadTile({
                     <img
                         alt=""
                         src={previewUrl}
-                        className="absolute inset-0 h-full w-full object-cover opacity-90"
+                        className="absolute inset-0 h-full w-full object-contain"
                     />
                 ) : null}
-                <div className="relative z-10 flex flex-col items-center gap-2">
+                <div
+                    className={`relative z-10 flex flex-col items-center gap-2 transition-opacity ${
+                        previewUrl ? 'opacity-0 group-hover:opacity-100' : ''
+                    }`}
+                >
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-zinc-200">
                         <Upload className="h-5 w-5 text-zinc-700" />
                     </div>
                     <div className="text-center">
-                        <p className="text-sm font-semibold text-zinc-900">{label}</p>
-                        <p className="mt-0.5 text-xs text-zinc-500">
-                            Click to upload
-                            <span className="text-zinc-400"> (PNG/JPG)</span>
+                        <p className="text-sm font-semibold text-zinc-900">
+                            {previewUrl ? 'Click to change' : label}
                         </p>
+                        {!previewUrl && (
+                            <p className="mt-0.5 text-xs text-zinc-500">
+                                Click to upload
+                                <span className="text-zinc-400"> (PNG/JPG)</span>
+                            </p>
+                        )}
                     </div>
                 </div>
-                <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100" />
+                <div
+                    className={`absolute inset-0 transition-opacity ${
+                        previewUrl ? 'bg-black/40 opacity-0 group-hover:opacity-100' : ''
+                    }`}
+                />
             </button>
         </div>
     );
@@ -126,7 +131,7 @@ function ResultPreview({ type, previewUrl }: { type: WorkbenchType; previewUrl?:
                 <div className="aspect-video w-full bg-zinc-100">
                     {previewUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+                        <img src={previewUrl} alt="" className="h-full w-full object-contain" />
                     ) : (
                         <div className="flex h-full w-full flex-col items-center justify-center gap-2">
                             <Skeleton className="h-24 w-40 rounded-xl" />
@@ -156,9 +161,8 @@ export function PostersWorkbench({
     const [style, setStyle] = useState('clean-modern');
     const [tone, setTone] = useState('brand-safe');
     const [isGenerating, setIsGenerating] = useState(false);
-    const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
-    const [negativePrompt, setNegativePrompt] = useState<string | null>(null);
     const [outputUrl, setOutputUrl] = useState<string | null>(null);
+    const [aiHelpOpen, setAiHelpOpen] = useState(false);
 
     const previewUrl = useMemo(() => {
         if (!referenceFile) return null;
@@ -187,6 +191,7 @@ export function PostersWorkbench({
     }
 
     return (
+        <>
         <Card className="overflow-hidden rounded-[14px] border border-zinc-200 bg-white shadow-sm">
             <div className="border-b border-zinc-200 bg-zinc-50/60 px-5 py-4">
                 <div className="flex items-start justify-between gap-4">
@@ -218,7 +223,7 @@ export function PostersWorkbench({
                         />
                         <div className="mt-4">
                             <UploadTile
-                                label={referenceFile ? referenceFile.name : 'Upload image'}
+                                label="Upload image"
                                 accept="image/*"
                                 previewUrl={previewUrl}
                                 onFile={(file) => setReferenceFile(file)}
@@ -230,13 +235,12 @@ export function PostersWorkbench({
                     <Card className="rounded-xl border border-zinc-200 bg-white p-4 shadow-none">
                         <StepHeader
                             step={2}
-                            title="Set your options"
-                            hint="Tell us what you want. We’ll convert it into a strong prompt."
+                            title="What do you want to generate?"
+                            hint="Describe your idea or use AI help for suggestions."
                             icon={<Wand2 className="h-4 w-4" />}
                         />
                         <div className="mt-4 space-y-3">
                             <div className="space-y-1.5">
-                                <p className="text-xs font-semibold text-zinc-700">What do you want to generate?</p>
                                 <Textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
@@ -244,59 +248,14 @@ export function PostersWorkbench({
                                     className="min-h-20"
                                 />
                             </div>
-                            <div className="space-y-1.5">
-                                <p className="text-xs font-semibold text-zinc-700">Requirements</p>
-                                <Input
-                                    value={requirements}
-                                    onChange={(e) => setRequirements(e.target.value)}
-                                    placeholder="Brand colors, CTA, logo placement, text limits, etc."
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                <div className="space-y-1.5">
-                                    <p className="text-xs font-semibold text-zinc-700">Format</p>
-                                    <Select value={format} onValueChange={setFormat}>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select" />
-                                        </SelectTrigger>
-                                        <SelectContent align="start">
-                                            <SelectItem value="landscape-16-9">16:9 (Landscape)</SelectItem>
-                                            <SelectItem value="square-1-1">1:1 (Square)</SelectItem>
-                                            <SelectItem value="portrait-4-5">4:5 (Portrait)</SelectItem>
-                                            <SelectItem value="reels-9-16">9:16 (Reels)</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <p className="text-xs font-semibold text-zinc-700">Style</p>
-                                    <Select value={style} onValueChange={setStyle}>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select" />
-                                        </SelectTrigger>
-                                        <SelectContent align="start">
-                                            <SelectItem value="clean-modern">Clean & modern</SelectItem>
-                                            <SelectItem value="bold-typography">Bold typography</SelectItem>
-                                            <SelectItem value="minimal">Minimal</SelectItem>
-                                            <SelectItem value="luxury">Luxury</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <p className="text-xs font-semibold text-zinc-700">Tone</p>
-                                    <Select value={tone} onValueChange={setTone}>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select" />
-                                        </SelectTrigger>
-                                        <SelectContent align="start">
-                                            <SelectItem value="brand-safe">Brand-safe</SelectItem>
-                                            <SelectItem value="playful">Playful</SelectItem>
-                                            <SelectItem value="premium">Premium</SelectItem>
-                                            <SelectItem value="urgent-salesy">Urgent / salesy</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
+                            <Button
+                                variant="outline"
+                                className="w-full h-10 rounded-full gap-2 text-sm"
+                                onClick={() => setAiHelpOpen(true)}
+                            >
+                                <Sparkles className="h-4 w-4" />
+                                AI Help – get prompt suggestions
+                            </Button>
 
                             <Button
                                 className={`mt-1 w-full h-11 px-6 gap-2 ${LANDING_BTN}`}
@@ -328,8 +287,6 @@ export function PostersWorkbench({
                                         const data = await res.json().catch(() => ({}));
                                         if (!res.ok) throw new Error(data.error || 'Failed to generate');
 
-                                        setGeneratedPrompt(data.prompt || null);
-                                        setNegativePrompt(data.negativePrompt || null);
                                         setOutputUrl(data.outputUrl || null);
 
                                         toast.success(type === 'image' ? 'Poster generated' : 'Prompt generated');
@@ -376,51 +333,11 @@ export function PostersWorkbench({
                                         </>
                                     )}
                                 </Button>
-                                <Button
-                                    className="rounded-full"
-                                    variant="outline"
-                                    disabled={!generatedPrompt}
-                                    onClick={async () => {
-                                        if (!generatedPrompt) return;
-                                        try {
-                                            await navigator.clipboard.writeText(
-                                                negativePrompt
-                                                    ? `${generatedPrompt}\n\nNegative prompt: ${negativePrompt}`
-                                                    : generatedPrompt
-                                            );
-                                            toast.success('Prompt copied');
-                                        } catch {
-                                            toast.error('Failed to copy');
-                                        }
-                                    }}
-                                >
-                                    Copy prompt
-                                </Button>
                             </div>
 
-                            {generatedPrompt ? (
-                                <div className="mt-3 space-y-2">
-                                    <p className="text-xs font-semibold text-zinc-700">Generated prompt</p>
-                                    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-                                        <p className="whitespace-pre-wrap text-xs leading-relaxed text-zinc-700">
-                                            {generatedPrompt}
-                                        </p>
-                                        {negativePrompt ? (
-                                            <>
-                                                <div className="my-2 h-px bg-zinc-200" />
-                                                <p className="text-[11px] font-semibold text-zinc-600">
-                                                    Negative prompt
-                                                </p>
-                                                <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-zinc-600">
-                                                    {negativePrompt}
-                                                </p>
-                                            </>
-                                        ) : null}
-                                    </div>
-                                </div>
-                            ) : (
+                            {!outputUrl && (
                                 <p className="mt-3 text-xs text-zinc-500">
-                                    Generate to see your output and the prompt we used.
+                                    Generate to see your output.
                                 </p>
                             )}
                         </div>
@@ -428,6 +345,20 @@ export function PostersWorkbench({
                 </div>
             </div>
         </Card>
+
+        <PostersAiHelpSheet
+            open={aiHelpOpen}
+            onOpenChange={setAiHelpOpen}
+            type={type}
+            onApply={(sel: AiHelpSelection) => {
+                setDescription(sel.description);
+                setRequirements(sel.requirements);
+                setFormat(sel.format);
+                setStyle(sel.style);
+                setTone(sel.tone);
+            }}
+        />
+    </>
     );
 }
 
