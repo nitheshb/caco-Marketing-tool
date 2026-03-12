@@ -169,7 +169,7 @@ export function StrategyPostDetailSidebar({
                     <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4">
                         <div className="flex items-start gap-4">
                             <div className="flex items-center justify-center w-14 h-14 rounded-full bg-zinc-800 text-white shrink-0">
-                                <PlatformIcon className="h-7 w-7" strokeWidth={2} />
+                                <PlatformIcon className="h-7 w-7" />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-zinc-900">{platformLabel}</p>

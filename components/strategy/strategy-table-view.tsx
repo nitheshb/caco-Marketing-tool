@@ -150,7 +150,7 @@ export function StrategyTableView({
                                     <TableCell className="px-3 py-2">
                                         <div className="flex items-center gap-2">
                                             <div className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-800 text-white shrink-0">
-                                                <PlatformIcon className="h-3.5 w-3.5" strokeWidth={2} />
+                                                <PlatformIcon className="h-3.5 w-3.5" />
                                             </div>
                                             <span className="text-zinc-700">{platformLabel}</span>
                                         </div>
