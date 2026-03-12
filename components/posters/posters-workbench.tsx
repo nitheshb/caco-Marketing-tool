@@ -11,6 +11,13 @@ import { PostersAiHelpSheet, type AiHelpSelection } from './posters-ai-help-shee
 import { PostersRegenerateModal, type PosterGenerationRecord } from './posters-regenerate-modal';
 import { toast } from 'sonner';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Download,
     Image as ImageIcon,
     Upload,
@@ -168,7 +175,12 @@ export function PostersWorkbench({
     const [isGenerating, setIsGenerating] = useState(false);
     const [outputUrl, setOutputUrl] = useState<string | null>(null);
     const [lastGeneration, setLastGeneration] = useState<PosterGenerationRecord | null>(null);
-    const [generations, setGenerations] = useState<PosterGenerationRecord[]>([]);
+    const [currentGenerations, setCurrentGenerations] = useState<PosterGenerationRecord[]>([]);
+    const [projects, setProjects] = useState<Array<{ id: number; referencePreview: string; generations: PosterGenerationRecord[] }>>([]);
+    const [previousGenerations, setPreviousGenerations] = useState<PosterGenerationRecord[]>([]);
+    const [selectedProjectKey, setSelectedProjectKey] = useState<string>('1');
+    const projectIdRef = useRef(0);
+    const projectPreviewsRef = useRef<string[]>([]);
     const [aiHelpOpen, setAiHelpOpen] = useState(false);
     const [regenerateModalOpen, setRegenerateModalOpen] = useState(false);
 
@@ -183,23 +195,88 @@ export function PostersWorkbench({
         };
     }, [previewUrl]);
 
-    useEffect(() => {
-        if (type === 'image') {
-            fetch('/api/posters/generations?limit=20')
-                .then((res) => res.json())
-                .then((data) => {
-                    if (data.generations) setGenerations(data.generations);
-                })
-                .catch(() => {});
+    function handleReferenceChange(newFile: File) {
+        if (type === 'image' && referenceFile && currentGenerations.length > 0) {
+            const refPreview = URL.createObjectURL(referenceFile);
+            projectPreviewsRef.current.push(refPreview);
+            projectIdRef.current += 1;
+            setProjects((prev) => [...prev, { id: projectIdRef.current, referencePreview: refPreview, generations: currentGenerations }]);
         }
+        setReferenceFile(newFile);
+        setOutputUrl(null);
+        setLastGeneration(null);
+        setCurrentGenerations([]);
+    }
+
+    useEffect(() => {
+        return () => {
+            projectPreviewsRef.current.forEach((url) => URL.revokeObjectURL(url));
+            projectPreviewsRef.current = [];
+        };
+    }, []);
+
+    useEffect(() => {
+        if (type !== 'image') return;
+        const auth = getAuth(app);
+        const p = auth.currentUser ? auth.currentUser.getIdToken(true) : Promise.resolve(null);
+        p.then((token) => {
+            const headers: Record<string, string> = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            return fetch('/api/posters/generations?limit=50', { headers });
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data?.generations) setPreviousGenerations(data.generations);
+            })
+            .catch(() => {});
     }, [type]);
 
     const canGenerate = description.trim().length > 0;
 
+    const projectOptions = useMemo(() => {
+        const opts: Array<{ key: string; label: string; previewUrl: string | null; generations: PosterGenerationRecord[] }> = [];
+        if (previousGenerations.length > 0) {
+            opts.push({
+                key: '1',
+                label: 'Project 1',
+                previewUrl: previousGenerations[0]?.output_url ?? null,
+                generations: previousGenerations,
+            });
+        }
+        projects.forEach((p, i) => {
+            opts.push({
+                key: `proj-${p.id}`,
+                label: `Project ${(previousGenerations.length > 0 ? 1 : 0) + i + 1}`,
+                previewUrl: p.referencePreview,
+                generations: p.generations,
+            });
+        });
+        if (currentGenerations.length > 0) {
+            opts.push({
+                key: 'current',
+                label: 'Current project',
+                previewUrl: previewUrl ?? currentGenerations[0]?.output_url ?? null,
+                generations: currentGenerations,
+            });
+        }
+        return opts;
+    }, [previousGenerations, projects, currentGenerations, previewUrl]);
+
+    const selectedProject = useMemo(
+        () => projectOptions.find((o) => o.key === selectedProjectKey) ?? projectOptions[0],
+        [projectOptions, selectedProjectKey]
+    );
+
+    useEffect(() => {
+        if (projectOptions.length > 0 && !projectOptions.some((o) => o.key === selectedProjectKey)) {
+            setSelectedProjectKey(projectOptions[0]!.key);
+        }
+    }, [projectOptions, selectedProjectKey]);
+
     function addGeneration(gen: PosterGenerationRecord) {
         setLastGeneration(gen);
         setOutputUrl(gen.output_url ?? null);
-        setGenerations((prev) => [gen, ...prev]);
+        setCurrentGenerations((prev) => [gen, ...prev]);
     }
 
     async function doSaveGeneration(id: string) {
@@ -210,7 +287,8 @@ export function PostersWorkbench({
                 body: JSON.stringify({ saved: true }),
             });
             setLastGeneration((g) => (g?.id === id ? { ...g, saved: true } : g));
-            setGenerations((prev) => prev.map((g) => (g.id === id ? { ...g, saved: true } : g)));
+            setCurrentGenerations((prev) => prev.map((g) => (g.id === id ? { ...g, saved: true } : g)));
+            setProjects((prev) => prev.map((p) => ({ ...p, generations: p.generations.map((g) => (g.id === id ? { ...g, saved: true } : g)) })));
             toast.success('Saved');
         } catch {
             toast.error('Failed to save');
@@ -266,7 +344,7 @@ export function PostersWorkbench({
                                 label="Upload image"
                                 accept="image/*"
                                 previewUrl={previewUrl}
-                                onFile={(file) => setReferenceFile(file)}
+                                onFile={(file) => (type === 'image' ? handleReferenceChange(file) : setReferenceFile(file))}
                             />
                         </div>
                     </Card>
@@ -429,56 +507,76 @@ export function PostersWorkbench({
                     </Card>
                 </div>
 
-                {type === 'image' && generations.length > 0 && (
+                {type === 'image' && (
                     <div className="border-t border-zinc-200 px-5 py-4">
-                        <p className="text-sm font-semibold text-zinc-800 mb-3">Generation history</p>
-                        <div className="overflow-hidden rounded-lg border border-zinc-200">
-                            <table className="w-full text-left text-sm">
-                                <thead>
-                                    <tr className="border-b border-zinc-200 bg-zinc-50/80">
-                                        <th className="px-4 py-2.5 font-semibold text-zinc-700 w-12">#</th>
-                                        <th className="px-4 py-2.5 font-semibold text-zinc-700 w-20">Image</th>
-                                        <th className="px-4 py-2.5 font-semibold text-zinc-700">Prompt</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {generations.map((g, idx) => (
-                                        <tr
-                                            key={g.id}
-                                            className="border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50/50"
-                                        >
-                                            <td className="px-4 py-2.5 text-zinc-500 font-medium">
-                                                {generations.length - idx}
-                                            </td>
-                                            <td className="px-4 py-2.5">
-                                                <a
-                                                    href={g.output_url ?? '#'}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="block w-14 h-14 rounded-md overflow-hidden border border-zinc-200 bg-zinc-100 hover:ring-2 hover:ring-[#f2d412] transition-all shrink-0"
-                                                >
-                                                    {g.output_url ? (
-                                                        // eslint-disable-next-line @next/next/no-img-element
+                        <p className="text-sm font-semibold text-zinc-800 mb-1">My generated posters</p>
+                        <p className="text-xs text-zinc-500 mb-3">Select a project to view. Click an image to open full size.</p>
+                        {projectOptions.length === 0 ? (
+                            <p className="text-sm text-zinc-500 py-6 text-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50/50">
+                                No posters yet. Generate your first one above.
+                            </p>
+                        ) : (
+                            <div className="space-y-4">
+                                <Select value={selectedProjectKey} onValueChange={setSelectedProjectKey}>
+                                    <SelectTrigger className="w-full max-w-sm h-11 border-zinc-200">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {projectOptions.map((opt) => (
+                                            <SelectItem key={opt.key} value={opt.key}>
+                                                <span className="flex items-center gap-2">
+                                                    {opt.previewUrl ? (
+                                                        /* eslint-disable-next-line @next/next/no-img-element */
                                                         <img
-                                                            src={g.output_url}
+                                                            src={opt.previewUrl}
                                                             alt=""
-                                                            className="w-full h-full object-cover"
+                                                            className="h-8 w-8 rounded object-cover shrink-0 border border-zinc-200"
                                                         />
                                                     ) : (
-                                                        <div className="w-full h-full" />
+                                                        <div className="h-8 w-8 rounded bg-zinc-200 shrink-0" />
                                                     )}
-                                                </a>
-                                            </td>
-                                            <td className="px-4 py-2.5 text-zinc-600 max-w-md">
-                                                <span className="line-clamp-2">
-                                                    {g.description}
+                                                    <span>{opt.label}</span>
+                                                    <span className="text-zinc-400 text-xs">({opt.generations.length})</span>
                                                 </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {selectedProject && (
+                                    <div className="overflow-hidden rounded-lg border border-zinc-200">
+                                        <table className="w-full text-left text-sm">
+                                            <thead>
+                                                <tr className="border-b border-zinc-200 bg-zinc-50/80">
+                                                    <th className="px-4 py-2.5 font-semibold text-zinc-700 w-12">#</th>
+                                                    <th className="px-4 py-2.5 font-semibold text-zinc-700 w-20">Image</th>
+                                                    <th className="px-4 py-2.5 font-semibold text-zinc-700">Prompt</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {selectedProject.generations.map((g, idx) => (
+                                                    <tr key={g.id} className="border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50/50">
+                                                        <td className="px-4 py-2.5 text-zinc-500 font-medium">{selectedProject.generations.length - idx}</td>
+                                                        <td className="px-4 py-2.5">
+                                                            <a href={g.output_url ?? '#'} target="_blank" rel="noreferrer" className="block w-14 h-14 rounded-md overflow-hidden border border-zinc-200 bg-zinc-100 hover:ring-2 hover:ring-[#f2d412] transition-all shrink-0">
+                                                                {g.output_url ? (
+                                                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                                                    <img src={g.output_url} alt="" className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <div className="w-full h-full" />
+                                                                )}
+                                                            </a>
+                                                        </td>
+                                                        <td className="px-4 py-2.5 text-zinc-600 max-w-md">
+                                                            <span className="line-clamp-2">{g.description}</span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
