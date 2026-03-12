@@ -8,6 +8,7 @@ import { Loader2, ArrowLeft, LayoutGrid, Table2 } from 'lucide-react';
 import Link from 'next/link';
 import { StrategyColumn } from '@/components/strategy/strategy-column';
 import { StrategyTableView } from '@/components/strategy/strategy-table-view';
+import { StrategyBoardSkeleton } from '@/components/strategy/strategy-board-skeleton';
 import { StrategyPostDetailSidebar } from '@/components/strategy/strategy-post-detail-sidebar';
 import { StrategyPostContentModal } from '@/components/strategy/strategy-post-content-modal';
 import { EditStrategyPostModal } from '@/components/strategy/edit-strategy-post-modal';
@@ -157,12 +158,7 @@ export default function StrategyBoardPage() {
     const getDefaultDay = () => addDay ?? 1;
 
     if (isLoading) {
-        return (
-            <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
-                <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-                <p className="text-base text-zinc-500">Loading strategy...</p>
-            </div>
-        );
+        return <StrategyBoardSkeleton />;
     }
 
     if (!strategy) {

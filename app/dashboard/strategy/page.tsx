@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { StrategyCard } from '@/components/strategy/strategy-card';
+import { StrategyCardSkeleton } from '@/components/strategy/strategy-card-skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { GenerateStrategyModal } from '@/components/strategy/generate-strategy-modal';
 import {
     STRATEGY_TEMPLATES,
@@ -99,10 +101,16 @@ export default function StrategyPage() {
             </div>
 
             {isLoading ? (
-                <div className="flex h-[40vh] flex-col items-center justify-center gap-4 bg-white rounded-[10px] shadow-sm border border-zinc-200">
-                    <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-                    <p className="text-base text-zinc-500">Loading strategies...</p>
-                </div>
+                <>
+                    <div className="flex items-center justify-between">
+                        <Skeleton className="h-4 w-40" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                            <StrategyCardSkeleton key={i} />
+                        ))}
+                    </div>
+                </>
             ) : strategies.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-6 py-16 bg-white rounded-[10px] border border-zinc-200 shadow-sm">
                     <div className="rounded-full bg-indigo-100 p-4">
