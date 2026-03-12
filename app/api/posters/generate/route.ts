@@ -104,7 +104,7 @@ export async function POST(req: Request) {
         });
 
         if (type === 'video') {
-            return NextResponse.json({ prompt, negativePrompt, outputUrl: null }, { status: 200 });
+            return NextResponse.json({ prompt, negativePrompt, outputUrl: null, generationId: null }, { status: 200 });
         }
 
         const referenceImage =
@@ -112,7 +112,37 @@ export async function POST(req: Request) {
                 { base64: referenceImageBase64, mimeType: referenceImageMimeType }
             : undefined;
         const outputUrl = await generateAndUploadImage(prompt, userId, referenceImage);
-        return NextResponse.json({ prompt, negativePrompt, outputUrl }, { status: 200 });
+
+        const parentId = body?.parentId ? String(body.parentId) : null;
+        const { data: generation, error: insertError } = await supabaseAdmin
+            .from('poster_generations')
+            .insert({
+                user_id: userId,
+                type,
+                output_url: outputUrl,
+                description,
+                requirements: requirements || null,
+                format: format || null,
+                style: style || null,
+                tone: tone || null,
+                prompt,
+                negative_prompt: negativePrompt || null,
+                parent_id: parentId || null,
+            })
+            .select('id, output_url, created_at')
+            .single();
+
+        if (insertError) {
+            console.error('[POSTERS_GENERATE] Insert failed:', insertError);
+        }
+
+        return NextResponse.json({
+            prompt,
+            negativePrompt,
+            outputUrl,
+            generationId: generation?.id ?? null,
+            generation,
+        }, { status: 200 });
     } catch (error) {
         console.error('[POSTERS_GENERATE]', error);
         const message = error instanceof Error ? error.message : 'Failed to generate';

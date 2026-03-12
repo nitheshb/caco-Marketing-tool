@@ -7,8 +7,29 @@ export async function POST(req: Request) {
         await getAuthUser(req);
         const body = await req.json();
         const type = (body?.type || 'image') as 'image' | 'video';
+        const refine = body?.refine as { originalPrompt?: string; feedback?: string } | undefined;
 
-        const prompt = `
+        const systemPrompt = refine?.originalPrompt
+            ? `
+You are an expert at refining prompts for AI image generation based on user feedback.
+
+ORIGINAL PROMPT that was used:
+"${refine.originalPrompt}"
+
+USER FEEDBACK (what they didn't like / what to change):
+"${refine.feedback || 'No specific feedback provided.'}"
+
+Generate exactly 8 refined prompt suggestions that address the feedback while keeping the good parts of the original.
+Each prompt should be 1-2 sentences, specific and evocative.
+- Incorporate the user's feedback and requested changes
+- Fix what they didn't like
+- Keep the overall intent where feedback doesn't contradict it
+- Be concrete and actionable
+
+Return ONLY a valid JSON array of 8 strings. No markdown, no code blocks.
+Example format: ["Refined prompt one...", "Refined prompt two...", ...]
+`
+            : `
 You are an expert at creating creative, varied prompts for AI image and video generation.
 Generate exactly 8 diverse prompt suggestions that users can pick from.
 Each prompt should be 1-2 sentences, specific and evocative - like trending prompts on creative AI galleries.
@@ -24,7 +45,7 @@ Requirements:
 Example format: ["Prompt one...", "Prompt two...", ...]
 `;
 
-        const result = await model.generateContent(prompt);
+        const result = await model.generateContent(systemPrompt);
         const text = result.response.text();
         if (!text) throw new Error('No response from AI');
 

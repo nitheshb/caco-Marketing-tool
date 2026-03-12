@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import {
     Sheet,
     SheetContent,
@@ -81,12 +83,17 @@ export function PostersAiHelpSheet({
             return;
         }
         setLoading(true);
-        fetch('/api/posters/suggestions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type }),
-        })
-            .then((res) => res.json())
+        const auth = getAuth(app);
+        const getToken = auth.currentUser ? auth.currentUser.getIdToken(true) : Promise.resolve(null);
+        getToken.then((token) => {
+            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            return fetch('/api/posters/suggestions', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ type }),
+            });
+        }).then((res) => res.json())
             .then((data) => {
                 if (data.suggestions) setSuggestions(data.suggestions);
             })

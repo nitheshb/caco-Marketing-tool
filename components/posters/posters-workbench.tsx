@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { getAuth } from 'firebase/auth';
+import { app } from '@/lib/firebase';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PostersAiHelpSheet, type AiHelpSelection } from './posters-ai-help-sheet';
+import { PostersRegenerateModal, type PosterGenerationRecord } from './posters-regenerate-modal';
 import { toast } from 'sonner';
 import {
     Download,
@@ -15,6 +18,8 @@ import {
     Film,
     Sparkles,
     CheckCircle2,
+    ThumbsUp,
+    RotateCcw,
 } from 'lucide-react';
 
 const LANDING_BTN =
@@ -162,7 +167,10 @@ export function PostersWorkbench({
     const [tone, setTone] = useState('brand-safe');
     const [isGenerating, setIsGenerating] = useState(false);
     const [outputUrl, setOutputUrl] = useState<string | null>(null);
+    const [lastGeneration, setLastGeneration] = useState<PosterGenerationRecord | null>(null);
+    const [generations, setGenerations] = useState<PosterGenerationRecord[]>([]);
     const [aiHelpOpen, setAiHelpOpen] = useState(false);
+    const [regenerateModalOpen, setRegenerateModalOpen] = useState(false);
 
     const previewUrl = useMemo(() => {
         if (!referenceFile) return null;
@@ -175,7 +183,39 @@ export function PostersWorkbench({
         };
     }, [previewUrl]);
 
+    useEffect(() => {
+        if (type === 'image') {
+            fetch('/api/posters/generations?limit=20')
+                .then((res) => res.json())
+                .then((data) => {
+                    if (data.generations) setGenerations(data.generations);
+                })
+                .catch(() => {});
+        }
+    }, [type]);
+
     const canGenerate = description.trim().length > 0;
+
+    function addGeneration(gen: PosterGenerationRecord) {
+        setLastGeneration(gen);
+        setOutputUrl(gen.output_url ?? null);
+        setGenerations((prev) => [gen, ...prev]);
+    }
+
+    async function doSaveGeneration(id: string) {
+        try {
+            await fetch(`/api/posters/generations/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ saved: true }),
+            });
+            setLastGeneration((g) => (g?.id === id ? { ...g, saved: true } : g));
+            setGenerations((prev) => prev.map((g) => (g.id === id ? { ...g, saved: true } : g)));
+            toast.success('Saved');
+        } catch {
+            toast.error('Failed to save');
+        }
+    }
 
     async function fileToBase64(file: File): Promise<{ base64: string; mimeType: string }> {
         return new Promise((resolve, reject) => {
@@ -257,9 +297,35 @@ export function PostersWorkbench({
                                 AI Help – get prompt suggestions
                             </Button>
 
+                            {type === 'image' && outputUrl && lastGeneration && (
+                                <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 space-y-2">
+                                    <p className="text-sm font-medium text-zinc-800">Did you like the content?</p>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-full gap-1.5"
+                                            disabled={lastGeneration.saved}
+                                            onClick={() => doSaveGeneration(lastGeneration.id)}
+                                        >
+                                            <ThumbsUp className="h-4 w-4" />
+                                            {lastGeneration.saved ? 'Saved' : 'Save'}
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            className={`rounded-full gap-1.5 ${LANDING_BTN}`}
+                                            onClick={() => setRegenerateModalOpen(true)}
+                                        >
+                                            <RotateCcw className="h-4 w-4" />
+                                            Regenerate
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
                             <Button
                                 className={`mt-1 w-full h-11 px-6 gap-2 ${LANDING_BTN}`}
-                                disabled={!canGenerate || isGenerating}
+                                disabled={!canGenerate || isGenerating || (type === 'image' && !!outputUrl)}
                                 onClick={async () => {
                                     setIsGenerating(true);
                                     try {
@@ -270,9 +336,13 @@ export function PostersWorkbench({
                                             referenceImageBase64 = base64;
                                             referenceImageMimeType = mimeType;
                                         }
+                                        const auth = getAuth(app);
+                                        const token = await auth.currentUser?.getIdToken(true);
+                                        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                                        if (token) headers['Authorization'] = `Bearer ${token}`;
                                         const res = await fetch('/api/posters/generate', {
                                             method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
+                                            headers,
                                             body: JSON.stringify({
                                                 type,
                                                 description: description.trim(),
@@ -287,7 +357,22 @@ export function PostersWorkbench({
                                         const data = await res.json().catch(() => ({}));
                                         if (!res.ok) throw new Error(data.error || 'Failed to generate');
 
-                                        setOutputUrl(data.outputUrl || null);
+                                        if (type === 'image' && data.generationId && data.outputUrl) {
+                                            const gen: PosterGenerationRecord = {
+                                                id: data.generationId,
+                                                output_url: data.outputUrl,
+                                                description: description.trim(),
+                                                requirements: requirements.trim() || null,
+                                                format,
+                                                style,
+                                                tone,
+                                                parent_id: data.parentId ?? null,
+                                                saved: false,
+                                            };
+                                            addGeneration(gen);
+                                        } else {
+                                            setOutputUrl(data.outputUrl ?? null);
+                                        }
 
                                         toast.success(type === 'image' ? 'Poster generated' : 'Prompt generated');
                                     } catch (e) {
@@ -343,8 +428,125 @@ export function PostersWorkbench({
                         </div>
                     </Card>
                 </div>
+
+                {type === 'image' && generations.length > 0 && (
+                    <div className="border-t border-zinc-200 px-5 py-4">
+                        <p className="text-sm font-semibold text-zinc-800 mb-3">Generation history</p>
+                        <div className="overflow-hidden rounded-lg border border-zinc-200">
+                            <table className="w-full text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-zinc-200 bg-zinc-50/80">
+                                        <th className="px-4 py-2.5 font-semibold text-zinc-700 w-12">#</th>
+                                        <th className="px-4 py-2.5 font-semibold text-zinc-700 w-20">Image</th>
+                                        <th className="px-4 py-2.5 font-semibold text-zinc-700">Prompt</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {generations.map((g, idx) => (
+                                        <tr
+                                            key={g.id}
+                                            className="border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50/50"
+                                        >
+                                            <td className="px-4 py-2.5 text-zinc-500 font-medium">
+                                                {generations.length - idx}
+                                            </td>
+                                            <td className="px-4 py-2.5">
+                                                <a
+                                                    href={g.output_url ?? '#'}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="block w-14 h-14 rounded-md overflow-hidden border border-zinc-200 bg-zinc-100 hover:ring-2 hover:ring-[#f2d412] transition-all shrink-0"
+                                                >
+                                                    {g.output_url ? (
+                                                        // eslint-disable-next-line @next/next/no-img-element
+                                                        <img
+                                                            src={g.output_url}
+                                                            alt=""
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full" />
+                                                    )}
+                                                </a>
+                                            </td>
+                                            <td className="px-4 py-2.5 text-zinc-600 max-w-md">
+                                                <span className="line-clamp-2">
+                                                    {g.description}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
             </div>
         </Card>
+
+        <PostersRegenerateModal
+            open={regenerateModalOpen}
+            onOpenChange={setRegenerateModalOpen}
+            type={type}
+            generation={lastGeneration}
+            onRegenerate={async (params) => {
+                setIsGenerating(true);
+                try {
+                    let referenceImageBase64: string | undefined;
+                    let referenceImageMimeType: string | undefined;
+                    if (referenceFile && type === 'image') {
+                        const { base64, mimeType } = await fileToBase64(referenceFile);
+                        referenceImageBase64 = base64;
+                        referenceImageMimeType = mimeType;
+                    }
+                    const auth = getAuth(app);
+                    const token = await auth.currentUser?.getIdToken(true);
+                    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                    const res = await fetch('/api/posters/generate', {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({
+                            type,
+                            description: params.description,
+                            requirements: params.requirements || undefined,
+                            format: params.format,
+                            style: params.style,
+                            tone: params.tone,
+                            referenceImageBase64,
+                            referenceImageMimeType,
+                            parentId: params.parentId,
+                        }),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.error || 'Failed to generate');
+                    if (data.generationId && data.outputUrl) {
+                        const gen: PosterGenerationRecord = {
+                            id: data.generationId,
+                            output_url: data.outputUrl,
+                            description: params.description,
+                            requirements: params.requirements || null,
+                            format: params.format,
+                            style: params.style,
+                            tone: params.tone,
+                            parent_id: params.parentId,
+                            saved: false,
+                        };
+                        addGeneration(gen);
+                        setDescription(params.description);
+                        setRequirements(params.requirements);
+                        setFormat(params.format);
+                        setStyle(params.style);
+                        setTone(params.tone);
+                    }
+                    toast.success('Regenerated');
+                } catch (e) {
+                    toast.error(e instanceof Error ? e.message : 'Failed to regenerate');
+                } finally {
+                    setIsGenerating(false);
+                }
+            }}
+        />
 
         <PostersAiHelpSheet
             open={aiHelpOpen}
