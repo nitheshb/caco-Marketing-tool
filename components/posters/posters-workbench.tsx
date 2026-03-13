@@ -27,7 +27,14 @@ import {
     CheckCircle2,
     ThumbsUp,
     RotateCcw,
+    ImagePlus,
 } from 'lucide-react';
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
 
 const LANDING_BTN =
     'bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900 rounded-full font-medium text-[15px] shadow-md transition-all';
@@ -137,6 +144,60 @@ function UploadTile({
     );
 }
 
+function GalleryPickerContent({ onSelect }: { onSelect: (url: string) => void }) {
+    const [media, setMedia] = useState<Array<{ id: string; url: string; name: string; type: string }>>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+        const auth = getAuth(app);
+        auth.currentUser?.getIdToken(true).then((token) => {
+            const headers: Record<string, string> = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            return fetch('/api/media?all=true', { headers });
+        }).then((res) => res.json()).then((data) => {
+            if (cancelled) return;
+            const items = Array.isArray(data) ? data : [];
+            setMedia(items.filter((m: { type?: string }) => m.type?.startsWith('image/')));
+        }).catch(() => {}).finally(() => {
+            if (!cancelled) setLoading(false);
+        });
+        return () => { cancelled = true; };
+    }, []);
+
+    return (
+        <div className="flex-1 overflow-y-auto py-4">
+            {loading ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <Skeleton className="h-12 w-12 rounded-lg" />
+                    <p className="text-sm text-zinc-500">Loading gallery…</p>
+                </div>
+            ) : media.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <ImageIcon className="h-12 w-12 text-zinc-300 mb-3" />
+                    <p className="text-sm font-medium text-zinc-600">No images in gallery</p>
+                    <p className="text-xs text-zinc-500 mt-1">Upload images in the Gallery section first.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 px-1">
+                    {media.map((item) => (
+                        <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => onSelect(item.url)}
+                            className="group relative aspect-square rounded-lg overflow-hidden border border-zinc-200 hover:border-[#f2d412] hover:ring-2 hover:ring-[#f2d412]/30 transition-all"
+                        >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 function ResultPreview({ type, previewUrl }: { type: WorkbenchType; previewUrl?: string | null }) {
     const emptyLabel = type === 'image' ? 'Your poster will appear here' : 'Your video will appear here';
     return (
@@ -177,6 +238,8 @@ export function PostersWorkbench({
     type: WorkbenchType;
 }) {
     const [referenceFile, setReferenceFile] = useState<File | null>(null);
+    const [referenceGalleryUrl, setReferenceGalleryUrl] = useState<string | null>(null);
+    const [galleryPickerOpen, setGalleryPickerOpen] = useState(false);
     const [description, setDescription] = useState('');
     const [requirements, setRequirements] = useState('');
     const [format, setFormat] = useState(type === 'image' ? 'landscape-16-9' : 'reels-9-16');
@@ -195,9 +258,10 @@ export function PostersWorkbench({
     const [regenerateModalOpen, setRegenerateModalOpen] = useState(false);
 
     const previewUrl = useMemo(() => {
-        if (!referenceFile) return null;
-        return URL.createObjectURL(referenceFile);
-    }, [referenceFile]);
+        if (referenceFile) return URL.createObjectURL(referenceFile);
+        if (referenceGalleryUrl) return referenceGalleryUrl;
+        return null;
+    }, [referenceFile, referenceGalleryUrl]);
 
     useEffect(() => {
         return () => {
@@ -205,14 +269,15 @@ export function PostersWorkbench({
         };
     }, [previewUrl]);
 
-    function handleReferenceChange(newFile: File) {
-        if (type === 'image' && referenceFile && currentGenerations.length > 0) {
-            const refPreview = URL.createObjectURL(referenceFile);
+    function handleReferenceChange(newFile: File | null, galleryUrl?: string | null) {
+        if (type === 'image' && (referenceFile || referenceGalleryUrl) && currentGenerations.length > 0) {
+            const refPreview = referenceFile ? URL.createObjectURL(referenceFile) : referenceGalleryUrl!;
             projectPreviewsRef.current.push(refPreview);
             projectIdRef.current += 1;
             setProjects((prev) => [...prev, { id: projectIdRef.current, referencePreview: refPreview, generations: currentGenerations }]);
         }
-        setReferenceFile(newFile);
+        setReferenceFile(newFile ?? null);
+        setReferenceGalleryUrl(galleryUrl ?? null);
         setOutputUrl(null);
         setLastGeneration(null);
         setCurrentGenerations([]);
@@ -322,6 +387,22 @@ export function PostersWorkbench({
         });
     }
 
+    async function urlToBase64(url: string): Promise<{ base64: string; mimeType: string }> {
+        const res = await fetch(url, { mode: 'cors' });
+        const blob = await res.blob();
+        const mimeType = blob.type || 'image/png';
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const result = reader.result as string;
+                const base64 = result.includes(',') ? result.split(',')[1]! : result;
+                resolve({ base64, mimeType });
+            };
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(blob);
+        });
+    }
+
     async function videoToFirstFrameBase64(file: File): Promise<{ base64: string; mimeType: string }> {
         return new Promise((resolve, reject) => {
             const video = document.createElement('video');
@@ -382,14 +463,33 @@ export function PostersWorkbench({
                             hint={type === 'image' ? 'Upload a brand asset or inspiration image.' : 'Upload a video as reference.'}
                             icon={type === 'image' ? <ImageIcon className="h-4 w-4" /> : <Film className="h-4 w-4" />}
                         />
-                        <div className="mt-4">
-                            <UploadTile
-                                label={type === 'image' ? 'Upload image' : 'Upload video'}
-                                accept={type === 'image' ? 'image/*' : 'video/*'}
-                                previewUrl={previewUrl}
-                                previewAsVideo={type === 'video'}
-                                onFile={(file) => (type === 'image' ? handleReferenceChange(file) : setReferenceFile(file))}
-                            />
+                        <div className="mt-4 space-y-3">
+                            {type === 'image' ? (
+                                <>
+                                    <UploadTile
+                                        label="Upload image"
+                                        accept="image/*"
+                                        previewUrl={previewUrl}
+                                        onFile={(file) => handleReferenceChange(file, null)}
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        className="w-full h-12 rounded-xl gap-2 border-dashed border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50"
+                                        onClick={() => setGalleryPickerOpen(true)}
+                                    >
+                                        <ImagePlus className="h-5 w-5 text-zinc-600" />
+                                        Upload from gallery
+                                    </Button>
+                                </>
+                            ) : (
+                                <UploadTile
+                                    label="Upload video"
+                                    accept="video/*"
+                                    previewUrl={previewUrl}
+                                    previewAsVideo
+                                    onFile={(file) => setReferenceFile(file)}
+                                />
+                            )}
                         </div>
                     </Card>
 
@@ -455,6 +555,10 @@ export function PostersWorkbench({
                                         let referenceImageMimeType: string | undefined;
                                         if (referenceFile) {
                                             const { base64, mimeType } = await fileToBase64(referenceFile);
+                                            referenceImageBase64 = base64;
+                                            referenceImageMimeType = mimeType;
+                                        } else if (referenceGalleryUrl) {
+                                            const { base64, mimeType } = await urlToBase64(referenceGalleryUrl);
                                             referenceImageBase64 = base64;
                                             referenceImageMimeType = mimeType;
                                         }
@@ -641,6 +745,10 @@ export function PostersWorkbench({
                         const { base64, mimeType } = await fileToBase64(referenceFile);
                         referenceImageBase64 = base64;
                         referenceImageMimeType = mimeType;
+                    } else if (referenceGalleryUrl) {
+                        const { base64, mimeType } = await urlToBase64(referenceGalleryUrl);
+                        referenceImageBase64 = base64;
+                        referenceImageMimeType = mimeType;
                     }
                     const auth = getAuth(app);
                     const token = await auth.currentUser?.getIdToken(true);
@@ -691,6 +799,23 @@ export function PostersWorkbench({
                 }
             }}
         />
+
+        <Sheet open={galleryPickerOpen} onOpenChange={setGalleryPickerOpen}>
+            <SheetContent side="right" className="flex flex-col w-full sm:max-w-xl overflow-hidden">
+                <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                        <ImagePlus className="h-5 w-5" />
+                        Pick from gallery
+                    </SheetTitle>
+                </SheetHeader>
+                <GalleryPickerContent
+                    onSelect={(url) => {
+                        handleReferenceChange(null, url);
+                        setGalleryPickerOpen(false);
+                    }}
+                />
+            </SheetContent>
+        </Sheet>
 
         <PostersAiHelpSheet
             open={aiHelpOpen}
