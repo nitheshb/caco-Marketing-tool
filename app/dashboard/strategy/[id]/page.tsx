@@ -13,6 +13,7 @@ import { StrategyPostDetailSidebar } from '@/components/strategy/strategy-post-d
 import { StrategyPostContentModal } from '@/components/strategy/strategy-post-content-modal';
 import { EditStrategyPostModal } from '@/components/strategy/edit-strategy-post-modal';
 import { PostToPlatformsModal } from '@/components/strategy/post-to-platforms-modal';
+import { ScheduleToCalendarModal } from '@/components/strategy/schedule-to-calendar-modal';
 import type { StrategyPost } from '@/components/strategy/edit-strategy-post-modal';
 import { addDays, format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -41,6 +42,7 @@ export default function StrategyBoardPage() {
     const [cloneFrom, setCloneFrom] = useState<StrategyPost | null>(null);
     const [postToPlatformsOpen, setPostToPlatformsOpen] = useState(false);
     const [postForPlatforms, setPostForPlatforms] = useState<StrategyPost | null>(null);
+    const [postForSchedule, setPostForSchedule] = useState<StrategyPost | null>(null);
     const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
     const [sidebarPost, setSidebarPost] = useState<StrategyPost | null>(null);
     const [contentPost, setContentPost] = useState<StrategyPost | null>(null);
@@ -109,6 +111,10 @@ export default function StrategyBoardPage() {
     const handlePostToPlatforms = (post: StrategyPost) => {
         setPostForPlatforms(post);
         setPostToPlatformsOpen(true);
+    };
+
+    const handleScheduleToCalendar = (post: StrategyPost) => {
+        setPostForSchedule(post);
     };
 
     const handleDeletePost = async (post: StrategyPost) => {
@@ -260,6 +266,7 @@ export default function StrategyBoardPage() {
                                 onEditPost={handleEditPost}
                                 onClonePost={handleClonePost}
                                 onPostToPlatforms={handlePostToPlatforms}
+                                onScheduleToCalendar={handleScheduleToCalendar}
                                 onContent={(post) => setContentPost(post)}
                                 onDeletePost={handleDeletePost}
                                 onIncludeChange={handleIncludeChange}
@@ -274,6 +281,7 @@ export default function StrategyBoardPage() {
                         onEdit={handleEditPost}
                         onClone={handleClonePost}
                         onPostToPlatforms={handlePostToPlatforms}
+                        onScheduleToCalendar={handleScheduleToCalendar}
                         onContent={(post) => setContentPost(post)}
                         onDelete={handleDeletePost}
                         onIncludeChange={handleIncludeChange}
@@ -281,6 +289,16 @@ export default function StrategyBoardPage() {
                     />
                 )}
             </div>
+
+            <ScheduleToCalendarModal
+                open={!!postForSchedule}
+                onClose={() => setPostForSchedule(null)}
+                post={postForSchedule}
+                strategyId={id}
+                startDate={strategy?.start_date ?? null}
+                durationDays={strategy?.duration_days ?? 30}
+                onSuccess={() => { fetchStrategy(); setPostForSchedule(null); }}
+            />
 
             <PostToPlatformsModal
                 open={postToPlatformsOpen}
@@ -316,6 +334,12 @@ export default function StrategyBoardPage() {
                 onContent={() => {
                     if (sidebarPost) {
                         setContentPost(sidebarPost);
+                        setSidebarPost(null);
+                    }
+                }}
+                onScheduleToCalendar={() => {
+                    if (sidebarPost) {
+                        handleScheduleToCalendar(sidebarPost);
                         setSidebarPost(null);
                     }
                 }}

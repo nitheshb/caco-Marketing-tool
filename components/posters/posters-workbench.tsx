@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PostersAiHelpSheet, type AiHelpSelection } from './posters-ai-help-sheet';
 import { PostersRegenerateModal, type PosterGenerationRecord } from './posters-regenerate-modal';
+import { AddToStrategyModal } from './add-to-strategy-modal';
 import { toast } from 'sonner';
 import {
     Select,
@@ -28,6 +29,7 @@ import {
     ThumbsUp,
     RotateCcw,
     ImagePlus,
+    CalendarPlus,
 } from 'lucide-react';
 import {
     Sheet,
@@ -256,6 +258,8 @@ export function PostersWorkbench({
     const projectPreviewsRef = useRef<string[]>([]);
     const [aiHelpOpen, setAiHelpOpen] = useState(false);
     const [regenerateModalOpen, setRegenerateModalOpen] = useState(false);
+    const [addToStrategyModalOpen, setAddToStrategyModalOpen] = useState(false);
+    const [addToStrategyMediaUrl, setAddToStrategyMediaUrl] = useState<string | null>(null);
 
     const previewUrl = useMemo(() => {
         if (referenceFile) return URL.createObjectURL(referenceFile);
@@ -683,24 +687,44 @@ export function PostersWorkbench({
                             <div className="grid grid-cols-3 gap-3">
                                 {selectedProject.generations.map((g, idx) => {
                                     const num = selectedProject.generations.length - idx;
+                                    const url = g.output_url ?? null;
                                     return (
-                                        <a
+                                        <div
                                             key={g.id}
-                                            href={g.output_url ?? '#'}
-                                            target="_blank"
-                                            rel="noreferrer"
                                             className="group relative aspect-square rounded-lg overflow-hidden border border-zinc-200 bg-zinc-100 hover:border-zinc-300 hover:shadow-md transition-all"
                                         >
-                                            {g.output_url ? (
-                                                /* eslint-disable-next-line @next/next/no-img-element */
-                                                <img src={g.output_url} alt="" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full" />
-                                            )}
+                                            <a
+                                                href={url ?? '#'}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="block w-full h-full"
+                                            >
+                                                {url ? (
+                                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                                    <img src={url} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full" />
+                                                )}
+                                            </a>
                                             <div className="absolute top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs font-semibold text-white">
                                                 {num}
                                             </div>
-                                        </a>
+                                            {url && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    className="absolute bottom-2 right-2 h-8 px-2 gap-1 rounded-full text-xs font-medium bg-white/95 hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setAddToStrategyMediaUrl(url);
+                                                        setAddToStrategyModalOpen(true);
+                                                    }}
+                                                >
+                                                    <CalendarPlus className="h-3.5 w-3.5" />
+                                                    Add to strategy
+                                                </Button>
+                                            )}
+                                        </div>
                                     );
                                 })}
                             </div>
@@ -795,6 +819,17 @@ export function PostersWorkbench({
                 />
             </SheetContent>
         </Sheet>
+
+        {addToStrategyMediaUrl && (
+            <AddToStrategyModal
+                open={addToStrategyModalOpen}
+                onClose={() => {
+                    setAddToStrategyModalOpen(false);
+                    setAddToStrategyMediaUrl(null);
+                }}
+                mediaUrl={addToStrategyMediaUrl}
+            />
+        )}
 
         <PostersAiHelpSheet
             open={aiHelpOpen}
