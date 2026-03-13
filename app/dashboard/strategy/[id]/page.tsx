@@ -4,13 +4,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, LayoutGrid, Table2 } from 'lucide-react';
 import Link from 'next/link';
 import { StrategyColumn } from '@/components/strategy/strategy-column';
+import { StrategyTableView } from '@/components/strategy/strategy-table-view';
+import { StrategyBoardSkeleton } from '@/components/strategy/strategy-board-skeleton';
+import { StrategyPostDetailSidebar } from '@/components/strategy/strategy-post-detail-sidebar';
+import { StrategyPostContentModal } from '@/components/strategy/strategy-post-content-modal';
 import { EditStrategyPostModal } from '@/components/strategy/edit-strategy-post-modal';
 import { PostToPlatformsModal } from '@/components/strategy/post-to-platforms-modal';
 import type { StrategyPost } from '@/components/strategy/edit-strategy-post-modal';
 import { addDays, format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface Strategy {
@@ -36,6 +41,9 @@ export default function StrategyBoardPage() {
     const [cloneFrom, setCloneFrom] = useState<StrategyPost | null>(null);
     const [postToPlatformsOpen, setPostToPlatformsOpen] = useState(false);
     const [postForPlatforms, setPostForPlatforms] = useState<StrategyPost | null>(null);
+    const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
+    const [sidebarPost, setSidebarPost] = useState<StrategyPost | null>(null);
+    const [contentPost, setContentPost] = useState<StrategyPost | null>(null);
 
     const fetchStrategy = useCallback(async () => {
         try {
@@ -150,20 +158,15 @@ export default function StrategyBoardPage() {
     const getDefaultDay = () => addDay ?? 1;
 
     if (isLoading) {
-        return (
-            <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
-                <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-                <p className="text-zinc-500 font-medium">Loading strategy...</p>
-            </div>
-        );
+        return <StrategyBoardSkeleton />;
     }
 
     if (!strategy) {
         return (
             <div className="flex flex-col items-center justify-center gap-4 py-16">
-                <p className="text-zinc-500">Strategy not found.</p>
+                <p className="text-base text-zinc-500">Strategy not found.</p>
                 <Link href="/dashboard/strategy">
-                    <Button variant="outline" className="rounded-xl">
+                    <Button variant="outline" className="rounded-full font-medium text-[15px]">
                         Back to Strategies
                     </Button>
                 </Link>
@@ -199,37 +202,84 @@ export default function StrategyBoardPage() {
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         <Input
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             onBlur={handleNameBlur}
-                            className="text-xl font-black border-0 border-b-2 border-transparent hover:border-zinc-200 focus:border-indigo-500 bg-transparent px-0 h-auto py-1 focus-visible:ring-0 rounded-none max-w-md"
+                            className="text-xl font-semibold tracking-tight border-0 border-b-2 border-transparent hover:border-zinc-200 focus:border-zinc-400 bg-transparent px-0 h-auto py-1 focus-visible:ring-0 rounded-none max-w-md"
                         />
                         {isSavingName && (
                             <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
                         )}
+                        <span className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-sm font-semibold">
+                            {strategy.posts?.length ?? 0} {strategy.posts?.length === 1 ? 'post' : 'posts'}
+                        </span>
                     </div>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 rounded-lg border border-zinc-200 bg-zinc-50/50 p-1">
+                    <Button
+                        variant={viewMode === 'cards' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className={cn(
+                            'rounded-md gap-1.5 font-medium text-[13px]',
+                            viewMode === 'cards' ? 'bg-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'
+                        )}
+                        onClick={() => setViewMode('cards')}
+                    >
+                        <LayoutGrid className="h-4 w-4" />
+                        Cards
+                    </Button>
+                    <Button
+                        variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                        size="sm"
+                        className={cn(
+                            'rounded-md gap-1.5 font-medium text-[13px]',
+                            viewMode === 'table' ? 'bg-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'
+                        )}
+                        onClick={() => setViewMode('table')}
+                    >
+                        <Table2 className="h-4 w-4" />
+                        Table
+                    </Button>
+                </div>
                 </div>
             </div>
 
             <div className="w-full">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {Array.from({ length: duration }, (_, i) => i + 1).map((day) => (
-                        <StrategyColumn
-                            key={day}
-                            day={day}
-                            posts={postsByDay[day] || []}
-                            dateLabel={dateLabels[day] || undefined}
-                            onAddPost={() => handleAddPost(day)}
-                            onEditPost={handleEditPost}
-                            onClonePost={handleClonePost}
-                            onPostToPlatforms={handlePostToPlatforms}
-                            onDeletePost={handleDeletePost}
-                            onIncludeChange={handleIncludeChange}
-                        />
-                    ))}
-                </div>
+                {viewMode === 'cards' ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        {Array.from({ length: duration }, (_, i) => i + 1).map((day) => (
+                            <StrategyColumn
+                                key={day}
+                                day={day}
+                                posts={postsByDay[day] || []}
+                                dateLabel={dateLabels[day] || undefined}
+                                onAddPost={() => handleAddPost(day)}
+                                onEditPost={handleEditPost}
+                                onClonePost={handleClonePost}
+                                onPostToPlatforms={handlePostToPlatforms}
+                                onContent={(post) => setContentPost(post)}
+                                onDeletePost={handleDeletePost}
+                                onIncludeChange={handleIncludeChange}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <StrategyTableView
+                        posts={strategy.posts}
+                        startDate={strategy.start_date}
+                        onRowClick={(post) => setSidebarPost(post)}
+                        onEdit={handleEditPost}
+                        onClone={handleClonePost}
+                        onPostToPlatforms={handlePostToPlatforms}
+                        onContent={(post) => setContentPost(post)}
+                        onDelete={handleDeletePost}
+                        onIncludeChange={handleIncludeChange}
+                        onAddPost={() => handleAddPost(1)}
+                    />
+                )}
             </div>
 
             <PostToPlatformsModal
@@ -241,6 +291,33 @@ export default function StrategyBoardPage() {
                 onSuccess={() => {
                     fetchStrategy();
                     toast.success('Added to more platforms');
+                }}
+            />
+
+            <StrategyPostContentModal
+                post={contentPost}
+                open={!!contentPost}
+                onClose={() => setContentPost(null)}
+                strategyId={id}
+                onSuccess={() => { fetchStrategy(); setContentPost(null); }}
+            />
+
+            <StrategyPostDetailSidebar
+                post={sidebarPost}
+                open={!!sidebarPost}
+                onClose={() => setSidebarPost(null)}
+                startDate={strategy.start_date ?? null}
+                onEdit={() => {
+                    if (sidebarPost) {
+                        handleEditPost(sidebarPost);
+                        setSidebarPost(null);
+                    }
+                }}
+                onContent={() => {
+                    if (sidebarPost) {
+                        setContentPost(sidebarPost);
+                        setSidebarPost(null);
+                    }
                 }}
             />
 

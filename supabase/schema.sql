@@ -193,6 +193,7 @@ CREATE TABLE IF NOT EXISTS public.strategies (
   theme TEXT,
   duration_days INTEGER NOT NULL DEFAULT 30,
   start_date DATE,
+  image_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

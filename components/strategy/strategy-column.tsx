@@ -13,6 +13,7 @@ interface StrategyColumnProps {
     onEditPost: (post: StrategyPost) => void;
     onClonePost: (post: StrategyPost) => void;
     onPostToPlatforms: (post: StrategyPost) => void;
+    onContent: (post: StrategyPost) => void;
     onDeletePost: (post: StrategyPost) => void;
     onIncludeChange: (post: StrategyPost, checked: boolean) => void;
 }
@@ -25,6 +26,7 @@ export function StrategyColumn({
     onEditPost,
     onClonePost,
     onPostToPlatforms,
+    onContent,
     onDeletePost,
     onIncludeChange,
 }: StrategyColumnProps) {
@@ -32,7 +34,7 @@ export function StrategyColumn({
         <div className="flex flex-col min-w-0 w-full rounded-xl border border-zinc-200 bg-zinc-50/50">
             <div className="flex items-center justify-between gap-2 p-3 border-b border-zinc-200 bg-white rounded-t-xl">
                 <div className="flex flex-col">
-                    <h3 className="font-bold text-zinc-900">Day {day}</h3>
+                    <h3 className="text-base font-semibold tracking-tight text-zinc-900">Day {day}</h3>
                     {dateLabel && (
                         <span className="text-xs text-zinc-500">{dateLabel}</span>
                     )}
@@ -55,6 +57,7 @@ export function StrategyColumn({
                         onEdit={() => onEditPost(post)}
                         onClone={() => onClonePost(post)}
                         onPostToPlatforms={() => onPostToPlatforms(post)}
+                        onContent={() => onContent(post)}
                         onDelete={() => onDeletePost(post)}
                         onIncludeChange={(c) => onIncludeChange(post, c)}
                     />
