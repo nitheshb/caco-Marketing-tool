@@ -17,7 +17,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Pencil, Trash2, Copy, Share2, MoreVertical, Plus, ImagePlus } from 'lucide-react';
+import { Pencil, Trash2, Copy, Share2, MoreVertical, Plus, ImagePlus, Calendar } from 'lucide-react';
 import { Instagram, Linkedin, Youtube, Video, Facebook } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StrategyPost } from './edit-strategy-post-modal';
@@ -55,6 +55,7 @@ interface StrategyTableViewProps {
     onEdit: (post: StrategyPost) => void;
     onClone: (post: StrategyPost) => void;
     onPostToPlatforms: (post: StrategyPost) => void;
+    onScheduleToCalendar?: (post: StrategyPost) => void;
     onContent: (post: StrategyPost) => void;
     onDelete: (post: StrategyPost) => void;
     onIncludeChange: (post: StrategyPost, checked: boolean) => void;
@@ -68,6 +69,7 @@ export function StrategyTableView({
     onEdit,
     onClone,
     onPostToPlatforms,
+    onScheduleToCalendar,
     onContent,
     onDelete,
     onIncludeChange,
@@ -207,6 +209,15 @@ export function StrategyTableView({
                                                     <Share2 className="h-3.5 w-3.5" />
                                                     Post to more
                                                 </DropdownMenuItem>
+                                                {onScheduleToCalendar && (
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => { e.stopPropagation(); onScheduleToCalendar(post); }}
+                                                        className="gap-2 rounded-md"
+                                                    >
+                                                        <Calendar className="h-3.5 w-3.5" />
+                                                        Schedule to calendar
+                                                    </DropdownMenuItem>
+                                                )}
                                                 <DropdownMenuItem
                                                     onClick={(e) => { e.stopPropagation(); onContent(post); }}
                                                     className="gap-2 rounded-md"

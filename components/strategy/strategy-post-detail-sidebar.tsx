@@ -4,7 +4,7 @@ import { addDays, format } from 'date-fns';
 import { SlidePanel } from '@/components/ui/slide-panel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Instagram, Linkedin, Youtube, Video, Facebook, Pencil, ImagePlus } from 'lucide-react';
+import { Instagram, Linkedin, Youtube, Video, Facebook, Pencil, ImagePlus, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StrategyPost } from './edit-strategy-post-modal';
 
@@ -49,6 +49,7 @@ interface StrategyPostDetailSidebarProps {
     startDate?: string | null;
     onEdit: () => void;
     onContent?: () => void;
+    onScheduleToCalendar?: () => void;
 }
 
 export function StrategyPostDetailSidebar({
@@ -58,6 +59,7 @@ export function StrategyPostDetailSidebar({
     startDate,
     onEdit,
     onContent,
+    onScheduleToCalendar,
 }: StrategyPostDetailSidebarProps) {
     if (!post) return null;
 
@@ -88,6 +90,16 @@ export function StrategyPostDetailSidebar({
                         >
                             <ImagePlus className="h-4 w-4" />
                             Content
+                        </Button>
+                    )}
+                    {onScheduleToCalendar && (
+                        <Button
+                            variant="outline"
+                            onClick={() => { onClose(); onScheduleToCalendar(); }}
+                            className="rounded-full font-medium text-[15px] gap-2 border-zinc-200"
+                        >
+                            <Calendar className="h-4 w-4" />
+                            Schedule
                         </Button>
                     )}
                     <Button

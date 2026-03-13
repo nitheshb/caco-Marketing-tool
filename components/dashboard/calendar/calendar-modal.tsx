@@ -302,10 +302,13 @@ export function CalendarModal() {
 
                             {formType === 'post' && (
                                 <div className="space-y-2">
-                                    <label className="text-sm font-bold text-zinc-500">Select Connected Account</label>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-sm font-bold text-zinc-500">Select Account to Publish To</label>
+                                        <a href="/dashboard/settings" className="text-xs text-indigo-600 hover:underline">From Settings →</a>
+                                    </div>
                                     {socialConnections.length === 0 ? (
                                         <div className="text-sm text-zinc-500 p-4 bg-zinc-50 rounded-xl border border-zinc-200">
-                                            No social accounts connected. Connect an account in Settings first.
+                                            No social accounts connected. Connect Instagram, LinkedIn, YouTube, etc. in Settings → Social first.
                                         </div>
                                     ) : (
                                         <div className="flex flex-wrap gap-3">

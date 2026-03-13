@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Pencil, Trash2, Copy, Share2, MoreVertical, ImagePlus } from 'lucide-react';
+import { Pencil, Trash2, Copy, Share2, MoreVertical, ImagePlus, Calendar } from 'lucide-react';
 import { Instagram, Linkedin, Youtube, Video, Facebook } from 'lucide-react';
 import {
     DropdownMenu,
@@ -47,6 +47,7 @@ interface StrategyPostCardProps {
     onEdit: () => void;
     onClone: () => void;
     onPostToPlatforms: () => void;
+    onScheduleToCalendar?: () => void;
     onContent: () => void;
     onDelete: () => void;
     onIncludeChange: (checked: boolean) => void;
@@ -57,6 +58,7 @@ export function StrategyPostCard({
     onEdit,
     onClone,
     onPostToPlatforms,
+    onScheduleToCalendar,
     onContent,
     onDelete,
     onIncludeChange,
@@ -105,6 +107,12 @@ export function StrategyPostCard({
                                 <Share2 className="h-3.5 w-3.5" />
                                 Post to more
                             </DropdownMenuItem>
+                            {onScheduleToCalendar && (
+                                <DropdownMenuItem onClick={() => { onScheduleToCalendar(); setMenuOpen(false); }} className="gap-2 rounded-md">
+                                    <Calendar className="h-3.5 w-3.5" />
+                                    Schedule to calendar
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => { onContent(); setMenuOpen(false); }} className="gap-2 rounded-md">
                                 <ImagePlus className="h-3.5 w-3.5" />
                                 Create / Upload content

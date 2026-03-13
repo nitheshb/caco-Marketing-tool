@@ -35,6 +35,7 @@ export interface StrategyPost {
     goal: string;
     status: string;
     include_in_calendar: boolean;
+    media_url?: string | null;
 }
 
 interface EditStrategyPostModalProps {
