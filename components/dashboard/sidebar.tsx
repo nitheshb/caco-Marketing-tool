@@ -54,8 +54,8 @@ const sidebarData = [
         defaultExpanded: true,
         items: [
             { name: 'Series', href: '/dashboard' },
-            { name: 'Videos', href: '/dashboard/videos' },
-            { name: 'Posters', href: '/dashboard/posters' },
+            { name: 'Gallery', href: '/dashboard/videos' },
+            { name: 'Create Content', href: '/dashboard/posters' },
             
             { name: 'Create New', href: '/dashboard/create' },
             // { name: 'Billing', href: '/dashboard/billing' },
