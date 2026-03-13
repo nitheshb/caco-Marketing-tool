@@ -21,6 +21,7 @@ const LANDING_BTN =
 
 export interface PosterGenerationRecord {
     id: string;
+    type?: 'image' | 'video';
     output_url: string | null;
     description: string;
     requirements?: string | null;

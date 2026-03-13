@@ -66,11 +66,13 @@ function UploadTile({
     accept,
     onFile,
     previewUrl,
+    previewAsVideo,
 }: {
     label: string;
     accept: string;
     onFile: (file: File) => void;
     previewUrl?: string | null;
+    previewAsVideo?: boolean;
 }) {
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -94,12 +96,16 @@ function UploadTile({
                 onClick={() => inputRef.current?.click()}
             >
                 {previewUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                        alt=""
-                        src={previewUrl}
-                        className="absolute inset-0 h-full w-full object-contain"
-                    />
+                    previewAsVideo ? (
+                        <video src={previewUrl} muted playsInline className="absolute inset-0 h-full w-full object-contain" />
+                    ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            alt=""
+                            src={previewUrl}
+                            className="absolute inset-0 h-full w-full object-contain"
+                        />
+                    )
                 ) : null}
                 <div
                     className={`relative z-10 flex flex-col items-center gap-2 transition-opacity ${
@@ -113,10 +119,10 @@ function UploadTile({
                         <p className="text-sm font-semibold text-zinc-900">
                             {previewUrl ? 'Click to change' : label}
                         </p>
-                        {!previewUrl && (
+                            {!previewUrl && (
                             <p className="mt-0.5 text-xs text-zinc-500">
                                 Click to upload
-                                <span className="text-zinc-400"> (PNG/JPG)</span>
+                                <span className="text-zinc-400"> ({accept.includes('video') ? 'MP4, WebM' : 'PNG/JPG'})</span>
                             </p>
                         )}
                     </div>
@@ -142,8 +148,12 @@ function ResultPreview({ type, previewUrl }: { type: WorkbenchType; previewUrl?:
                 </div>
                 <div className="aspect-video w-full bg-zinc-100">
                     {previewUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={previewUrl} alt="" className="h-full w-full object-contain" />
+                        type === 'video' ? (
+                            <video src={previewUrl} controls loop playsInline className="h-full w-full object-contain" />
+                        ) : (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={previewUrl} alt="" className="h-full w-full object-contain" />
+                        )
                     ) : (
                         <div className="flex h-full w-full flex-col items-center justify-center gap-2">
                             <Skeleton className="h-24 w-40 rounded-xl" />
@@ -218,13 +228,12 @@ export function PostersWorkbench({
     }, []);
 
     useEffect(() => {
-        if (type !== 'image') return;
         const auth = getAuth(app);
         const p = auth.currentUser ? auth.currentUser.getIdToken(true) : Promise.resolve(null);
         p.then((token) => {
             const headers: Record<string, string> = {};
             if (token) headers['Authorization'] = `Bearer ${token}`;
-            return fetch('/api/posters/generations?limit=50', { headers });
+            return fetch(`/api/posters/generations?limit=50&type=${type}`, { headers });
         })
             .then((res) => res.json())
             .then((data) => {
@@ -298,6 +307,9 @@ export function PostersWorkbench({
     }
 
     async function fileToBase64(file: File): Promise<{ base64: string; mimeType: string }> {
+        if (file.type.startsWith('video/')) {
+            return videoToFirstFrameBase64(file);
+        }
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
@@ -307,6 +319,35 @@ export function PostersWorkbench({
             };
             reader.onerror = () => reject(reader.error);
             reader.readAsDataURL(file);
+        });
+    }
+
+    async function videoToFirstFrameBase64(file: File): Promise<{ base64: string; mimeType: string }> {
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            video.muted = true;
+            video.playsInline = true;
+            video.preload = 'metadata';
+            video.onloadeddata = () => {
+                video.currentTime = 0.1;
+            };
+            video.onseeked = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return reject(new Error('Could not get canvas context'));
+                ctx.drawImage(video, 0, 0);
+                const dataUrl = canvas.toDataURL('image/png');
+                const base64 = dataUrl.includes(',') ? dataUrl.split(',')[1]! : dataUrl;
+                URL.revokeObjectURL(video.src);
+                resolve({ base64, mimeType: 'image/png' });
+            };
+            video.onerror = () => {
+                URL.revokeObjectURL(video.src);
+                reject(new Error('Failed to load video'));
+            };
+            video.src = URL.createObjectURL(file);
         });
     }
 
@@ -338,14 +379,15 @@ export function PostersWorkbench({
                         <StepHeader
                             step={1}
                             title="Pick your reference"
-                            hint={type === 'image' ? 'Upload a brand asset or inspiration image.' : 'Upload a keyframe or inspiration image.'}
+                            hint={type === 'image' ? 'Upload a brand asset or inspiration image.' : 'Upload a video as reference.'}
                             icon={type === 'image' ? <ImageIcon className="h-4 w-4" /> : <Film className="h-4 w-4" />}
                         />
                         <div className="mt-4">
                             <UploadTile
-                                label="Upload image"
-                                accept="image/*"
+                                label={type === 'image' ? 'Upload image' : 'Upload video'}
+                                accept={type === 'image' ? 'image/*' : 'video/*'}
                                 previewUrl={previewUrl}
+                                previewAsVideo={type === 'video'}
                                 onFile={(file) => (type === 'image' ? handleReferenceChange(file) : setReferenceFile(file))}
                             />
                         </div>
@@ -377,7 +419,7 @@ export function PostersWorkbench({
                                 AI Help – get prompt suggestions
                             </Button>
 
-                            {type === 'image' && outputUrl && lastGeneration && (
+                            {outputUrl && lastGeneration && (
                                 <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 space-y-2">
                                     <p className="text-sm font-medium text-zinc-800">Did you like the content?</p>
                                     <div className="flex gap-2">
@@ -405,13 +447,13 @@ export function PostersWorkbench({
 
                             <Button
                                 className={`mt-1 w-full h-11 px-6 gap-2 ${LANDING_BTN}`}
-                                disabled={!canGenerate || isGenerating || (type === 'image' && !!outputUrl)}
+                                disabled={!canGenerate || isGenerating || !!outputUrl}
                                 onClick={async () => {
                                     setIsGenerating(true);
                                     try {
                                         let referenceImageBase64: string | undefined;
                                         let referenceImageMimeType: string | undefined;
-                                        if (referenceFile && type === 'image') {
+                                        if (referenceFile) {
                                             const { base64, mimeType } = await fileToBase64(referenceFile);
                                             referenceImageBase64 = base64;
                                             referenceImageMimeType = mimeType;
@@ -437,9 +479,10 @@ export function PostersWorkbench({
                                         const data = await res.json().catch(() => ({}));
                                         if (!res.ok) throw new Error(data.error || 'Failed to generate');
 
-                                        if (type === 'image' && data.generationId && data.outputUrl) {
+                                        if (data.generationId && data.outputUrl) {
                                             const gen: PosterGenerationRecord = {
                                                 id: data.generationId,
+                                                type,
                                                 output_url: data.outputUrl,
                                                 description: description.trim(),
                                                 requirements: requirements.trim() || null,
@@ -454,7 +497,7 @@ export function PostersWorkbench({
                                             setOutputUrl(data.outputUrl ?? null);
                                         }
 
-                                        toast.success(type === 'image' ? 'Poster generated' : 'Prompt generated');
+                                        toast.success(type === 'image' ? 'Poster generated' : 'Video generated');
                                     } catch (e) {
                                         const msg = e instanceof Error ? e.message : 'Failed to generate';
                                         toast.error(msg);
@@ -594,7 +637,7 @@ export function PostersWorkbench({
                 try {
                     let referenceImageBase64: string | undefined;
                     let referenceImageMimeType: string | undefined;
-                    if (referenceFile && type === 'image') {
+                    if (referenceFile) {
                         const { base64, mimeType } = await fileToBase64(referenceFile);
                         referenceImageBase64 = base64;
                         referenceImageMimeType = mimeType;
@@ -623,6 +666,7 @@ export function PostersWorkbench({
                     if (data.generationId && data.outputUrl) {
                         const gen: PosterGenerationRecord = {
                             id: data.generationId,
+                            type,
                             output_url: data.outputUrl,
                             description: params.description,
                             requirements: params.requirements || null,
