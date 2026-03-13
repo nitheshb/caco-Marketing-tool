@@ -9,6 +9,7 @@ export async function GET(req: Request) {
 
         const searchParams = new URL(req.url).searchParams;
         const folderId = searchParams.get("folderId");
+        const all = searchParams.get("all") === "true";
 
         let query = supabaseAdmin
             .from("media_assets")
@@ -16,10 +17,12 @@ export async function GET(req: Request) {
             .eq("user_id", userId)
             .order("created_at", { ascending: false });
 
-        if (folderId === "null" || folderId === null) {
-            query = query.is("folder_id", null);
-        } else {
-            query = query.eq("folder_id", folderId);
+        if (!all) {
+            if (folderId === "null" || folderId === null) {
+                query = query.is("folder_id", null);
+            } else {
+                query = query.eq("folder_id", folderId);
+            }
         }
 
         const { data, error } = await query;
