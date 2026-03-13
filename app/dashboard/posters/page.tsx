@@ -10,10 +10,10 @@ type TabType = 'image' | 'video';
 export default function PostersPage() {
     const [activeTab, setActiveTab] = useState<TabType>('image');
     return (
-        <div className="space-y-6 w-full max-w-7xl mx-auto">
-            <div className="bg-white p-6 rounded-[10px] border border-zinc-200 shadow-sm">
-                <div className="space-y-4">
-                    <div className="space-y-1">
+        <div className="space-y-3 w-full max-w-7xl mx-auto">
+            <div className="bg-white p-4 rounded-[10px] border border-zinc-200 shadow-sm">
+                <div className="space-y-2">
+                    <div className="space-y-0.5">
                         <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-zinc-900 leading-tight">
                             Posters
                         </h1>

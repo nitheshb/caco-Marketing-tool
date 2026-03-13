@@ -53,12 +53,12 @@ function StepHeader({
     icon: ReactNode;
 }) {
     return (
-        <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-white">
+        <div className="flex items-start gap-2">
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-xs font-bold text-white">
                 {step}
             </div>
             <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                     <div className="text-zinc-700">{icon}</div>
                     <h3 className="text-sm font-semibold text-zinc-900">{title}</h3>
                 </div>
@@ -99,7 +99,7 @@ function UploadTile({
             />
             <button
                 type="button"
-                className="group relative flex w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-zinc-300 bg-zinc-50 px-4 py-8 text-left transition-colors hover:bg-zinc-100"
+                className="group relative flex w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-3 py-5 text-left transition-colors hover:bg-zinc-100"
                 onClick={() => inputRef.current?.click()}
             >
                 {previewUrl ? (
@@ -216,8 +216,8 @@ function ResultPreview({ type, previewUrl }: { type: WorkbenchType; previewUrl?:
                             <img src={previewUrl} alt="" className="h-full w-full object-contain" />
                         )
                     ) : (
-                        <div className="flex h-full w-full flex-col items-center justify-center gap-2">
-                            <Skeleton className="h-24 w-40 rounded-xl" />
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5">
+                            <Skeleton className="h-20 w-32 rounded-lg" />
                             <p className="text-xs text-zinc-500">{emptyLabel}</p>
                         </div>
                     )}
@@ -434,36 +434,36 @@ export function PostersWorkbench({
 
     return (
         <>
-        <Card className="overflow-hidden rounded-[14px] border border-zinc-200 bg-white shadow-sm">
-            <div className="border-b border-zinc-200 bg-zinc-50/60 px-5 py-4">
-                <div className="flex items-start justify-between gap-4">
+        <Card className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+            <div className="border-b border-zinc-200 bg-zinc-50/60 px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <p className="text-xs font-bold tracking-widest uppercase text-[#239047]">
                             Content Creation
                         </p>
-                        <h2 className="mt-1 text-xl font-semibold tracking-tight text-zinc-900">
+                        <h2 className="mt-0.5 text-xl font-semibold tracking-tight text-zinc-900">
                             {title}
                         </h2>
-                        <p className="mt-1 text-sm text-zinc-500">{subtitle}</p>
+                        <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>
                     </div>
-                    <div className="hidden sm:flex items-center gap-2 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-xs text-zinc-600">
+                    <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-2.5 py-1 text-xs text-zinc-600">
                         <Sparkles className="h-3.5 w-3.5 text-zinc-500" />
                         AI assisted prompt builder
                     </div>
                 </div>
             </div>
 
-            <div className="p-5">
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="p-4">
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
                     {/* Step 1 */ }
-                    <Card className="rounded-xl border border-zinc-200 bg-white p-4 shadow-none">
+                    <Card className="rounded-lg border border-zinc-200 bg-white p-3 shadow-none">
                         <StepHeader
                             step={1}
                             title="Pick your reference"
                             hint={type === 'image' ? 'Upload a brand asset or inspiration image.' : 'Upload a video as reference.'}
                             icon={type === 'image' ? <ImageIcon className="h-4 w-4" /> : <Film className="h-4 w-4" />}
                         />
-                        <div className="mt-4 space-y-3">
+                        <div className="mt-3 space-y-2">
                             {type === 'image' ? (
                                 <>
                                     <UploadTile
@@ -474,7 +474,7 @@ export function PostersWorkbench({
                                     />
                                     <Button
                                         variant="outline"
-                                        className="w-full h-12 rounded-xl gap-2 border-dashed border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50"
+                                        className="w-full h-10 rounded-lg gap-2 border-dashed border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50"
                                         onClick={() => setGalleryPickerOpen(true)}
                                     >
                                         <ImagePlus className="h-5 w-5 text-zinc-600" />
@@ -494,25 +494,25 @@ export function PostersWorkbench({
                     </Card>
 
                     {/* Step 2 */ }
-                    <Card className="rounded-xl border border-zinc-200 bg-white p-4 shadow-none">
+                    <Card className="rounded-lg border border-zinc-200 bg-white p-3 shadow-none">
                         <StepHeader
                             step={2}
                             title="What do you want to generate?"
                             hint="Describe your idea or use AI help for suggestions."
                             icon={<Wand2 className="h-4 w-4" />}
                         />
-                        <div className="mt-4 space-y-3">
-                            <div className="space-y-1.5">
+                        <div className="mt-3 space-y-2">
+                            <div className="space-y-1">
                                 <Textarea
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     placeholder={type === 'image' ? 'Example: A clean promo poster for 50% OFF summer sale' : 'Example: A short reel for product launch with smooth zoom-in'}
-                                    className="min-h-20"
+                                    className="min-h-16"
                                 />
                             </div>
                             <Button
                                 variant="outline"
-                                className="w-full h-10 rounded-full gap-2 text-sm"
+                                className="w-full h-9 rounded-full gap-1.5 text-sm"
                                 onClick={() => setAiHelpOpen(true)}
                             >
                                 <Sparkles className="h-4 w-4" />
@@ -520,7 +520,7 @@ export function PostersWorkbench({
                             </Button>
 
                             {outputUrl && lastGeneration && (
-                                <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 space-y-2">
+                                <div className="rounded-lg border border-zinc-200 bg-zinc-50/80 p-2.5 space-y-1.5">
                                     <p className="text-sm font-medium text-zinc-800">Did you like the content?</p>
                                     <div className="flex gap-2">
                                         <Button
@@ -546,7 +546,7 @@ export function PostersWorkbench({
                             )}
 
                             <Button
-                                className={`mt-1 w-full h-11 px-6 gap-2 ${LANDING_BTN}`}
+                                className={`mt-0.5 w-full h-10 px-5 gap-2 ${LANDING_BTN}`}
                                 disabled={!canGenerate || isGenerating || !!outputUrl}
                                 onClick={async () => {
                                     setIsGenerating(true);
@@ -617,16 +617,16 @@ export function PostersWorkbench({
                     </Card>
 
                     {/* Step 3 */ }
-                    <Card className="rounded-xl border border-zinc-200 bg-white p-4 shadow-none">
+                    <Card className="rounded-lg border border-zinc-200 bg-white p-3 shadow-none">
                         <StepHeader
                             step={3}
                             title="Download result"
                             hint="Preview your output, then download when ready."
                             icon={<Download className="h-4 w-4" />}
                         />
-                        <div className="mt-4">
+                        <div className="mt-3">
                             <ResultPreview type={type} previewUrl={outputUrl} />
-                            <div className="mt-3 flex flex-wrap gap-2">
+                            <div className="mt-2 flex flex-wrap gap-2">
                                 <Button
                                     className="rounded-full"
                                     variant="outline"
@@ -648,7 +648,7 @@ export function PostersWorkbench({
                             </div>
 
                             {!outputUrl && (
-                                <p className="mt-3 text-xs text-zinc-500">
+                                <p className="mt-2 text-xs text-zinc-500">
                                     Generate to see your output.
                                 </p>
                             )}
@@ -657,73 +657,52 @@ export function PostersWorkbench({
                 </div>
 
                 {type === 'image' && (
-                    <div className="border-t border-zinc-200 px-5 py-4">
-                        <p className="text-sm font-semibold text-zinc-800 mb-1">My generated posters</p>
-                        <p className="text-xs text-zinc-500 mb-3">Select a project to view. Click an image to open full size.</p>
-                        {projectOptions.length === 0 ? (
-                            <p className="text-sm text-zinc-500 py-6 text-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50/50">
-                                No posters yet. Generate your first one above.
-                            </p>
-                        ) : (
-                            <div className="space-y-4">
+                    <div className="border-t border-zinc-200 px-4 py-3">
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="text-sm font-semibold text-zinc-800">My generated posters</p>
+                            {projectOptions.length > 1 && (
                                 <Select value={selectedProjectKey} onValueChange={setSelectedProjectKey}>
-                                    <SelectTrigger className="w-full max-w-sm h-11 border-zinc-200">
+                                    <SelectTrigger className="w-[140px] h-9 border-zinc-200 text-xs">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {projectOptions.map((opt) => (
                                             <SelectItem key={opt.key} value={opt.key}>
-                                                <span className="flex items-center gap-2">
-                                                    {opt.previewUrl ? (
-                                                        /* eslint-disable-next-line @next/next/no-img-element */
-                                                        <img
-                                                            src={opt.previewUrl}
-                                                            alt=""
-                                                            className="h-8 w-8 rounded object-cover shrink-0 border border-zinc-200"
-                                                        />
-                                                    ) : (
-                                                        <div className="h-8 w-8 rounded bg-zinc-200 shrink-0" />
-                                                    )}
-                                                    <span>{opt.label}</span>
-                                                    <span className="text-zinc-400 text-xs">({opt.generations.length})</span>
-                                                </span>
+                                                {opt.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                {selectedProject && (
-                                    <div className="overflow-hidden rounded-lg border border-zinc-200">
-                                        <table className="w-full text-left text-sm">
-                                            <thead>
-                                                <tr className="border-b border-zinc-200 bg-zinc-50/80">
-                                                    <th className="px-4 py-2.5 font-semibold text-zinc-700 w-12">#</th>
-                                                    <th className="px-4 py-2.5 font-semibold text-zinc-700 w-20">Image</th>
-                                                    <th className="px-4 py-2.5 font-semibold text-zinc-700">Prompt</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {selectedProject.generations.map((g, idx) => (
-                                                    <tr key={g.id} className="border-b border-zinc-100 last:border-b-0 hover:bg-zinc-50/50">
-                                                        <td className="px-4 py-2.5 text-zinc-500 font-medium">{selectedProject.generations.length - idx}</td>
-                                                        <td className="px-4 py-2.5">
-                                                            <a href={g.output_url ?? '#'} target="_blank" rel="noreferrer" className="block w-14 h-14 rounded-md overflow-hidden border border-zinc-200 bg-zinc-100 hover:ring-2 hover:ring-[#f2d412] transition-all shrink-0">
-                                                                {g.output_url ? (
-                                                                    /* eslint-disable-next-line @next/next/no-img-element */
-                                                                    <img src={g.output_url} alt="" className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <div className="w-full h-full" />
-                                                                )}
-                                                            </a>
-                                                        </td>
-                                                        <td className="px-4 py-2.5 text-zinc-600 max-w-md">
-                                                            <span className="line-clamp-2">{g.description}</span>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
+                            )}
+                        </div>
+                        {projectOptions.length === 0 || !selectedProject ? (
+                            <p className="text-sm text-zinc-500 py-4 text-center rounded-lg border border-dashed border-zinc-200 bg-zinc-50/50">
+                                No posters yet. Generate your first one above.
+                            </p>
+                        ) : (
+                            <div className="grid grid-cols-3 gap-3">
+                                {selectedProject.generations.map((g, idx) => {
+                                    const num = selectedProject.generations.length - idx;
+                                    return (
+                                        <a
+                                            key={g.id}
+                                            href={g.output_url ?? '#'}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="group relative aspect-square rounded-lg overflow-hidden border border-zinc-200 bg-zinc-100 hover:border-zinc-300 hover:shadow-md transition-all"
+                                        >
+                                            {g.output_url ? (
+                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                <img src={g.output_url} alt="" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full" />
+                                            )}
+                                            <div className="absolute top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-xs font-semibold text-white">
+                                                {num}
+                                            </div>
+                                        </a>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
