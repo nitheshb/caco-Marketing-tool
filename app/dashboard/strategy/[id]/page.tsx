@@ -24,6 +24,67 @@ function formatLabel(s: string) {
     return s.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
+function StatRingCard({
+    label,
+    valueLabel,
+    subtitle,
+    progress,
+    accentColor,
+}: {
+    label: string;
+    valueLabel: string;
+    subtitle: string;
+    progress: number;
+    accentColor: string;
+}) {
+    const radius = 32;
+    const circumference = 2 * Math.PI * radius;
+    const safeProgress = Math.min(Math.max(progress, 0), 1);
+    const offset = circumference * (1 - safeProgress);
+
+    return (
+        <div className="flex items-center gap-4 rounded-2xl bg-white border border-zinc-200 px-4 py-3.5 shadow-sm">
+            <div className="relative h-20 w-20 flex items-center justify-center">
+                <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
+                    <circle
+                        cx="40"
+                        cy="40"
+                        r={radius}
+                        className="stroke-zinc-200"
+                        strokeWidth="8"
+                        fill="none"
+                    />
+                    <circle
+                        cx="40"
+                        cy="40"
+                        r={radius}
+                        stroke={accentColor}
+                        strokeWidth="8"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                    />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-xs font-medium text-zinc-600">
+                        {Math.round(safeProgress * 100)}%
+                    </span>
+                </div>
+            </div>
+            <div className="min-w-0">
+                <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                    {label}
+                </div>
+                <div className="text-[19px] font-semibold text-zinc-900 leading-tight">
+                    {valueLabel}
+                </div>
+                <div className="text-[11px] text-zinc-500 mt-0.5 line-clamp-1">{subtitle}</div>
+            </div>
+        </div>
+    );
+}
+
 interface Strategy {
     id: string;
     name: string;
@@ -307,35 +368,49 @@ export default function StrategyBoardPage() {
             </div>
 
             {/* Stats row */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 px-6 py-4">
-                <div className="bg-zinc-50 rounded-lg p-3">
-                    <div className="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Total posts</div>
-                    <div className="text-[22px] font-medium text-zinc-900 leading-tight">{posts.length}</div>
-                    <div className="text-[11px] text-zinc-400 mt-0.5">across {duration} days</div>
-                </div>
-                <div className="bg-zinc-50 rounded-lg p-3">
-                    <div className="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Content ready</div>
-                    <div className="text-[22px] font-medium leading-tight text-emerald-800">{readyCount}</div>
-                    <div className="text-[11px] text-zinc-400 mt-0.5">{posts.length - readyCount} planned</div>
-                </div>
-                <div className="bg-zinc-50 rounded-lg p-3">
-                    <div className="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Primary goal</div>
-                    <div className="text-[15px] font-medium text-zinc-900 pt-1">{primaryGoal.goal}</div>
-                    <div className="text-[11px] text-zinc-400 mt-0.5">
-                        {primaryGoal.count} of {posts.length} posts
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-6 py-5">
+                <StatRingCard
+                    label="Total posts"
+                    valueLabel={`${posts.length} of ${duration} days`}
+                    subtitle="7-day plan overview"
+                    progress={duration ? posts.length / duration : 0}
+                    accentColor="#F5C842"
+                />
+
+                <div className="rounded-2xl bg-white border border-zinc-200 px-4 py-3.5 shadow-sm flex flex-col items-center justify-center text-center">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                        Content ready
+                    </div>
+                    <div className="mt-1 text-[19px] font-semibold text-zinc-900 leading-tight">
+                        {readyCount} of {posts.length || 1}
+                    </div>
+                    <div className="text-[11px] text-zinc-500 mt-0.5">
+                        {Math.max(posts.length - readyCount, 0)} still planned
                     </div>
                 </div>
-                <div className="bg-zinc-50 rounded-lg p-3">
-                    <div className="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Platform</div>
-                    <div className="text-[15px] font-medium text-zinc-900 pt-1">{platformCoverage}</div>
-                    <div className="text-[11px] text-zinc-400 mt-0.5">coverage</div>
-                </div>
-                <div className="bg-zinc-50 rounded-lg p-3">
-                    <div className="text-[11px] text-zinc-500 uppercase tracking-wider mb-1">Days remaining</div>
-                    <div className="text-[22px] font-medium text-zinc-900 leading-tight">
-                        {remainingDays}
+
+                <div className="rounded-2xl bg-white border border-zinc-200 px-4 py-3.5 shadow-sm flex flex-col items-center justify-center text-center">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                        Platforms
                     </div>
-                    <div className="text-[11px] text-zinc-400 mt-0.5">in this campaign</div>
+                    <div className="mt-1 text-[19px] font-semibold text-zinc-900 leading-tight">
+                        {platformCoverage}
+                    </div>
+                    <div className="text-[11px] text-zinc-500 mt-0.5">
+                        Channel coverage
+                    </div>
+                </div>
+
+                <div className="rounded-2xl bg-white border border-zinc-200 px-4 py-3.5 shadow-sm flex flex-col items-center justify-center text-center">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                        Campaign progress
+                    </div>
+                    <div className="mt-1 text-[19px] font-semibold text-zinc-900 leading-tight">
+                        Day {todayDay} of {duration}
+                    </div>
+                    <div className="text-[11px] text-zinc-500 mt-0.5">
+                        {remainingDays > 0 ? `${remainingDays} days left` : 'Campaign completed'}
+                    </div>
                 </div>
             </div>
 
