@@ -56,6 +56,7 @@ export function StrategyColumn({
                     <StrategyPostCard
                         key={post.id}
                         post={post}
+                        dateLabel={dateLabel}
                         onEdit={() => onEditPost(post)}
                         onClone={() => onClonePost(post)}
                         onPostToPlatforms={() => onPostToPlatforms(post)}

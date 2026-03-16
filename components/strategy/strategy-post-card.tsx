@@ -1,12 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Pencil, Trash2, Copy, Share2, MoreVertical, ImagePlus, Calendar } from 'lucide-react';
-import { Instagram, Linkedin, Youtube, Video, Facebook } from 'lucide-react';
+import { Pencil, Trash2, Copy, Share2, MoreVertical, ImagePlus, Calendar, Check } from 'lucide-react';
+import { Instagram, Linkedin, Youtube, Facebook } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,34 +13,61 @@ import {
 import { cn } from '@/lib/utils';
 import type { StrategyPost } from './edit-strategy-post-modal';
 
-const PLATFORM_ICONS: Record<string, React.ComponentType<{ className?: string; strokeWidth?: number }>> = {
-    instagram: Instagram,
-    linkedin: Linkedin,
-    youtube: Youtube,
-    facebook: Facebook,
-};
-
-const PLATFORM_LABELS: Record<string, string> = {
-    instagram: 'Instagram',
-    linkedin: 'LinkedIn',
-    youtube: 'YouTube',
-    facebook: 'Facebook',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-    planned: 'bg-zinc-100 text-zinc-700',
-    content_pending: 'bg-amber-100 text-amber-800',
-    content_ready: 'bg-blue-100 text-blue-800',
-    scheduled: 'bg-indigo-100 text-indigo-800',
-    posted: 'bg-emerald-100 text-emerald-800',
+const PLATFORM_CONFIG: Record<string, {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    gradient: string;
+}> = {
+    instagram: {
+        icon: Instagram,
+        label: 'Instagram',
+        gradient: 'linear-gradient(135deg, #fd5949 0%, #d6249f 50%, #285AEB 100%)',
+    },
+    linkedin: {
+        icon: Linkedin,
+        label: 'LinkedIn',
+        gradient: 'linear-gradient(135deg, #0077B5 0%, #00A0DC 100%)',
+    },
+    youtube: {
+        icon: Youtube,
+        label: 'YouTube',
+        gradient: 'linear-gradient(135deg, #FF0000 0%, #cc0000 100%)',
+    },
+    facebook: {
+        icon: Facebook,
+        label: 'Facebook',
+        gradient: 'linear-gradient(135deg, #1877F2 0%, #0C5FC7 100%)',
+    },
+    tiktok: {
+        icon: Instagram, // fallback icon
+        label: 'TikTok',
+        gradient: 'linear-gradient(135deg, #010101 0%, #69C9D0 50%, #EE1D52 100%)',
+    },
 };
 
 function formatLabel(s: string) {
     return s.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
+const TYPE_PILL: Record<string, { bg: string; text: string }> = {
+    reel: { bg: 'bg-violet-100', text: 'text-violet-800' },
+    carousel: { bg: 'bg-sky-100', text: 'text-sky-800' },
+    video: { bg: 'bg-pink-100', text: 'text-pink-800' },
+    image: { bg: 'bg-amber-100', text: 'text-amber-800' },
+    text_post: { bg: 'bg-slate-100', text: 'text-slate-700' },
+};
+
+const STATUS_PILL: Record<string, { bg: string; text: string; border?: string }> = {
+    content_ready: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+    planned: { bg: 'bg-zinc-100', text: 'text-zinc-600', border: 'border border-zinc-200' },
+    content_pending: { bg: 'bg-amber-100', text: 'text-amber-800' },
+    scheduled: { bg: 'bg-indigo-100', text: 'text-indigo-800' },
+    posted: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+};
+
 interface StrategyPostCardProps {
     post: StrategyPost;
+    dateLabel?: string;
     onEdit: () => void;
     onClone: () => void;
     onPostToPlatforms: () => void;
@@ -55,6 +79,7 @@ interface StrategyPostCardProps {
 
 export function StrategyPostCard({
     post,
+    dateLabel,
     onEdit,
     onClone,
     onPostToPlatforms,
@@ -64,34 +89,39 @@ export function StrategyPostCard({
     onIncludeChange,
 }: StrategyPostCardProps) {
     const [menuOpen, setMenuOpen] = useState(false);
-    const PlatformIcon = PLATFORM_ICONS[post.platform?.toLowerCase()] || Video;
-    const platformLabel = PLATFORM_LABELS[post.platform?.toLowerCase()] || formatLabel(post.platform || '');
-    const statusColor = STATUS_COLORS[post.status] || STATUS_COLORS.planned;
+    const typeStyle = TYPE_PILL[post.content_type?.toLowerCase()] || TYPE_PILL.text_post;
+    const statusStyle = STATUS_PILL[post.status] || STATUS_PILL.planned;
+    const platformKey = post.platform?.toLowerCase() ?? '';
+    const platformCfg = PLATFORM_CONFIG[platformKey];
+    const PlatformIcon = platformCfg?.icon;
 
     return (
-        <Card className="rounded-xl border border-zinc-200 p-0 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-            {/* Platform logo header */}
-            <div className="relative flex flex-col items-center pt-4 pb-2 px-3 bg-zinc-50/80">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800 text-white shrink-0">
-                    <PlatformIcon className="h-6 w-6" />
-                </div>
-                <p className="mt-1.5 text-xs font-semibold text-zinc-700">{platformLabel}</p>
-                <div className="absolute top-2 right-2 flex items-center gap-0.5">
-                    <Checkbox
-                        checked={post.include_in_calendar}
-                        onCheckedChange={(c) => onIncludeChange(c === true)}
-                        className="h-4 w-4 shrink-0"
-                        onClick={(e) => e.stopPropagation()}
-                    />
+        <div className="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+            {/* Top: Day badge + Status + More menu */}
+            <div className="flex justify-between items-start mb-2.5">
+                <span className="text-[11px] font-medium text-zinc-600 bg-zinc-100 rounded-xl px-2 py-0.5">
+                    Day {post.day}
+                </span>
+                <div className="flex items-center gap-0.5">
+                    <span
+                        className={cn(
+                            'text-[11px] font-medium px-2 py-0.5 rounded-xl',
+                            statusStyle.bg,
+                            statusStyle.text,
+                            statusStyle.border
+                        )}
+                    >
+                        {formatLabel(post.status)}
+                    </span>
                     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-7 w-7 shrink-0 rounded-lg text-zinc-500 hover:text-zinc-700"
+                                className="h-6 w-6 shrink-0 rounded-lg text-zinc-500 hover:text-zinc-700 -mr-1"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <MoreVertical className="h-4 w-4" />
+                                <MoreVertical className="h-3.5 w-3.5" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-lg border border-zinc-200">
@@ -129,29 +159,62 @@ export function StrategyPostCard({
                 </div>
             </div>
 
-            {/* Details body */}
-            <div className="p-3 space-y-2 border-t border-zinc-100">
-                <div className="flex flex-wrap gap-1.5">
-                    <Badge variant="secondary" className="text-[10px] font-medium bg-amber-100 text-amber-800">
-                        {formatLabel(post.content_type)}
-                    </Badge>
-                    <Badge className={cn('text-[10px] font-medium', statusColor)}>
-                        {formatLabel(post.status)}
-                    </Badge>
-                </div>
-                <h4 className="font-semibold text-zinc-900 text-sm line-clamp-2">
-                    {post.idea || 'Untitled'}
-                </h4>
-                {post.caption && (
-                    <p className="text-xs text-zinc-500 line-clamp-2">{post.caption}</p>
-                )}
-                {(post.goal || post.theme) && (
-                    <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] text-zinc-500">
-                        {post.goal && <span>Goal: {formatLabel(post.goal)}</span>}
-                        {post.theme && <span>• {formatLabel(post.theme)}</span>}
+            {/* Platform badge */}
+            {platformCfg && PlatformIcon && (
+                <div className="flex items-center gap-1.5 mb-2.5">
+                    <div
+                        className="w-5 h-5 rounded-md flex items-center justify-center shrink-0"
+                        style={{ background: platformCfg.gradient }}
+                    >
+                        <PlatformIcon className="h-3 w-3 text-white" />
                     </div>
-                )}
+                    <span className="text-[11px] font-medium text-zinc-500">{platformCfg.label}</span>
+                </div>
+            )}
+
+            {/* Title + caption */}
+            <div className="text-[13px] font-medium text-zinc-900 mb-1 line-clamp-2">
+                {post.idea || 'Untitled'}
             </div>
-        </Card>
+            {post.caption && (
+                <div className="text-[11px] text-zinc-400 mb-3 line-clamp-2">{post.caption}</div>
+            )}
+
+            {/* Type pill + Date */}
+            <div className="flex items-center justify-between">
+                <span
+                    className={cn(
+                        'inline-flex text-[11px] font-medium px-2 py-0.5 rounded-xl',
+                        typeStyle.bg,
+                        typeStyle.text
+                    )}
+                >
+                    {formatLabel(post.content_type)}
+                </span>
+                <span className="text-[11px] text-[#C87D3A] font-medium">
+                    {dateLabel || `Day ${post.day}`}
+                </span>
+            </div>
+
+            {/* Footer: Goal + Checkbox */}
+            <div className="mt-3 pt-3 border-t border-zinc-100 flex justify-between items-center">
+                <span className="text-[11px] text-zinc-500">
+                    {post.goal ? formatLabel(post.goal) : '—'}
+                </span>
+                <button
+                    type="button"
+                    className={cn(
+                        'w-4 h-4 rounded flex items-center justify-center shrink-0 cursor-pointer transition-colors',
+                        post.include_in_calendar ? 'bg-zinc-900 text-white' : 'bg-white border border-zinc-300'
+                    )}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onIncludeChange(!post.include_in_calendar);
+                    }}
+                >
+                    {post.include_in_calendar && <Check className="h-2.5 w-2.5 text-white" strokeWidth={2.5} />}
+                </button>
+            </div>
+        </div>
     );
 }
