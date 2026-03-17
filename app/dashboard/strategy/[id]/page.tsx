@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, ArrowLeft, LayoutGrid, Table2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { StrategyColumn } from '@/components/strategy/strategy-column';
+import { StrategyPostCard } from '@/components/strategy/strategy-post-card';
 import { StrategyTableView } from '@/components/strategy/strategy-table-view';
 import { StrategyBoardSkeleton } from '@/components/strategy/strategy-board-skeleton';
 import { StrategyPostDetailSidebar } from '@/components/strategy/strategy-post-detail-sidebar';
@@ -18,6 +19,71 @@ import type { StrategyPost } from '@/components/strategy/edit-strategy-post-moda
 import { addDays, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+function formatLabel(s: string) {
+    return s.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function StatRingCard({
+    label,
+    valueLabel,
+    subtitle,
+    progress,
+    accentColor,
+}: {
+    label: string;
+    valueLabel: string;
+    subtitle: string;
+    progress: number;
+    accentColor: string;
+}) {
+    const radius = 32;
+    const circumference = 2 * Math.PI * radius;
+    const safeProgress = Math.min(Math.max(progress, 0), 1);
+    const offset = circumference * (1 - safeProgress);
+
+    return (
+        <div className="flex items-center gap-4 rounded-2xl bg-white border border-zinc-200 px-4 py-3.5 shadow-sm">
+            <div className="relative h-20 w-20 flex items-center justify-center">
+                <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
+                    <circle
+                        cx="40"
+                        cy="40"
+                        r={radius}
+                        className="stroke-zinc-200"
+                        strokeWidth="8"
+                        fill="none"
+                    />
+                    <circle
+                        cx="40"
+                        cy="40"
+                        r={radius}
+                        stroke={accentColor}
+                        strokeWidth="8"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                    />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-xs font-medium text-zinc-600">
+                        {Math.round(safeProgress * 100)}%
+                    </span>
+                </div>
+            </div>
+            <div className="min-w-0">
+                <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                    {label}
+                </div>
+                <div className="text-[19px] font-semibold text-zinc-900 leading-tight">
+                    {valueLabel}
+                </div>
+                <div className="text-[11px] text-zinc-500 mt-0.5 line-clamp-1">{subtitle}</div>
+            </div>
+        </div>
+    );
+}
 
 interface Strategy {
     id: string;
@@ -46,6 +112,7 @@ export default function StrategyBoardPage() {
     const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
     const [sidebarPost, setSidebarPost] = useState<StrategyPost | null>(null);
     const [contentPost, setContentPost] = useState<StrategyPost | null>(null);
+    const [filter, setFilter] = useState<string>('all');
 
     const fetchStrategy = useCallback(async () => {
         try {
@@ -163,6 +230,61 @@ export default function StrategyBoardPage() {
 
     const getDefaultDay = () => addDay ?? 1;
 
+    const posts = strategy?.posts ?? [];
+    const duration = strategy?.duration_days ?? 30;
+
+    const goalFilters = useMemo(() => {
+        const goals = new Set(posts.map((p) => p.goal).filter(Boolean));
+        return ['all', ...Array.from(goals)];
+    }, [posts]);
+
+    const filteredPosts = useMemo(() => {
+        if (filter === 'all') return posts;
+        return posts.filter((p) => p.goal === filter);
+    }, [posts, filter]);
+
+    const readyCount = useMemo(
+        () => posts.filter((p) => p.status === 'content_ready').length,
+        [posts]
+    );
+
+    const primaryGoal = useMemo(() => {
+        const counts: Record<string, number> = {};
+        posts.forEach((p) => {
+            if (p.goal) counts[p.goal] = (counts[p.goal] || 0) + 1;
+        });
+        const entries = Object.entries(counts);
+        if (entries.length === 0) return { goal: '—', count: 0 };
+        const [goal, count] = entries.reduce((a, b) => (a[1] > b[1] ? a : b));
+        return { goal: formatLabel(goal), count };
+    }, [posts]);
+
+    const platformCoverage = useMemo(() => {
+        const platforms = new Set(posts.map((p) => p.platform?.toLowerCase()).filter(Boolean));
+        return `${platforms.size} platform${platforms.size !== 1 ? 's' : ''}`;
+    }, [posts]);
+
+    const baseDate = strategy?.start_date ? new Date(strategy.start_date) : null;
+    const todayDay = useMemo(() => {
+        if (!baseDate) return 1;
+        return Math.min(
+            Math.max(1, Math.floor((Date.now() - baseDate.getTime()) / 86400000) + 1),
+            duration
+        );
+    }, [baseDate, duration]);
+
+    const remainingDays = Math.max(duration - todayDay, 0);
+
+    const { postsByDay, dateLabels } = useMemo(() => {
+        const byDay: Record<number, StrategyPost[]> = {};
+        const labels: Record<number, string | null> = {};
+        for (let d = 1; d <= duration; d++) {
+            byDay[d] = filteredPosts.filter((p) => p.day === d);
+            labels[d] = baseDate ? format(addDays(baseDate, d - 1), 'dd/MM/yy') : null;
+        }
+        return { postsByDay: byDay, dateLabels: labels };
+    }, [duration, filteredPosts, baseDate]);
+
     if (isLoading) {
         return <StrategyBoardSkeleton />;
     }
@@ -180,102 +302,190 @@ export default function StrategyBoardPage() {
         );
     }
 
-    const duration = strategy.duration_days || 30;
-    const postsByDay: Record<number, StrategyPost[]> = {};
-    const dateLabels: Record<number, string | null> = {};
-
-    let baseDate: Date | null = null;
-    if (strategy.start_date) {
-        baseDate = new Date(strategy.start_date);
-    }
-
-    for (let d = 1; d <= duration; d++) {
-        postsByDay[d] = (strategy.posts || []).filter((p) => p.day === d);
-        if (baseDate) {
-            const date = addDays(baseDate, d - 1);
-            dateLabels[d] = format(date, 'dd/MM/yy');
-        } else {
-            dateLabels[d] = null;
-        }
-    }
-
     return (
-        <div className="space-y-6 w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="min-h-screen bg-white text-zinc-900">
+            <link
+                href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@600&display=swap"
+                rel="stylesheet"
+            />
+
+            {/* Header */}
+            <div className="px-6  flex flex-col sm:flex-row sm:items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3">
                     <Link href="/dashboard/strategy">
-                        <Button variant="ghost" size="icon" className="rounded-lg">
+                        <button
+                            type="button"
+                            className="w-8 h-8 rounded-full border border-zinc-200 bg-zinc-100 flex items-center justify-center text-zinc-600 hover:bg-zinc-200 transition-colors"
+                            aria-label="Back"
+                        >
                             <ArrowLeft className="h-4 w-4" />
-                        </Button>
+                        </button>
                     </Link>
-                    <div className="flex items-center gap-3">
-                        <Input
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            onBlur={handleNameBlur}
-                            className="text-xl font-semibold tracking-tight border-0 border-b-2 border-transparent hover:border-zinc-200 focus:border-zinc-400 bg-transparent px-0 h-auto py-1 focus-visible:ring-0 rounded-none max-w-md"
-                        />
-                        {isSavingName && (
-                            <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
-                        )}
-                        <span className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-zinc-100 text-zinc-700 text-sm font-semibold">
-                            {strategy.posts?.length ?? 0} {strategy.posts?.length === 1 ? 'post' : 'posts'}
-                        </span>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <Input
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                onBlur={handleNameBlur}
+                                className="text-lg font-semibold tracking-tight border-0 bg-transparent px-0 h-auto py-0.5 focus-visible:ring-0 rounded-none max-w-md"
+                            />
+                            {isSavingName && <Loader2 className="h-4 w-4 animate-spin text-zinc-400 shrink-0" />}
+                        </div>
+                        <p className="text-[11px] text-zinc-400 mt-0.5">AI-generated marketing strategy</p>
                     </div>
+                    <span className="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full bg-zinc-900 text-white text-[11px] font-medium">
+                        {duration} days
+                    </span>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 rounded-lg border border-zinc-200 bg-zinc-50/50 p-1">
-                    <Button
-                        variant={viewMode === 'cards' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className={cn(
-                            'rounded-md gap-1.5 font-medium text-[13px]',
-                            viewMode === 'cards' ? 'bg-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'
-                        )}
-                        onClick={() => setViewMode('cards')}
-                    >
-                        <LayoutGrid className="h-4 w-4" />
-                        Cards
-                    </Button>
-                    <Button
-                        variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className={cn(
-                            'rounded-md gap-1.5 font-medium text-[13px]',
-                            viewMode === 'table' ? 'bg-white shadow-sm' : 'text-zinc-600 hover:text-zinc-900'
-                        )}
-                        onClick={() => setViewMode('table')}
-                    >
-                        <Table2 className="h-4 w-4" />
-                        Table
-                    </Button>
-                </div>
+                <div className="flex items-center gap-2">
+                    <div className="flex bg-zinc-100 rounded-[20px] p-0.5 gap-0.5">
+                        <button
+                            type="button"
+                            className={cn(
+                                'text-xs font-medium py-1.5 px-3 rounded-2xl transition-colors',
+                                viewMode === 'table'
+                                    ? 'bg-zinc-900 text-white'
+                                    : 'bg-transparent text-zinc-500 hover:text-zinc-700'
+                            )}
+                            onClick={() => setViewMode('table')}
+                        >
+                            Table
+                        </button>
+                        <button
+                            type="button"
+                            className={cn(
+                                'text-xs font-medium py-1.5 px-3 rounded-2xl transition-colors',
+                                viewMode === 'cards'
+                                    ? 'bg-white text-zinc-900 border border-zinc-200'
+                                    : 'bg-transparent text-zinc-500 hover:text-zinc-700'
+                            )}
+                            onClick={() => setViewMode('cards')}
+                        >
+                            Cards
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div className="w-full">
-                {viewMode === 'cards' ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {Array.from({ length: duration }, (_, i) => i + 1).map((day) => (
-                            <StrategyColumn
-                                key={day}
-                                day={day}
-                                posts={postsByDay[day] || []}
-                                dateLabel={dateLabels[day] || undefined}
-                                onAddPost={() => handleAddPost(day)}
-                                onEditPost={handleEditPost}
-                                onClonePost={handleClonePost}
-                                onPostToPlatforms={handlePostToPlatforms}
-                                onScheduleToCalendar={handleScheduleToCalendar}
-                                onContent={(post) => setContentPost(post)}
-                                onDeletePost={handleDeletePost}
-                                onIncludeChange={handleIncludeChange}
-                            />
-                        ))}
+            {/* Stats row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-6 py-5">
+                <StatRingCard
+                    label="Total posts"
+                    valueLabel={`${posts.length} of ${duration} days`}
+                    subtitle="7-day plan overview"
+                    progress={duration ? posts.length / duration : 0}
+                    accentColor="#F5C842"
+                />
+
+                <div className="rounded-2xl bg-white border border-zinc-200 px-4 py-3.5 shadow-sm flex flex-col items-center justify-center text-center">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                        Content ready
                     </div>
+                    <div className="mt-1 text-[19px] font-semibold text-zinc-900 leading-tight">
+                        {readyCount} of {posts.length || 1}
+                    </div>
+                    <div className="text-[11px] text-zinc-500 mt-0.5">
+                        {Math.max(posts.length - readyCount, 0)} still planned
+                    </div>
+                </div>
+
+                <div className="rounded-2xl bg-white border border-zinc-200 px-4 py-3.5 shadow-sm flex flex-col items-center justify-center text-center">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                        Platforms
+                    </div>
+                    <div className="mt-1 text-[19px] font-semibold text-zinc-900 leading-tight">
+                        {platformCoverage}
+                    </div>
+                    <div className="text-[11px] text-zinc-500 mt-0.5">
+                        Channel coverage
+                    </div>
+                </div>
+
+                <div className="rounded-2xl bg-white border border-zinc-200 px-4 py-3.5 shadow-sm flex flex-col items-center justify-center text-center">
+                    <div className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+                        Campaign progress
+                    </div>
+                    <div className="mt-1 text-[19px] font-semibold text-zinc-900 leading-tight">
+                        Day {todayDay} of {duration}
+                    </div>
+                    <div className="text-[11px] text-zinc-500 mt-0.5">
+                        {remainingDays > 0 ? `${remainingDays} days left` : 'Campaign completed'}
+                    </div>
+                </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="px-6 pb-1">
+                <div className="text-[11px] text-zinc-400 mb-1.5">
+                    Campaign progress — Day {todayDay} of {duration}
+                </div>
+                <div className="h-1 bg-zinc-100 rounded flex gap-0.5 overflow-hidden">
+                    {Array.from({ length: duration }, (_, i) => {
+                        const dayNum = i + 1;
+                        let bg = 'bg-zinc-200';
+                        if (dayNum < todayDay) bg = 'bg-zinc-900';
+                        else if (dayNum === todayDay) bg = 'bg-[#F5C842]';
+                        return <div key={i} className={cn('flex-1 rounded-sm', bg)} />;
+                    })}
+                </div>
+            </div>
+
+            {/* Toolbar: filters + add post */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 px-6 py-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                    {goalFilters.map((f) => (
+                        <button
+                            key={f}
+                            type="button"
+                            className={cn(
+                                'text-xs font-medium py-1.5 px-3 rounded-[20px] transition-colors',
+                                filter === f
+                                    ? 'bg-zinc-900 text-white'
+                                    : 'bg-white text-zinc-500 border border-zinc-200 hover:text-zinc-700'
+                            )}
+                            onClick={() => setFilter(f)}
+                        >
+                            {f === 'all' ? 'All' : formatLabel(f)}
+                        </button>
+                    ))}
+                </div>
+                <Button
+                    size="sm"
+                    onClick={() => handleAddPost(1)}
+                    className="rounded-[20px] bg-[#F5C842] hover:bg-[#f2c112] text-zinc-900 font-medium text-[13px] gap-1.5"
+                >
+                    <Plus className="h-4 w-4" />
+                    Add post
+                </Button>
+            </div>
+
+            <div className="w-full px-6 pb-6">
+                {viewMode === 'cards' ? (
+                    filteredPosts.length === 0 ? (
+                        <div className="py-12 text-center text-zinc-400 text-[13px]">
+                            No posts match this filter.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                            {[...filteredPosts].sort((a, b) => a.day - b.day).map((post) => (
+                                <StrategyPostCard
+                                    key={post.id}
+                                    post={post}
+                                    dateLabel={dateLabels[post.day] || undefined}
+                                    onEdit={() => handleEditPost(post)}
+                                    onClone={() => handleClonePost(post)}
+                                    onPostToPlatforms={() => handlePostToPlatforms(post)}
+                                    onScheduleToCalendar={() => handleScheduleToCalendar(post)}
+                                    onContent={() => setContentPost(post)}
+                                    onDelete={() => handleDeletePost(post)}
+                                    onIncludeChange={(c) => handleIncludeChange(post, c)}
+                                />
+                            ))}
+                        </div>
+                    )
                 ) : (
                     <StrategyTableView
-                        posts={strategy.posts}
+                        posts={filteredPosts}
                         startDate={strategy.start_date}
                         onRowClick={(post) => setSidebarPost(post)}
                         onEdit={handleEditPost}

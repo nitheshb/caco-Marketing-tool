@@ -2,7 +2,6 @@
 
 import { addDays, format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     Table,
     TableBody,
@@ -17,31 +16,52 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Pencil, Trash2, Copy, Share2, MoreVertical, Plus, ImagePlus, Calendar } from 'lucide-react';
-import { Instagram, Linkedin, Youtube, Video, Facebook } from 'lucide-react';
+import { Pencil, Trash2, Copy, Share2, MoreVertical, ImagePlus, Calendar, Check } from 'lucide-react';
+import { Instagram, Linkedin, Youtube, Facebook, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StrategyPost } from './edit-strategy-post-modal';
 
-const PLATFORM_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-    instagram: Instagram,
-    linkedin: Linkedin,
-    youtube: Youtube,
-    facebook: Facebook,
+const PLATFORM_CONFIG: Record<string, {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    gradient: string;
+}> = {
+    instagram: {
+        icon: Instagram,
+        label: 'Instagram',
+        gradient: 'linear-gradient(135deg, #fd5949 0%, #d6249f 50%, #285AEB 100%)',
+    },
+    linkedin: {
+        icon: Linkedin,
+        label: 'LinkedIn',
+        gradient: 'linear-gradient(135deg, #0077B5 0%, #00A0DC 100%)',
+    },
+    youtube: {
+        icon: Youtube,
+        label: 'YouTube',
+        gradient: 'linear-gradient(135deg, #FF0000 0%, #cc0000 100%)',
+    },
+    facebook: {
+        icon: Facebook,
+        label: 'Facebook',
+        gradient: 'linear-gradient(135deg, #1877F2 0%, #0C5FC7 100%)',
+    },
 };
 
-const PLATFORM_LABELS: Record<string, string> = {
-    instagram: 'Instagram',
-    linkedin: 'LinkedIn',
-    youtube: 'YouTube',
-    facebook: 'Facebook',
+const TYPE_PILL: Record<string, { bg: string; text: string }> = {
+    reel: { bg: 'bg-violet-100', text: 'text-violet-800' },
+    carousel: { bg: 'bg-sky-100', text: 'text-sky-800' },
+    video: { bg: 'bg-pink-100', text: 'text-pink-800' },
+    image: { bg: 'bg-amber-100', text: 'text-amber-800' },
+    text_post: { bg: 'bg-slate-100', text: 'text-slate-700' },
 };
 
-const STATUS_COLORS: Record<string, string> = {
-    planned: 'bg-zinc-100 text-zinc-700',
-    content_pending: 'bg-amber-100 text-amber-800',
-    content_ready: 'bg-blue-100 text-blue-800',
-    scheduled: 'bg-indigo-100 text-indigo-800',
-    posted: 'bg-emerald-100 text-emerald-800',
+const STATUS_PILL: Record<string, { bg: string; text: string; border?: string }> = {
+    content_ready: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+    planned: { bg: 'bg-zinc-100', text: 'text-zinc-600', border: 'border border-zinc-200' },
+    content_pending: { bg: 'bg-amber-100', text: 'text-amber-800' },
+    scheduled: { bg: 'bg-indigo-100', text: 'text-indigo-800' },
+    posted: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
 };
 
 function formatLabel(s: string) {
@@ -80,113 +100,137 @@ export function StrategyTableView({
 
     const getDateLabel = (day: number) => {
         if (!baseDate) return `Day ${day}`;
-        return format(addDays(baseDate, day - 1), 'MMMM d, yyyy');
+        return format(addDays(baseDate, day - 1), 'MMM d, yyyy');
     };
 
     const sortedPosts = [...posts].sort((a, b) => a.day - b.day || 0);
 
     return (
-        <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 bg-zinc-50/50">
-                <span className="text-sm font-medium text-zinc-700">
-                    All posts <span className="ml-1.5 inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full bg-zinc-200 text-zinc-700 text-xs font-semibold">{posts.length}</span>
-                </span>
-                <Button
-                    size="sm"
-                    onClick={onAddPost}
-                    className="rounded-full bg-[#f2d412] hover:bg-[#f2c112] text-zinc-900 font-medium text-[15px] gap-2"
-                >
-                    <Plus className="h-4 w-4" />
-                    Add post
-                </Button>
-            </div>
-            <Table>
+        <div className="rounded-[14px] border border-zinc-200 bg-white/90 shadow-sm transition-shadow hover:shadow-md">
+            <Table className="text-[13px]">
                 <TableHeader>
-                    <TableRow className="border-zinc-200 hover:bg-transparent">
-                        <TableHead className="w-10 px-3 py-3"></TableHead>
-                        <TableHead className="px-3 py-3 font-semibold text-zinc-700">Idea</TableHead>
-                        <TableHead className="px-3 py-3 font-semibold text-zinc-700">Day</TableHead>
-                        <TableHead className="px-3 py-3 font-semibold text-zinc-700">Date</TableHead>
-                        <TableHead className="px-3 py-3 font-semibold text-zinc-700">Platform</TableHead>
-                        <TableHead className="px-3 py-3 font-semibold text-zinc-700">Content Type</TableHead>
-                        <TableHead className="px-3 py-3 font-semibold text-zinc-700">Goal</TableHead>
-                        <TableHead className="px-3 py-3 font-semibold text-zinc-700">Status</TableHead>
-                        <TableHead className="w-10 px-3 py-3"></TableHead>
+                    <TableRow className="border-zinc-200 bg-zinc-50/80">
+                        <TableHead className="w-8 px-3 py-2.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.18em]"></TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.18em]">Idea</TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.18em]">Day</TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.18em]">Date</TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.18em]">Platform</TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.18em]">Content type</TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.18em]">Goal</TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.18em]">Status</TableHead>
+                        <TableHead className="w-16 px-3.5 py-2.5 text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.18em]"></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {sortedPosts.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={9} className="py-12 text-center text-zinc-500">
-                                No posts yet. Click &quot;Add post&quot; to create one.
+                            <TableCell colSpan={9} className="py-8 text-center text-zinc-400 text-[13px]">
+                                No posts match this filter.
                             </TableCell>
                         </TableRow>
                     ) : (
                         sortedPosts.map((post) => {
-                            const PlatformIcon = PLATFORM_ICONS[post.platform?.toLowerCase()] || Video;
-                            const platformLabel = PLATFORM_LABELS[post.platform?.toLowerCase()] || formatLabel(post.platform || '');
-                            const statusColor = STATUS_COLORS[post.status] || STATUS_COLORS.planned;
+                            const platformKey = post.platform?.toLowerCase() ?? '';
+                            const platformCfg = PLATFORM_CONFIG[platformKey];
+                            const PlatformIcon = platformCfg?.icon ?? Video;
+                            const platformLabel = platformCfg?.label ?? formatLabel(post.platform || '');
+                            const typeStyle = TYPE_PILL[post.content_type?.toLowerCase()] || TYPE_PILL.text_post;
+                            const statusStyle = STATUS_PILL[post.status] || STATUS_PILL.planned;
 
                             return (
                                 <TableRow
                                     key={post.id}
-                                    className="border-zinc-100 cursor-pointer group"
+                                    className="border-zinc-100 cursor-pointer group hover:bg-zinc-50 transition-colors odd:bg-white even:bg-zinc-50/60"
                                     onClick={() => onRowClick(post)}
                                 >
-                                    <TableCell className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-                                        <Checkbox
-                                            checked={post.include_in_calendar}
-                                            onCheckedChange={(c) => onIncludeChange(post, c === true)}
-                                        />
+                                    <TableCell className="px-3 py-3 align-middle" onClick={(e) => e.stopPropagation()}>
+                                        <button
+                                            type="button"
+                                            className={cn(
+                                                'w-4 h-4 rounded flex items-center justify-center shrink-0 cursor-pointer transition-colors',
+                                                post.include_in_calendar
+                                                    ? 'bg-zinc-900 text-white'
+                                                    : 'bg-white border border-zinc-300'
+                                            )}
+                                            onClick={() => onIncludeChange(post, !post.include_in_calendar)}
+                                        >
+                                            {post.include_in_calendar && <Check className="h-2.5 w-2.5 text-white" strokeWidth={2.5} />}
+                                        </button>
                                     </TableCell>
-                                    <TableCell className="px-3 py-2 max-w-[200px]">
-                                        <span className="font-medium text-zinc-900 line-clamp-2">
+                                    <TableCell className="px-3.5 py-3 max-w-[220px]">
+                                        <div className="font-medium text-[13px] text-zinc-900 line-clamp-2 truncate">
                                             {post.idea || 'Untitled'}
-                                        </span>
+                                        </div>
                                         {post.caption && (
-                                            <p className="text-xs text-zinc-500 line-clamp-1 mt-0.5">{post.caption}</p>
+                                            <p className="text-[11px] text-zinc-400 line-clamp-1 truncate mt-0.5">{post.caption}</p>
                                         )}
                                     </TableCell>
-                                    <TableCell className="px-3 py-2 text-zinc-600">Day {post.day}</TableCell>
-                                    <TableCell className="px-3 py-2">
-                                        <span className="text-amber-700 font-medium">{getDateLabel(post.day)}</span>
+                                    <TableCell className="px-3.5 py-3">
+                                        <span className="text-[11px] font-medium text-zinc-600 bg-zinc-100 rounded-xl px-2 py-0.5">
+                                            Day {post.day}
+                                        </span>
                                     </TableCell>
-                                    <TableCell className="px-3 py-2">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-zinc-800 text-white shrink-0">
-                                                <PlatformIcon className="h-3.5 w-3.5" />
+                                    <TableCell className="px-3.5 py-3">
+                                        <span className="text-xs font-medium text-[#C87D3A]">{getDateLabel(post.day)}</span>
+                                    </TableCell>
+                                    <TableCell className="px-3.5 py-3">
+                                        <div className="flex items-center gap-1.5">
+                                            <div
+                                                className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                                                style={{ background: platformCfg?.gradient ?? 'linear-gradient(135deg, #71717a, #3f3f46)' }}
+                                            >
+                                                <PlatformIcon className="h-3.5 w-3.5 text-white" />
                                             </div>
-                                            <span className="text-zinc-700">{platformLabel}</span>
+                                            <span className="text-xs text-zinc-600">{platformLabel}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell className="px-3 py-2">
-                                        <span className="text-zinc-600">{formatLabel(post.content_type)}</span>
-                                    </TableCell>
-                                    <TableCell className="px-3 py-2 text-zinc-600">
-                                        {post.goal ? formatLabel(post.goal) : '—'}
-                                    </TableCell>
-                                    <TableCell className="px-3 py-2">
+                                    <TableCell className="px-3.5 py-3">
                                         <span
                                             className={cn(
-                                                'inline-flex px-2 py-0.5 rounded text-xs font-medium',
-                                                statusColor
+                                                'inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-xl',
+                                                typeStyle.bg,
+                                                typeStyle.text
+                                            )}
+                                        >
+                                            {formatLabel(post.content_type)}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="px-3.5 py-3 text-xs text-zinc-600">
+                                        {post.goal ? formatLabel(post.goal) : '—'}
+                                    </TableCell>
+                                    <TableCell className="px-3.5 py-3">
+                                        <span
+                                            className={cn(
+                                                'inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-xl',
+                                                statusStyle.bg,
+                                                statusStyle.text,
+                                                statusStyle.border
                                             )}
                                         >
                                             {formatLabel(post.status)}
                                         </span>
                                     </TableCell>
-                                    <TableCell className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    size="icon"
-                                                    variant="ghost"
-                                                    className="h-8 w-8 shrink-0 rounded-lg text-zinc-500 hover:text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
+                                    <TableCell className="px-3.5 py-3" onClick={(e) => e.stopPropagation()}>
+                                        <div className="flex items-center gap-1.5">
+                                            <button
+                                                type="button"
+                                                className="w-7 h-7 rounded-lg border border-zinc-200 bg-white flex items-center justify-center text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50 transition-colors"
+                                                onClick={() => onEdit(post)}
+                                                title="Edit"
+                                            >
+                                                <Pencil className="h-3.5 w-3.5" />
+                                            </button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        className="h-7 w-7 shrink-0 rounded-lg border border-zinc-200 bg-white text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <MoreVertical className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="rounded-lg border border-zinc-200">
                                                 <DropdownMenuItem
                                                     onClick={(e) => { e.stopPropagation(); onEdit(post); }}
@@ -234,6 +278,7 @@ export function StrategyTableView({
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             );
