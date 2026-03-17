@@ -130,6 +130,7 @@ export async function POST(req: Request) {
             hasReferenceImage: !!referenceImageBase64,
         });
 
+        // Video: free-form prompt. Image: JSON spec prompt (buildPowerPrompt handles routing).
         if (type === 'video') {
             const referenceImage =
                 referenceImageBase64 ?
