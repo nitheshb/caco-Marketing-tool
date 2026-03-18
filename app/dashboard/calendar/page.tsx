@@ -1,12 +1,12 @@
 'use client';
 
 import { CalendarProvider, useCalendar } from '@/components/dashboard/calendar/calendar-context';
-import { DayView } from '@/components/dashboard/calendar/day-view';
+import { ListView } from '@/components/dashboard/calendar/list-view';
 import { WeekView } from '@/components/dashboard/calendar/week-view';
 import { MonthView } from '@/components/dashboard/calendar/month-view';
 import { CalendarModal } from '@/components/dashboard/calendar/calendar-modal';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Loader2, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { addDays, addMonths, addWeeks, endOfWeek, format, startOfWeek, subDays, subMonths, subWeeks } from 'date-fns';
 
@@ -14,9 +14,12 @@ function CalendarContent() {
     const { isLoading, displayMode, setDisplayMode, openCreateDialog, currentDate, setCurrentDate } = useCalendar();
 
     const title = (() => {
-        if (displayMode === 'day') return format(currentDate, 'EEEE, MMM d, yyyy');
+        if (displayMode === 'list') {
+            const ws = startOfWeek(currentDate, { weekStartsOn: 0 });
+            const end = addDays(ws, 20);
+            return `${format(ws, 'M/d/yyyy')} – ${format(end, 'M/d/yyyy')}`;
+        }
         if (displayMode === 'month') return format(currentDate, 'MMMM yyyy');
-
         const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
         const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
         const sameMonth = format(weekStart, 'MMM yyyy') === format(weekEnd, 'MMM yyyy');
@@ -28,13 +31,13 @@ function CalendarContent() {
     const goToday = () => setCurrentDate(new Date());
 
     const goPrev = () => {
-        if (displayMode === 'day') return setCurrentDate(subDays(currentDate, 1));
+        if (displayMode === 'list') return setCurrentDate(subDays(currentDate, 21));
         if (displayMode === 'month') return setCurrentDate(subMonths(currentDate, 1));
         return setCurrentDate(subWeeks(currentDate, 1));
     };
 
     const goNext = () => {
-        if (displayMode === 'day') return setCurrentDate(addDays(currentDate, 1));
+        if (displayMode === 'list') return setCurrentDate(addDays(currentDate, 21));
         if (displayMode === 'month') return setCurrentDate(addMonths(currentDate, 1));
         return setCurrentDate(addWeeks(currentDate, 1));
     };
@@ -49,9 +52,9 @@ function CalendarContent() {
     }
 
     return (
-        <div className="w-full max-w-7xl mx-auto">
+        <div className="w-full max-w-7xl mx-auto -mt-7">
             {/* Header Area - centered, two groups with clear space between */}
-            <div className="flex items-center justify-between gap-4 pt-0 pb-2 border-b border-zinc-200">
+            <div className="flex items-center justify-between gap-4 py-3 border-b border-zinc-200">
                 {/* Left group: nav + title */}
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-0.5 bg-zinc-100 p-0.5 rounded-lg border border-zinc-200">
@@ -76,7 +79,8 @@ function CalendarContent() {
                             <ChevronRight className="h-4 w-4" />
                         </button>
                     </div>
-                    <h1 className="text-lg sm:text-xl font-black tracking-tight text-zinc-900">
+                    <h1 className="text-base sm:text-lg font-semibold text-zinc-900 flex items-center gap-2">
+                        {displayMode === 'list' && <Calendar className="h-4 w-4 text-zinc-500" />}
                         {title}
                     </h1>
                 </div>
@@ -84,7 +88,7 @@ function CalendarContent() {
                 {/* Right group: view switcher + Add New */}
                 <div className="flex items-center gap-3">
                     <div className="flex bg-zinc-100 p-0.5 rounded-lg border border-zinc-200">
-                        {(['day', 'week', 'month'] as const).map(mode => (
+                        {(['list', 'week', 'month'] as const).map(mode => (
                             <button
                                 key={mode}
                                 onClick={() => setDisplayMode(mode)}
@@ -111,7 +115,7 @@ function CalendarContent() {
 
             {/* Calendar View Area */}
             <div className="w-full pt-3">
-                {displayMode === 'day' && <DayView />}
+                {displayMode === 'list' && <ListView />}
                 {displayMode === 'week' && <WeekView />}
                 {displayMode === 'month' && <MonthView />}
             </div>
