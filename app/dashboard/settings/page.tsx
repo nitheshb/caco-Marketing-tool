@@ -59,6 +59,14 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import Image from "next/image";
+import {
+    GoogleBusinessIcon,
+    PinterestIcon,
+    SnapchatIcon,
+    ThreadsIcon,
+    TikTokIcon,
+    XIcon,
+} from "@/components/dashboard/social-brand-icons";
 
 interface SocialIntegration {
     id: string;
@@ -73,6 +81,39 @@ interface SocialConnection {
     platform: 'youtube' | 'instagram' | 'tiktok' | 'linkedin' | 'facebook';
     profile_name?: string;
 }
+
+const COMING_SOON_PLATFORMS = [
+    {
+        platform: 'x',
+        Icon: XIcon,
+        color: 'text-zinc-900',
+        bgColor: 'bg-zinc-100',
+    },
+    {
+        platform: 'threads',
+        Icon: ThreadsIcon,
+        color: 'text-zinc-900',
+        bgColor: 'bg-zinc-100',
+    },
+    {
+        platform: 'pinterest',
+        Icon: PinterestIcon,
+        color: 'text-rose-600',
+        bgColor: 'bg-rose-50',
+    },
+    {
+        platform: 'snapchat',
+        Icon: SnapchatIcon,
+        color: 'text-yellow-500',
+        bgColor: 'bg-yellow-50',
+    },
+    {
+        platform: 'google-business',
+        Icon: GoogleBusinessIcon,
+        color: 'text-emerald-600',
+        bgColor: 'bg-emerald-50',
+    },
+];
 
 function ProfileSection({ firebaseUser }: { firebaseUser: User | null }) {
     const [isEditing, setIsEditing] = useState(false);
@@ -208,6 +249,7 @@ function SettingsForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
+    const highlightedPlatform = searchParams.get('platform');
 
     useEffect(() => {
         const auth = getAuth(app);
@@ -259,11 +301,16 @@ function SettingsForm() {
             router.replace(pathname);
         }
 
+        const comingSoonSelected = COMING_SOON_PLATFORMS.find((item) => item.platform === highlightedPlatform);
+        if (comingSoonSelected) {
+            toast.info(`${comingSoonSelected.platform.replace('-', ' ')} integration is coming soon.`);
+        }
+
         // Clean up funky hashes left by Facebook/Instagram OAuth
         if (typeof window !== 'undefined' && window.location.hash === '#_') {
             window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
         }
-    }, [searchParams, pathname, router]);
+    }, [searchParams, pathname, router, highlightedPlatform]);
 
     const [connections, setConnections] = useState<SocialConnection[]>([]);
     const [customIntegrations, setCustomIntegrations] = useState<SocialIntegration[]>([]);
@@ -444,6 +491,7 @@ function SettingsForm() {
                             onConnect={() => handleConnect('youtube')}
                             onDisconnect={(id: string) => handleDisconnect(id, 'youtube')}
                             allowCustomApp={true}
+                            highlighted={highlightedPlatform === 'youtube'}
                             onManageCredentials={() => {
                                 setSelectedPlatformToManage('youtube');
                                 setIsCredentialsModalOpen(true);
@@ -461,6 +509,7 @@ function SettingsForm() {
                             onConnect={() => handleConnect('facebook')}
                             onDisconnect={(id: string) => handleDisconnect(id, 'facebook')}
                             allowCustomApp={true}
+                            highlighted={highlightedPlatform === 'facebook'}
                             onManageCredentials={() => {
                                 setSelectedPlatformToManage('facebook');
                                 setIsCredentialsModalOpen(true);
@@ -478,6 +527,7 @@ function SettingsForm() {
                             onConnect={() => handleConnect('linkedin')}
                             onDisconnect={(id: string) => handleDisconnect(id, 'linkedin')}
                             allowCustomApp={true}
+                            highlighted={highlightedPlatform === 'linkedin'}
                             onManageCredentials={() => {
                                 setSelectedPlatformToManage('linkedin');
                                 setIsCredentialsModalOpen(true);
@@ -495,6 +545,7 @@ function SettingsForm() {
                             onConnect={() => handleConnect('instagram')}
                             onDisconnect={(id: string) => handleDisconnect(id, 'instagram')}
                             allowCustomApp={true}
+                            highlighted={highlightedPlatform === 'instagram'}
                             onManageCredentials={() => {
                                 setSelectedPlatformToManage('instagram');
                                 setIsCredentialsModalOpen(true);
@@ -504,19 +555,27 @@ function SettingsForm() {
                         {/* TikTok (Custom Placeholder for now) */}
                         <SocialPlatformCard
                             platform="tiktok"
-                            Icon={({ className }: any) => (
-                                <div className={className}>
-                                    <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 0 1 3.183-4.51v-3.5a6.329 6.329 0 0 0-5.394 10.692 6.33 6.33 0 0 0 10.857-4.424V8.687a8.182 8.182 0 0 0 4.773 1.526V6.79a4.831 4.831 0 0 1-1.003-.104z" />
-                                    </svg>
-                                </div>
-                            )}
+                            Icon={TikTokIcon}
                             color="text-zinc-900"
                             bgColor="bg-zinc-100"
                             connections={connections.filter(c => c.platform === 'tiktok')}
                             onConnect={() => handleConnect('tiktok')}
                             onDisconnect={(id: string) => handleDisconnect(id, 'tiktok')}
+                            highlighted={highlightedPlatform === 'tiktok'}
                         />
+
+                        {COMING_SOON_PLATFORMS.map((item) => (
+                            <SocialPlatformCard
+                                key={item.platform}
+                                platform={item.platform}
+                                Icon={item.Icon}
+                                color={item.color}
+                                bgColor={item.bgColor}
+                                connections={[]}
+                                comingSoon={true}
+                                highlighted={highlightedPlatform === item.platform}
+                            />
+                        ))}
                     </div>
                 )}
 
@@ -535,12 +594,15 @@ function SettingsForm() {
     );
 }
 
-function SocialPlatformCard({ platform, Icon, color, bgColor, connections, customIntegrations, onConnect, onDisconnect, allowCustomApp, onManageCredentials }: any) {
+function SocialPlatformCard({ platform, Icon, color, bgColor, connections, customIntegrations, onConnect, onDisconnect, allowCustomApp, onManageCredentials, comingSoon, highlighted }: any) {
     const isConnected = connections && connections.length > 0;
     const [showCredentialsModal, setShowCredentialsModal] = useState(false);
 
     return (
-        <Card className="border-zinc-200/60 shadow-sm bg-white group hover:shadow-md transition-all duration-300">
+        <Card className={cn(
+            "border-zinc-200/60 shadow-sm bg-white group hover:shadow-md transition-all duration-300",
+            highlighted && "ring-2 ring-amber-300 border-amber-200"
+        )}>
             <CardContent className="pt-6">
                 <div className="flex flex-col items-center text-center space-y-4">
                     <div className={`p-4 rounded-2xl ${bgColor} ${color} transition-transform group-hover:scale-110 duration-300`}>
@@ -549,15 +611,33 @@ function SocialPlatformCard({ platform, Icon, color, bgColor, connections, custo
                     <div className="flex flex-col items-center">
                         <div className="flex items-center gap-2">
                             <h3 className="font-bold text-zinc-900 capitalize">{platform}</h3>
-                            {platform !== 'youtube' && (
+                            {comingSoon ? (
+                                <Badge className="bg-zinc-100 text-zinc-600 border-zinc-200 text-[10px] h-5 px-1.5 font-black uppercase tracking-tighter">Soon</Badge>
+                            ) : platform !== 'youtube' && (
                                 <Badge className="bg-amber-50 text-amber-700 border-amber-100 text-[10px] h-5 px-1.5 font-black uppercase tracking-tighter">Pro</Badge>
                             )}
                         </div>
                         <p className="text-[10px] uppercase font-black tracking-widest text-zinc-400 mt-1">
-                            {isConnected ? `${connections.length} Connected` : "Disconnected"}
+                            {comingSoon ? "Coming Soon" : isConnected ? `${connections.length} Connected` : "Disconnected"}
                         </p>
                     </div>
 
+                    {comingSoon ? (
+                        <div className="w-full space-y-3">
+                            <div className="p-3 rounded-xl bg-zinc-50 border border-zinc-100 text-[11px] font-medium text-zinc-500 leading-snug">
+                                This integration is not ready yet. It will appear here once supported.
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                disabled
+                                className="w-full rounded-xl border-zinc-200 text-zinc-400 bg-zinc-50"
+                            >
+                                Coming soon
+                            </Button>
+                        </div>
+                    ) : (
+                        <>
                     {isConnected && (
                         <div className="w-full space-y-3">
                             {connections.map((conn: any) => (
@@ -646,6 +726,8 @@ function SocialPlatformCard({ platform, Icon, color, bgColor, connections, custo
                                 {isConnected ? "Add Another Account" : "Connect Account"}
                             </Button>
                         )
+                    )}
+                        </>
                     )}
                 </div>
             </CardContent>

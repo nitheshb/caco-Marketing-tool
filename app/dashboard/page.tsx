@@ -33,6 +33,21 @@ import { usePlanLimits } from '@/hooks/use-plan-limits';
 import { UpgradeModal } from '@/components/dashboard/upgrade-modal';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Facebook, Instagram, Linkedin, Youtube } from 'lucide-react';
+import {
+    GoogleBusinessIcon,
+    PinterestIcon,
+    SnapchatIcon,
+    ThreadsIcon,
+    TikTokIcon,
+    XIcon,
+} from '@/components/dashboard/social-brand-icons';
 
 type ToolItem = {
     name: string;
@@ -187,23 +202,27 @@ const EXTRA_TOOLS: ToolItem[] = [
     },
 ];
 
-const INTEGRATIONS = [
-    { name: 'Figma', color: '#A259FF' },
-    { name: 'Zendesk', color: '#03363D' },
-    { name: 'HubSpot', color: '#FF7A59' },
-    { name: 'Salesforce', color: '#00A1E0' },
-    { name: 'Google Drive', color: '#4285F4' },
-    { name: 'Shopify', color: '#96BF48' },
-    { name: 'WooCommerce', color: '#96588A' },
-    { name: 'Mailchimp', color: '#FFE01B' },
-    { name: 'Notion', color: '#000000' },
-    { name: 'Canva', color: '#00C4CC' },
-    { name: 'Zapier', color: '#FF4A00' },
-    { name: 'Slack', color: '#4A154B' },
-    { name: 'Trello', color: '#0079BF' },
-    { name: 'Asana', color: '#F06A6A' },
-    { name: 'Monday', color: '#FF3D57' },
-    { name: 'Airtable', color: '#18BFFF' },
+type IntegrationItem = {
+    id: string;
+    name: string;
+    icon: LucideIcon | ((props: { className?: string }) => JSX.Element);
+    iconClassName?: string;
+    bg: string;
+    fg: string;
+    ready: boolean;
+};
+
+const INTEGRATIONS: IntegrationItem[] = [
+    { id: 'youtube', name: 'YouTube', icon: Youtube, bg: 'bg-red-50', fg: 'text-red-600', ready: true },
+    { id: 'instagram', name: 'Instagram', icon: Instagram, bg: 'bg-pink-50', fg: 'text-pink-600', ready: true },
+    { id: 'facebook', name: 'Facebook', icon: Facebook, bg: 'bg-blue-50', fg: 'text-blue-700', ready: true },
+    { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, bg: 'bg-sky-50', fg: 'text-sky-700', ready: true },
+    { id: 'tiktok', name: 'TikTok', icon: TikTokIcon, bg: 'bg-zinc-100', fg: 'text-zinc-900', ready: true },
+    { id: 'x', name: 'X', icon: XIcon, bg: 'bg-zinc-100', fg: 'text-zinc-900', ready: false },
+    { id: 'threads', name: 'Threads', icon: ThreadsIcon, bg: 'bg-zinc-100', fg: 'text-zinc-900', ready: false },
+    { id: 'pinterest', name: 'Pinterest', icon: PinterestIcon, bg: 'bg-rose-50', fg: 'text-rose-600', ready: false },
+    { id: 'snapchat', name: 'Snapchat', icon: SnapchatIcon, bg: 'bg-yellow-50', fg: 'text-yellow-500', ready: false },
+    { id: 'google-business', name: 'Google Business', icon: GoogleBusinessIcon, bg: 'bg-emerald-50', fg: 'text-emerald-600', ready: false },
 ];
 
 function ToolArtwork({ tool }: { tool: ToolItem }) {
@@ -286,15 +305,33 @@ function ToolCard({ tool }: { tool: ToolItem }) {
     );
 }
 
-function IntegrationIcon({ integration }: { integration: typeof INTEGRATIONS[number] }) {
+function IntegrationIcon({ integration }: { integration: IntegrationItem }) {
+    const Icon = integration.icon;
     return (
-        <div
-            className="h-10 w-10 rounded-lg flex items-center justify-center text-white text-[11px] font-black shrink-0 border border-zinc-100 shadow-sm transition-transform hover:scale-110"
-            style={{ backgroundColor: integration.color }}
-            title={integration.name}
-        >
-            {integration.name.substring(0, 2)}
-        </div>
+        <TooltipProvider delayDuration={120}>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Link
+                        href={`/dashboard/settings?platform=${integration.id}`}
+                        className={cn(
+                            "relative h-14 w-full rounded-2xl flex items-center justify-center shrink-0 border border-zinc-200 shadow-sm transition-all hover:scale-[1.03] hover:shadow-md",
+                            integration.bg
+                        )}
+                    >
+                        <Icon className={cn("h-7 w-7", integration.fg, integration.iconClassName)} />
+                    </Link>
+                </TooltipTrigger>
+                <TooltipContent
+                    side="bottom"
+                    sideOffset={8}
+                    showArrow={false}
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-md"
+                >
+                    {integration.name}
+                    {!integration.ready ? ' · Coming soon' : ''}
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     );
 }
 
@@ -400,7 +437,7 @@ export default function DashboardPage() {
                     >
                         Trial more features
                     </Button>
-                    <Button className="rounded-full bg-zinc-900 text-white hover:bg-zinc-800 font-bold text-sm px-4 h-9">
+                    <Button className="rounded-full bg-amber-300 text-zinc-900 hover:bg-amber-400 font-bold text-sm px-4 h-9 border border-amber-200">
                         Start my subscription
                     </Button>
                 </div>
@@ -409,7 +446,7 @@ export default function DashboardPage() {
             {/* Explore Section */}
             <div className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
                 {/* Green progress bar at top */}
-                <div className="h-1.5 w-full bg-emerald-400" />
+                <div className="h-1.5 w-full bg-amber-300" />
 
                 <div className="p-6">
                     <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">
@@ -470,20 +507,20 @@ export default function DashboardPage() {
                             Integrations
                         </h2>
                         <p className="text-sm text-zinc-500 mt-0.5">
-                            Unify your workflow by integrating with your tech stack. Select a tool to get started.
+                            Connect your social channels. Ready integrations open directly in Settings, while the rest are marked coming soon.
                         </p>
                     </div>
                 </div>
 
-                <div className="mt-5 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 flex-wrap">
+                <div className="mt-5 space-y-4">
+                    <div className="grid grid-cols-5 md:grid-cols-10 gap-3 w-full">
                         {INTEGRATIONS.map((integration) => (
                             <IntegrationIcon key={integration.name} integration={integration} />
                         ))}
                     </div>
                     <Link
                         href="/dashboard/settings"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-zinc-200 bg-white text-sm font-bold text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition-colors shrink-0 whitespace-nowrap"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-zinc-200 bg-white text-sm font-bold text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition-colors whitespace-nowrap"
                     >
                         Browse all integrations
                     </Link>
