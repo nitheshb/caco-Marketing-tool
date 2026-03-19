@@ -122,7 +122,7 @@ function CreateSeriesForm() {
                 if (!response.ok) throw new Error('Failed to save series');
 
                 toast.success(isEditMode ? 'Series updated successfully!' : 'Series scheduled successfully!');
-                router.push('/dashboard');
+                router.push('/dashboard/series');
             } catch (error) {
                 console.error("Submit Error:", error);
                 toast.error('Failed to schedule series. Please try again.');
@@ -252,7 +252,7 @@ function CreateSeriesForm() {
                 isOpen={isUpgradeModalOpen}
                 onClose={() => {
                     setIsUpgradeModalOpen(false);
-                    router.push('/dashboard');
+                    router.push('/dashboard/series');
                 }}
                 title={`Upgrade to Create More Series`}
                 description={`You can create up to ${limits.maxSeries} series on the ${currentPlan} plan. Upgrade to Basic or Unlimited to create more!`}

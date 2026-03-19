@@ -53,7 +53,7 @@ const sidebarData = [
         icon: Film,
         defaultExpanded: true,
         items: [
-            { name: 'Series', href: '/dashboard' },
+            { name: 'Series', href: '/dashboard/series' },
             { name: 'Gallery', href: '/dashboard/videos' },
             { name: 'Create Content', href: '/dashboard/posters' },
             

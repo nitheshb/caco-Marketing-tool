@@ -46,7 +46,7 @@ export function ListView() {
         name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || '?';
 
     return (
-        <div className="w-full text-zinc-900">
+        <div className="w-full text-zinc-900 overflow-y-auto max-h-[calc(100vh-260px)] pr-1">
             {/* Post Volume — horizontal date timeline */}
             <div className="mb-3">
                 <div className="text-xs font-semibold text-zinc-500 mb-2">Post Volume</div>
