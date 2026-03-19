@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
+import { format, isToday, subDays } from 'date-fns';
 import { Button } from "@/components/ui/button";
 import {
     Plus,
@@ -11,7 +12,6 @@ import {
     CalendarDays,
     Clock3,
     MessageSquareText,
-    BarChart3,
     PieChart,
     Sparkles,
     FileText,
@@ -23,14 +23,14 @@ import {
     Megaphone,
     Inbox,
     Shapes,
+    BellRing,
+    ClipboardList,
+    MessagesSquare,
+    ArrowUpRight,
     type LucideIcon,
 } from "lucide-react";
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { SeriesCard } from '@/components/dashboard/series-card';
 import { toast } from 'sonner';
-import { usePlanLimits } from '@/hooks/use-plan-limits';
-import { UpgradeModal } from '@/components/dashboard/upgrade-modal';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
 import {
@@ -58,6 +58,36 @@ type ToolItem = {
     accent: string;
     soft: string;
     artwork?: 'default' | 'analytics';
+};
+
+type CalendarPost = {
+    id: string;
+    title: string;
+    description?: string | null;
+    platform?: string | null;
+    account_id?: string | null;
+    media_url?: string | null;
+    scheduled_at: string;
+    status: string;
+    type?: string;
+};
+
+type StrategySummary = {
+    id: string;
+    name?: string;
+};
+
+type StrategyPost = {
+    id: string;
+    title?: string;
+    status: string;
+    platform?: string | null;
+    strategy_id: string;
+};
+
+type StrategyDetail = {
+    id: string;
+    posts?: StrategyPost[];
 };
 
 const CORE_TOOLS: ToolItem[] = [
@@ -205,11 +235,22 @@ const EXTRA_TOOLS: ToolItem[] = [
 type IntegrationItem = {
     id: string;
     name: string;
-    icon: LucideIcon | ((props: { className?: string }) => JSX.Element);
+    icon: LucideIcon | ComponentType<{ className?: string }>;
     iconClassName?: string;
     bg: string;
     fg: string;
     ready: boolean;
+};
+
+type ResourceLinkItem = {
+    label: string;
+    href: string;
+};
+
+type ResourceSection = {
+    title: string;
+    icon: LucideIcon;
+    links: ResourceLinkItem[];
 };
 
 const INTEGRATIONS: IntegrationItem[] = [
@@ -223,6 +264,83 @@ const INTEGRATIONS: IntegrationItem[] = [
     { id: 'pinterest', name: 'Pinterest', icon: PinterestIcon, bg: 'bg-rose-50', fg: 'text-rose-600', ready: false },
     { id: 'snapchat', name: 'Snapchat', icon: SnapchatIcon, bg: 'bg-yellow-50', fg: 'text-yellow-500', ready: false },
     { id: 'google-business', name: 'Google Business', icon: GoogleBusinessIcon, bg: 'bg-emerald-50', fg: 'text-emerald-600', ready: false },
+];
+
+const RESOURCE_CENTER_PRIMARY: ResourceSection[] = [
+    {
+        title: 'Support',
+        icon: MessagesSquare,
+        links: [
+            { label: 'Visit Help Center', href: '/dashboard/settings' },
+            { label: 'Chat with Support', href: '/dashboard/emails' },
+            { label: 'Submit a Support Ticket', href: '/dashboard/cases' },
+        ],
+    },
+    {
+        title: 'Sprout Academy',
+        icon: Sparkles,
+        links: [
+            { label: 'Get Started', href: '/dashboard' },
+            { label: 'Learn a Skill', href: '/dashboard/strategy' },
+            { label: 'Earn a Certification', href: '/dashboard/analytics' },
+        ],
+    },
+    {
+        title: 'Community',
+        icon: Users,
+        links: [
+            { label: 'Ask a Question', href: '/dashboard/emails' },
+            { label: 'Networking', href: '/dashboard/settings' },
+            { label: 'Share Product Ideas', href: '/dashboard/create' },
+        ],
+    },
+];
+
+const RESOURCE_CENTER_SECONDARY: ResourceSection[] = [
+    {
+        title: 'Your Account',
+        icon: Clock3,
+        links: [
+            { label: 'Billing', href: '/dashboard/settings' },
+            { label: 'Language', href: '/dashboard/settings' },
+            { label: 'Time Zone', href: '/dashboard/settings' },
+            { label: 'Security', href: '/dashboard/settings' },
+            { label: 'Profile Picture', href: '/dashboard/settings' },
+            { label: 'Users & Permissions', href: '/dashboard/settings' },
+        ],
+    },
+    {
+        title: 'Connect Profile',
+        icon: Plus,
+        links: [
+            { label: 'Facebook', href: '/dashboard/settings?platform=facebook' },
+            { label: 'Instagram', href: '/dashboard/settings?platform=instagram' },
+            { label: 'LinkedIn', href: '/dashboard/settings?platform=linkedin' },
+            { label: 'X', href: '/dashboard/settings?platform=x' },
+            { label: 'Pinterest', href: '/dashboard/settings?platform=pinterest' },
+        ],
+    },
+    {
+        title: 'Integrations',
+        icon: Shapes,
+        links: [
+            { label: 'Bit.ly', href: '/dashboard/settings' },
+            { label: 'Google Analytics', href: '/dashboard/settings' },
+            { label: 'Zendesk', href: '/dashboard/settings' },
+        ],
+    },
+    {
+        title: 'Power Users',
+        icon: FolderKanban,
+        links: [
+            { label: 'Brand Keywords', href: '/dashboard/strategy' },
+            { label: 'Chrome Extension', href: '/dashboard/settings' },
+            { label: 'iOS/Android apps', href: '/dashboard/settings' },
+            { label: 'Keyboard Shortcuts', href: '/dashboard/settings' },
+            { label: 'Message Tagging', href: '/dashboard/emails' },
+            { label: 'Contact Lists', href: '/dashboard/emails' },
+        ],
+    },
 ];
 
 function ToolArtwork({ tool }: { tool: ToolItem }) {
@@ -314,11 +432,10 @@ function IntegrationIcon({ integration }: { integration: IntegrationItem }) {
                     <Link
                         href={`/dashboard/settings?platform=${integration.id}`}
                         className={cn(
-                            "relative h-14 w-full rounded-2xl flex items-center justify-center shrink-0 border border-zinc-200 shadow-sm transition-all hover:scale-[1.03] hover:shadow-md",
-                            integration.bg
+                            "relative h-12 w-12 rounded-xl flex items-center justify-center shrink-0 border border-zinc-200 bg-white shadow-sm transition-all hover:border-zinc-300 hover:shadow-md"
                         )}
                     >
-                        <Icon className={cn("h-7 w-7", integration.fg, integration.iconClassName)} />
+                        <Icon className={cn("h-5 w-5", integration.fg, integration.iconClassName)} />
                     </Link>
                 </TooltipTrigger>
                 <TooltipContent
@@ -335,31 +452,100 @@ function IntegrationIcon({ integration }: { integration: IntegrationItem }) {
     );
 }
 
-export default function DashboardPage() {
-    const router = useRouter();
-    const { user } = useAuth();
-    const [series, setSeries] = useState<any[]>([]);
-    const [videoCount, setVideoCount] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-    const [showMore, setShowMore] = useState(false);
+function ResourceLink({
+    item,
+    underlined = false,
+    showArrow = true,
+}: {
+    item: ResourceLinkItem;
+    underlined?: boolean;
+    showArrow?: boolean;
+}) {
+    return (
+        <Link
+            href={item.href}
+            className={cn(
+                "flex w-fit items-center gap-1.5 text-xs font-semibold text-blue-800 transition-colors hover:text-blue-900",
+                underlined && "underline decoration-blue-800 underline-offset-2 hover:decoration-blue-900"
+            )}
+        >
+            {item.label}
+            {showArrow && <ArrowUpRight className="h-3.5 w-3.5 shrink-0" />}
+        </Link>
+    );
+}
 
-    const { currentPlan, limits, canCreateVideo, canExecuteWorkflow } = usePlanLimits();
+function ResourceSectionCard({
+    section,
+    compact = false,
+    underlinedLinks = false,
+    showArrow = true,
+}: {
+    section: ResourceSection;
+    compact?: boolean;
+    underlinedLinks?: boolean;
+    showArrow?: boolean;
+}) {
+    const Icon = section.icon;
+
+    return (
+        <div className={cn("flex h-full flex-col", compact ? "px-4 py-4" : "px-5 py-5")}>
+            <div className="flex items-center gap-2 text-zinc-900">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-100">
+                    <Icon className="h-4 w-4 text-zinc-600" />
+                </div>
+                <h3 className="text-sm font-bold">{section.title}</h3>
+            </div>
+            <div className="mt-4 space-y-2.5">
+                {section.links.map((item) => (
+                    <ResourceLink key={item.label} item={item} underlined={underlinedLinks} showArrow={showArrow} />
+                ))}
+            </div>
+        </div>
+    );
+}
+
+export default function DashboardPage() {
+    const { user } = useAuth();
+    const [calendarPosts, setCalendarPosts] = useState<CalendarPost[]>([]);
+    const [approvalPosts, setApprovalPosts] = useState<StrategyPost[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [showMore, setShowMore] = useState(false);
+    const [recentSort, setRecentSort] = useState<'latest' | 'scheduled' | 'published'>('latest');
 
     const displayName = user?.displayName || user?.email?.split('@')[0] || 'there';
 
     const fetchData = async () => {
         try {
             setIsLoading(true);
-            const seriesRes = await fetch('/api/series');
-            if (seriesRes.ok) {
-                const data = await seriesRes.json();
-                setSeries(data);
+            const scheduleRes = await fetch('/api/schedule');
+            if (scheduleRes.ok) {
+                const data = await scheduleRes.json();
+                setCalendarPosts((data || []).filter((item: CalendarPost) => (item.type || '').toLowerCase() !== 'note'));
             }
-            const videosRes = await fetch('/api/videos');
-            if (videosRes.ok) {
-                const data = await videosRes.json();
-                setVideoCount(data.length);
+
+            const strategiesRes = await fetch('/api/strategy');
+            if (strategiesRes.ok) {
+                const strategies: StrategySummary[] = await strategiesRes.json();
+                const details = await Promise.all(
+                    (strategies || []).slice(0, 10).map(async (strategy) => {
+                        const detailRes = await fetch(`/api/strategy/${strategy.id}`);
+                        if (!detailRes.ok) return null;
+                        return detailRes.json();
+                    })
+                );
+
+                const pendingApprovals = details
+                    .filter(Boolean)
+                    .flatMap((strategy: StrategyDetail) =>
+                        (strategy.posts || []).map((post: StrategyPost) => ({
+                            ...post,
+                            strategy_id: strategy.id,
+                        }))
+                    )
+                    .filter((post: StrategyPost) => post.status === 'content_ready');
+
+                setApprovalPosts(pendingApprovals);
             }
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -373,36 +559,27 @@ export default function DashboardPage() {
         fetchData();
     }, []);
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this series?")) return;
-        try {
-            const response = await fetch(`/api/series/${id}`, { method: 'DELETE' });
-            if (response.ok) {
-                toast.success("Series deleted");
-                setSeries(prev => prev.filter(s => s.id !== id));
-            }
-        } catch {
-            toast.error("Failed to delete series");
-        }
-    };
+    const todaysPosts = calendarPosts
+        .filter((post) => isToday(new Date(post.scheduled_at)))
+        .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
-    const handleTogglePause = async (id: string) => {
-        const item = series.find(s => s.id === id);
-        const newStatus = item.status === 'paused' ? 'active' : 'paused';
-        try {
-            const response = await fetch(`/api/series/${id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus })
-            });
-            if (response.ok) {
-                toast.success(`Series ${newStatus === 'paused' ? 'paused' : 'resumed'}`);
-                setSeries(prev => prev.map(s => s.id === id ? { ...s, status: newStatus } : s));
-            }
-        } catch {
-            toast.error("Failed to update status");
+    const weekStart = subDays(new Date(), 6);
+    const recentPostsBase = calendarPosts.filter((post) => {
+        const postDate = new Date(post.scheduled_at);
+        return postDate >= weekStart;
+    });
+
+    const recentPosts = [...recentPostsBase].sort((a, b) => {
+        if (recentSort === 'published') {
+            const aPublished = a.status === 'completed' || a.status === 'published' ? 1 : 0;
+            const bPublished = b.status === 'completed' || b.status === 'published' ? 1 : 0;
+            if (aPublished !== bPublished) return bPublished - aPublished;
         }
-    };
+        if (recentSort === 'scheduled') {
+            return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime();
+        }
+        return new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime();
+    });
 
     if (isLoading) {
         return (
@@ -512,98 +689,271 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="mt-5 space-y-4">
-                    <div className="grid grid-cols-5 md:grid-cols-10 gap-3 w-full">
+                <div className="mt-5 flex items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-3 flex-1">
                         {INTEGRATIONS.map((integration) => (
                             <IntegrationIcon key={integration.name} integration={integration} />
                         ))}
                     </div>
                     <Link
                         href="/dashboard/settings"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-zinc-200 bg-white text-sm font-bold text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition-colors whitespace-nowrap"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-zinc-200 bg-white text-sm font-bold text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 transition-colors whitespace-nowrap shrink-0"
                     >
                         Browse all integrations
                     </Link>
                 </div>
             </div>
 
-            {/* Series Section */}
-            <div>
-                <div className="flex items-center justify-between mb-6">
-                    <div className="space-y-1">
-                        <h2 className="text-xl font-bold tracking-tight text-zinc-900">Your Series</h2>
-                        <p className="text-[13px] text-zinc-500 font-medium">Manage and monitor your automated video series.</p>
+            {/* Latest Activity */}
+            <div className="space-y-4">
+                <h2 className="text-2xl font-bold text-zinc-900">Your Latest Activity</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-6">
+                    <div className="space-y-4">
+                        <div className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
+                            <div className="px-5 py-4 border-b border-zinc-100">
+                                <h3 className="font-bold text-zinc-900">Today&apos;s Publishing</h3>
+                            </div>
+                            <div className="p-5 min-h-[250px] flex flex-col items-center justify-center text-center">
+                                <div className="h-12 w-12 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center shadow-sm">
+                                    <BellRing className="h-6 w-6" />
+                                </div>
+                                {todaysPosts.length > 0 ? (
+                                    <div className="mt-4 space-y-2">
+                                        <div className="text-2xl font-black text-zinc-900">{todaysPosts.length}</div>
+                                        <div className="text-sm font-semibold text-zinc-700">
+                                            {todaysPosts.length === 1 ? 'post scheduled today' : 'posts scheduled today'}
+                                        </div>
+                                        <p className="text-sm text-zinc-500 max-w-[180px]">
+                                            Next post at {format(new Date(todaysPosts[0].scheduled_at), 'h:mm a')}.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="mt-4 text-3xl font-black text-zinc-900">0</div>
+                                        <div className="mt-2 text-2xl font-bold text-zinc-900">Publish your first post.</div>
+                                        <p className="mt-2 text-sm text-zinc-500 max-w-[190px]">
+                                            Publish, schedule or queue to reach your audience at the perfect time.
+                                        </p>
+                                    </>
+                                )}
+                                <Link href="/dashboard/calendar" className="mt-5">
+                                    <Button variant="outline" className="rounded-xl border-zinc-200 font-bold">
+                                        Compose Post
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
+                            <div className="px-5 py-4 border-b border-zinc-100">
+                                <h3 className="font-bold text-zinc-900">To Do</h3>
+                            </div>
+                            <div className="divide-y divide-zinc-100">
+                                <Link href="/dashboard/cases" className="flex items-center justify-between px-5 py-4 hover:bg-zinc-50 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <MessagesSquare className="h-4 w-4 text-zinc-500" />
+                                        <span className="text-2xl font-black text-zinc-900">0</span>
+                                    </div>
+                                    <span className="text-sm font-semibold text-blue-700">Go to Cases</span>
+                                </Link>
+                                <Link href="/dashboard/approvals" className="flex items-center justify-between px-5 py-4 hover:bg-zinc-50 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <ClipboardList className="h-4 w-4 text-zinc-500" />
+                                        <span className="text-2xl font-black text-zinc-900">{approvalPosts.length}</span>
+                                    </div>
+                                    <span className="text-sm font-semibold text-blue-700">Open Approvals</span>
+                                </Link>
+                            </div>
+                            <div className="p-4">
+                                <Link href="/dashboard/emails">
+                                    <Button variant="outline" className="w-full rounded-xl border-zinc-200 font-bold">
+                                        You have new messages!
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
                     </div>
-                    <Link href="/dashboard/create">
-                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-6 shadow-lg shadow-indigo-200 transition-all active:scale-95 gap-2 rounded-xl">
-                            <Plus className="h-5 w-5" />
-                            New Series
-                        </Button>
-                    </Link>
+
+                    <div className="rounded-2xl border border-zinc-200 bg-white overflow-hidden">
+                        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-zinc-100">
+                            <h3 className="font-bold text-zinc-900">Your Recent Posts</h3>
+                            <div className="flex items-center gap-2 text-sm">
+                                <span className="text-zinc-500 font-medium">Sort by</span>
+                                <select
+                                    value={recentSort}
+                                    onChange={(e) => setRecentSort(e.target.value as 'latest' | 'scheduled' | 'published')}
+                                    className="h-9 rounded-lg border border-zinc-200 bg-white px-3 text-sm font-medium text-zinc-700 focus:outline-none"
+                                >
+                                    <option value="latest">Latest</option>
+                                    <option value="scheduled">Upcoming first</option>
+                                    <option value="published">Published first</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {recentPosts.length >= 3 ? (
+                            <div className="p-5 space-y-4">
+                                {recentPosts.slice(0, 3).map((post) => {
+                                    const media = post.media_url?.split(',')[0]?.trim();
+                                    const statusLabel = post.status === 'completed' || post.status === 'published' ? 'Published' : 'Scheduled';
+                                    return (
+                                        <Link
+                                            key={post.id}
+                                            href="/dashboard/calendar"
+                                            className="flex items-start gap-4 rounded-xl border border-zinc-200 p-4 hover:border-zinc-300 hover:bg-zinc-50 transition-colors"
+                                        >
+                                            <div className="h-20 w-24 rounded-lg bg-zinc-100 overflow-hidden shrink-0 flex items-center justify-center">
+                                                {media ? (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img src={media} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <LayoutGrid className="h-6 w-6 text-zinc-300" />
+                                                )}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    <div className="text-sm font-bold text-zinc-900 truncate">{post.title}</div>
+                                                    <span className={cn(
+                                                        "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                                                        statusLabel === 'Published' ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                                                    )}>
+                                                        {statusLabel}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-zinc-500 mt-1 line-clamp-2">
+                                                    {post.description || 'No description yet.'}
+                                                </p>
+                                                <div className="mt-2 text-xs text-zinc-400">
+                                                    {format(new Date(post.scheduled_at), 'MMM dd, yyyy • h:mm a')}
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="min-h-[320px] p-6 flex flex-col justify-between">
+                                <div className="flex items-center justify-center h-full">
+                                    <div className="flex items-center gap-8 max-w-[620px]">
+                                        <div className="w-[170px] rounded-2xl border border-zinc-200 bg-white shadow-sm p-3">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <div className="h-5 w-5 rounded-full bg-zinc-200" />
+                                                <div className="h-3 w-24 rounded bg-zinc-100" />
+                                            </div>
+                                            <div className="h-20 rounded-xl bg-zinc-100" />
+                                            <div className="mt-3 h-3 w-14 rounded bg-zinc-100" />
+                                        </div>
+                                        <div className="max-w-[340px]">
+                                            <div className="text-3xl font-bold text-zinc-900 leading-snug">
+                                                Easily compare your top performing posts once you have at least 3 posts per week.
+                                            </div>
+                                            <div className="mt-5 pt-4 border-t border-zinc-200 text-lg text-zinc-600">
+                                                Discover more ways to <Link href="/dashboard/strategy" className="text-blue-700 underline underline-offset-2">level-up your content strategy</Link>.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mt-6 flex items-center justify-between gap-4 border-t border-zinc-100 pt-4">
+                                    <span className="text-sm text-zinc-500">
+                                        Published from {format(weekStart, 'MM/dd/yy')} - {format(new Date(), 'MM/dd/yy')}
+                                    </span>
+                                    <Link href="/dashboard/analytics">
+                                        <Button variant="outline" className="rounded-xl border-zinc-200 font-bold">
+                                            Post Performance Report
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-6">
+                <div className="space-y-4">
+                    <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+                        <div className="border-b border-zinc-100 px-5 py-4">
+                            <h2 className="text-lg font-bold text-zinc-900">Resource Center</h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-100">
+                            {RESOURCE_CENTER_PRIMARY.map((section) => (
+                                <ResourceSectionCard key={section.title} section={section} underlinedLinks />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+                        <div className="border-b border-zinc-100 px-5 py-4">
+                            <h2 className="text-lg font-bold text-zinc-900">Looking for Something Else?</h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 divide-y md:divide-y-0 xl:divide-x divide-zinc-100">
+                            {RESOURCE_CENTER_SECONDARY.map((section) => (
+                                <ResourceSectionCard key={section.title} section={section} compact underlinedLinks showArrow={false} />
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
-                {series.length === 0 ? (
-                    <div className="flex h-[300px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-zinc-200 bg-white/50 space-y-4 text-center p-8">
-                        <div className="h-16 w-16 rounded-2xl bg-zinc-50 flex items-center justify-center border border-zinc-100">
-                            <LayoutGrid className="h-8 w-8 text-zinc-300" />
+                <div className="space-y-4 xl:sticky xl:top-24 self-start">
+                    <div className="rounded-2xl border border-zinc-200 bg-white p-5">
+                        <h2 className="text-lg font-bold text-zinc-900">Need Help?</h2>
+                        <div className="mt-4 space-y-2.5">
+                            <ResourceLink item={{ label: '1.866.878.3231', href: 'tel:18668783231' }} />
+                            <ResourceLink item={{ label: 'Contact Support', href: '/dashboard/cases' }} />
+                            <ResourceLink item={{ label: '@sproutsocial', href: '/dashboard/settings' }} />
                         </div>
-                        <div className="space-y-1 max-w-sm">
-                            <h3 className="text-lg font-bold text-zinc-900">No series created yet</h3>
-                            <p className="text-sm text-zinc-500 leading-relaxed">
-                                Start your content journey by creating your first automated video series.
-                            </p>
-                        </div>
-                        <Link href="/dashboard/create">
-                            <Button className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-11 px-8 rounded-xl shadow-md transition-all active:scale-95">
-                                Create Now
+                        <Link href="/dashboard/emails" className="mt-5 block">
+                            <Button variant="outline" className="w-full rounded-xl border-zinc-200 font-bold">
+                                Ask a Question
                             </Button>
                         </Link>
                     </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {series.map((item) => (
-                            <SeriesCard
-                                key={item.id}
-                                series={item}
-                                onDelete={handleDelete}
-                                onTogglePause={handleTogglePause}
-                                onEdit={(id) => router.push(`/dashboard/create?id=${id}`)}
-                                canExecuteWorkflow={canExecuteWorkflow}
-                                onGenerateNow={async (id, testMode = false) => {
-                                    if (!canCreateVideo(videoCount)) {
-                                        toast.error(`You've reached the video limit for the ${limits.name} plan.`);
-                                        setIsUpgradeModalOpen(true);
-                                        return;
-                                    }
-                                    try {
-                                        const response = await fetch('/api/video/generate', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ seriesId: id, testMode })
-                                        });
-                                        if (response.ok) {
-                                            toast.success(testMode ? "Test workflow started (4 min total delay)!" : "Video generation started!");
-                                            router.push('/dashboard/videos');
-                                        } else {
-                                            toast.error("Failed to start generation");
-                                        }
-                                    } catch {
-                                        toast.error("Error starting generation");
-                                    }
-                                }}
-                                onViewVideos={(id) => router.push(`/dashboard/videos?seriesId=${id}`)}
-                            />
-                        ))}
+
+                    <div className="rounded-2xl border border-zinc-200 bg-white p-5 text-center">
+                        <div className="mx-auto flex h-28 w-full max-w-[180px] items-center justify-center rounded-2xl bg-linear-to-br from-sky-50 via-white to-blue-50">
+                            <div className="relative h-16 w-20 rounded-2xl border-2 border-sky-200 bg-white shadow-sm">
+                                <div className="absolute inset-x-3 top-3 h-7 rounded-md bg-sky-100" />
+                                <div className="absolute -left-3 top-6 h-2 w-2 rounded-full bg-sky-300" />
+                                <div className="absolute -right-3 top-3 h-2.5 w-2.5 rounded-full bg-cyan-300" />
+                                <div className="absolute left-1/2 top-full mt-2 h-2 w-10 -translate-x-1/2 rounded-full bg-sky-200" />
+                            </div>
+                        </div>
+                        <h3 className="mt-4 text-lg font-bold text-zinc-900">Sign up for a free Live Webinar</h3>
+                        <p className="mt-2 text-sm text-zinc-500">
+                            Get up to speed in the platform and participate in a live Q&amp;A.
+                        </p>
+                        <Link href="/dashboard/analytics" className="mt-5 block">
+                            <Button variant="outline" className="w-full rounded-xl border-zinc-200 font-bold">
+                                Reserve My Spot
+                            </Button>
+                        </Link>
                     </div>
-                )}
+
+                    <div className="rounded-2xl border border-zinc-200 bg-white p-5 text-center">
+                        <div className="mx-auto flex h-28 w-full max-w-[180px] items-center justify-center rounded-2xl bg-linear-to-br from-emerald-50 via-white to-teal-50">
+                            <div className="relative h-16 w-16">
+                                <div className="absolute inset-0 rounded-[18px] bg-emerald-200/70 rotate-12" />
+                                <div className="absolute inset-0 rounded-[18px] border-2 border-emerald-300 bg-white -rotate-6 shadow-sm" />
+                                <div className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-100" />
+                                <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500" />
+                            </div>
+                        </div>
+                        <h3 className="mt-4 text-lg font-bold text-zinc-900">Sprout Help Center</h3>
+                        <div className="mt-3 space-y-2 text-left">
+                            <ResourceLink item={{ label: 'Organize Your Account', href: '/dashboard/settings' }} />
+                            <ResourceLink item={{ label: 'Instagram Scheduling', href: '/dashboard/settings?platform=instagram' }} />
+                            <ResourceLink item={{ label: 'Engage with Smart Inbox', href: '/dashboard/emails' }} />
+                            <ResourceLink item={{ label: 'Analyze Social Performance', href: '/dashboard/analytics' }} />
+                        </div>
+                        <Link href="/dashboard/settings" className="mt-5 block">
+                            <Button variant="outline" className="w-full rounded-xl border-zinc-200 font-bold">
+                                Visit Help Center
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
             </div>
 
-            <UpgradeModal
-                isOpen={isUpgradeModalOpen}
-                onClose={() => setIsUpgradeModalOpen(false)}
-                title="Upgrade to Generate More Videos"
-                description={`You've reached the ${limits.maxVideos} video limit on the ${limits.name} plan. Upgrade to Basic or Unlimited to unlock more generations!`}
-            />
         </div>
     );
 }
