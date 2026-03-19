@@ -3,21 +3,28 @@
 import { useCalendar } from './calendar-context';
 import { format, startOfWeek, addDays, isSameDay, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Megaphone, Plus, StickyNote, X, Check, Loader2, Instagram, Linkedin, Youtube, Facebook } from 'lucide-react';
+import {
+    Megaphone,
+    Plus,
+    StickyNote,
+    X,
+    Check,
+    Loader2,
+    Linkedin,
+    Youtube,
+    Heart,
+    MessageCircle,
+    Send,
+    Bookmark,
+    ThumbsUp,
+    Repeat2,
+    Share2,
+    MoreHorizontal,
+} from 'lucide-react';
 import { useMemo, useState, useRef } from 'react';
 import { toast } from 'sonner';
 
-const PLATFORM_CONFIG: Record<string, {
-    icon: React.ComponentType<{ className?: string }>;
-    label: string;
-    gradient: string;
-}> = {
-    instagram: { icon: Instagram, label: 'Instagram', gradient: 'linear-gradient(135deg, #fd5949 0%, #d6249f 50%, #285AEB 100%)' },
-    linkedin:  { icon: Linkedin,  label: 'LinkedIn',  gradient: 'linear-gradient(135deg, #0077B5 0%, #00A0DC 100%)' },
-    youtube:   { icon: Youtube,   label: 'YouTube',   gradient: 'linear-gradient(135deg, #FF0000 0%, #cc0000 100%)' },
-    facebook:  { icon: Facebook,  label: 'Facebook',  gradient: 'linear-gradient(135deg, #1877F2 0%, #0C5FC7 100%)' },
-    tiktok:    { icon: Instagram, label: 'TikTok',    gradient: 'linear-gradient(135deg, #010101 0%, #69C9D0 50%, #EE1D52 100%)' },
-};
+// Platform rendering is handled by PlatformPreview below.
 
 // One distinct color per day of the week (Sun → Sat)
 const DAY_COLORS = [
@@ -29,6 +36,323 @@ const DAY_COLORS = [
     '#f97316', // Fri – orange
     '#06b6d4', // Sat – cyan
 ];
+
+function getInitials(name: string) {
+    return name
+        .trim()
+        .split(/\s+/)
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase() || '?';
+}
+
+function PlatformPreview({
+    platformKey,
+    whenLabel,
+    accountName,
+    accountImage,
+    title,
+    description,
+    media,
+}: {
+    platformKey: string;
+    whenLabel: string;
+    accountName?: string;
+    accountImage?: string | null;
+    title: string;
+    description?: string | null;
+    media?: string;
+}) {
+    const name = accountName || 'Account';
+    const initials = getInitials(name);
+    const text = (description || title || '').trim();
+
+    if (platformKey === 'youtube') {
+        return (
+            <div className="p-2">
+                {/* YouTube-style video card */}
+                <div className="flex items-center justify-between">
+                    <div className="inline-flex items-center gap-1 text-[9px] font-bold text-zinc-500">
+                        <Youtube className="h-3 w-3 text-red-600" />
+                        <span className="uppercase tracking-wide">YouTube</span>
+                    </div>
+                    <span className="text-[10px] font-black text-zinc-500">{whenLabel}</span>
+                </div>
+
+                <div className="mt-2 relative w-full aspect-video rounded-lg overflow-hidden bg-zinc-100">
+                    {media ? (
+                        <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={media} alt="" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent" />
+                        </>
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-400 font-semibold">
+                            Thumbnail
+                        </div>
+                    )}
+                    {/* Duration badge (placeholder for realism) */}
+                    <div className="absolute bottom-1 right-1 rounded bg-black/80 px-1 py-0.5 text-[9px] font-bold text-white">
+                        10:40
+                    </div>
+                </div>
+
+                <div className="mt-2 flex items-start gap-2">
+                    {accountImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={accountImage} alt="" className="h-7 w-7 rounded-full object-cover bg-zinc-100 shrink-0" />
+                    ) : (
+                        <div className="h-7 w-7 rounded-full bg-zinc-200 flex items-center justify-center text-[10px] font-black text-zinc-700 shrink-0">
+                            {initials}
+                        </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                                <div className="text-[11px] font-black text-zinc-900 line-clamp-2 leading-snug">
+                                    {title}
+                                </div>
+                                <div className="text-[10px] text-zinc-500 truncate">{name}</div>
+                                <div className="text-[9px] text-zinc-400 mt-0.5">Scheduled • {whenLabel}</div>
+                            </div>
+                            <MoreHorizontal className="h-4 w-4 text-zinc-400 shrink-0 mt-0.5" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (platformKey === 'linkedin') {
+        return (
+            <div className="p-2">
+                <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black text-zinc-500">{whenLabel}</span>
+                    <div className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[9px] font-bold text-sky-800 border border-sky-200">
+                        <Linkedin className="h-3 w-3" />
+                        LinkedIn
+                    </div>
+                </div>
+
+                <div className="mt-2 flex items-start gap-2">
+                    {accountImage ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={accountImage} alt="" className="h-7 w-7 rounded-full object-cover bg-zinc-100 shrink-0" />
+                    ) : (
+                        <div className="h-7 w-7 rounded-full bg-sky-100 text-sky-900 flex items-center justify-center text-[10px] font-black shrink-0">
+                            {initials}
+                        </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                                <div className="text-[11px] font-black text-zinc-900 truncate">{name}</div>
+                                <div className="text-[9px] text-zinc-500 truncate">Scheduled post</div>
+                            </div>
+                            <MoreHorizontal className="h-4 w-4 text-zinc-400 shrink-0" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-2 text-[11px] text-zinc-800 whitespace-pre-wrap line-clamp-4 leading-snug">
+                    {text || title}
+                </div>
+
+                {media && (
+                    <div className="mt-2 w-full rounded-lg overflow-hidden bg-zinc-100">
+                        <div className="w-full aspect-video">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={media} alt="" className="w-full h-full object-cover" />
+                        </div>
+                    </div>
+                )}
+
+                <div className="mt-2 grid grid-cols-4 gap-1 text-[9px] font-semibold text-zinc-500">
+                    <div className="flex items-center justify-center gap-1 rounded-md py-1 hover:bg-zinc-50">
+                        <ThumbsUp className="h-3 w-3" /> Like
+                    </div>
+                    <div className="flex items-center justify-center gap-1 rounded-md py-1 hover:bg-zinc-50">
+                        <MessageCircle className="h-3 w-3" /> Comment
+                    </div>
+                    <div className="flex items-center justify-center gap-1 rounded-md py-1 hover:bg-zinc-50">
+                        <Repeat2 className="h-3 w-3" /> Repost
+                    </div>
+                    <div className="flex items-center justify-center gap-1 rounded-md py-1 hover:bg-zinc-50">
+                        <Send className="h-3 w-3" /> Send
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (platformKey === 'instagram') {
+        return (
+            <div className="p-2">
+                {/* Instagram feed-like card */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                        {accountImage ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={accountImage} alt="" className="h-7 w-7 rounded-full object-cover bg-zinc-100 shrink-0" />
+                        ) : (
+                            <div className="h-7 w-7 rounded-full bg-linear-to-br from-rose-500 via-fuchsia-500 to-blue-500 p-px shrink-0">
+                                <div className="h-full w-full rounded-full bg-white flex items-center justify-center text-[10px] font-black text-zinc-900">
+                                    {initials}
+                                </div>
+                            </div>
+                        )}
+                        <div className="min-w-0">
+                            <div className="text-[11px] font-black text-zinc-900 truncate">{name}</div>
+                            <div className="text-[9px] text-zinc-500 truncate">Scheduled • {whenLabel}</div>
+                        </div>
+                    </div>
+                    <MoreHorizontal className="h-4 w-4 text-zinc-400 shrink-0" />
+                </div>
+
+                <div className="mt-2 w-full aspect-square rounded-lg overflow-hidden bg-zinc-100">
+                    {media ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={media} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-400 font-semibold">
+                            Media
+                        </div>
+                    )}
+                </div>
+
+                <div className="mt-2 flex items-center justify-between text-zinc-700">
+                    <div className="flex items-center gap-3">
+                        <Heart className="h-4 w-4" />
+                        <MessageCircle className="h-4 w-4" />
+                        <Send className="h-4 w-4" />
+                    </div>
+                    <Bookmark className="h-4 w-4" />
+                </div>
+
+                <div className="mt-2 text-[10px] text-zinc-700 whitespace-pre-wrap line-clamp-3 leading-snug">
+                    <span className="font-black">{name}</span> {text || title}
+                </div>
+            </div>
+        );
+    }
+
+    if (platformKey === 'facebook') {
+        return (
+            <div className="p-2">
+                {/* Facebook feed-like card */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                        {accountImage ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={accountImage} alt="" className="h-7 w-7 rounded-full object-cover bg-zinc-100 shrink-0" />
+                        ) : (
+                            <div className="h-7 w-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black shrink-0">
+                                {initials}
+                            </div>
+                        )}
+                        <div className="min-w-0">
+                            <div className="text-[11px] font-black text-zinc-900 truncate">{name}</div>
+                            <div className="text-[9px] text-zinc-500 truncate">Scheduled • {whenLabel}</div>
+                        </div>
+                    </div>
+                    <MoreHorizontal className="h-4 w-4 text-zinc-400 shrink-0" />
+                </div>
+
+                <div className="mt-2 text-[11px] text-zinc-800 whitespace-pre-wrap line-clamp-3 leading-snug">
+                    {text || title}
+                </div>
+
+                {media && (
+                    <div className="mt-2 w-full aspect-video rounded-lg overflow-hidden bg-zinc-100">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={media} alt="" className="w-full h-full object-cover" />
+                    </div>
+                )}
+
+                <div className="mt-2 grid grid-cols-3 gap-1 text-[9px] font-semibold text-zinc-500">
+                    <div className="flex items-center justify-center gap-1 rounded-md py-1 hover:bg-zinc-50">
+                        <ThumbsUp className="h-3 w-3" /> Like
+                    </div>
+                    <div className="flex items-center justify-center gap-1 rounded-md py-1 hover:bg-zinc-50">
+                        <MessageCircle className="h-3 w-3" /> Comment
+                    </div>
+                    <div className="flex items-center justify-center gap-1 rounded-md py-1 hover:bg-zinc-50">
+                        <Share2 className="h-3 w-3" /> Share
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (platformKey === 'tiktok') {
+        return (
+            <div className="p-2">
+                {/* TikTok-style vertical preview */}
+                <div className="flex items-center justify-between">
+                    <div className="inline-flex items-center gap-1 text-[9px] font-bold text-zinc-500">
+                        <span className="h-2 w-2 rounded-full bg-zinc-900" />
+                        <span className="uppercase tracking-wide">TikTok</span>
+                    </div>
+                    <span className="text-[10px] font-black text-zinc-500">{whenLabel}</span>
+                </div>
+
+                <div className="mt-2 relative w-full aspect-9/16 rounded-xl overflow-hidden bg-zinc-100">
+                    {media ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={media} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-zinc-400 font-semibold">
+                            Video
+                        </div>
+                    )}
+                    <div className="absolute inset-0 bg-linear-to-t from-black/55 via-transparent to-transparent" />
+
+                    {/* Right-side actions (visual only) */}
+                    <div className="absolute right-2 bottom-10 flex flex-col items-center gap-3 text-white">
+                        <div className="h-9 w-9 rounded-full bg-white/15 flex items-center justify-center border border-white/20">
+                            <Heart className="h-4 w-4" />
+                        </div>
+                        <div className="h-9 w-9 rounded-full bg-white/15 flex items-center justify-center border border-white/20">
+                            <MessageCircle className="h-4 w-4" />
+                        </div>
+                        <div className="h-9 w-9 rounded-full bg-white/15 flex items-center justify-center border border-white/20">
+                            <Share2 className="h-4 w-4" />
+                        </div>
+                    </div>
+
+                    {/* Bottom caption */}
+                    <div className="absolute left-2 right-12 bottom-2 text-white">
+                        <div className="text-[10px] font-black truncate">@{name.replace(/\s+/g, '').toLowerCase()}</div>
+                        <div className="text-[9px] leading-snug line-clamp-2 opacity-95">{text || title}</div>
+                        <div className="mt-1 text-[9px] opacity-80 truncate">♪ Original audio • Scheduled</div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Fallback (unknown platform)
+    return (
+        <div className="p-2">
+            <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-zinc-500">{whenLabel}</span>
+                <div className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-[9px] font-bold text-zinc-700 border border-zinc-200">
+                    <Share2 className="h-3 w-3" />
+                    Post
+                </div>
+            </div>
+            <div className="mt-2 text-[11px] font-black text-zinc-900 line-clamp-2 leading-snug">{title}</div>
+            {description && <div className="mt-1 text-[10px] text-zinc-500 line-clamp-3">{description}</div>}
+            {media && (
+                <div className="mt-2 w-full aspect-video rounded-lg overflow-hidden bg-zinc-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={media} alt="" className="w-full h-full object-cover" />
+                </div>
+            )}
+        </div>
+    );
+}
 
 interface HBarProps {
     total: number;
@@ -271,8 +595,7 @@ export function WeekView() {
 
                                         // Post / event card
                                         const platformKey = (account?.platform || event.platform || '').toLowerCase();
-                                        const platformCfg = PLATFORM_CONFIG[platformKey];
-                                        const PlatformIcon = platformCfg?.icon;
+                                        const whenLabel = format(when, 'h:mm a');
 
                                         return (
                                             <button
@@ -283,44 +606,15 @@ export function WeekView() {
                                                     event.status === 'cancelled' ? 'opacity-50 border-zinc-200' : 'border-zinc-200'
                                                 )}
                                             >
-                                                {/* Time + platform icon pill */}
-                                                <div className="px-2 pt-2 pb-1 flex items-center justify-between gap-1">
-                                                    <span className="text-[10px] font-black text-zinc-500">{format(when, 'h:mm a')}</span>
-                                                    {platformCfg && PlatformIcon && (
-                                                        <div
-                                                            className="flex items-center gap-1 px-1.5 py-0.5 rounded-full"
-                                                            style={{ background: platformCfg.gradient }}
-                                                        >
-                                                            <PlatformIcon className="h-3 w-3 text-white" />
-                                                            <span className="text-[9px] font-bold text-white leading-none">
-                                                                {platformCfg.label}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                {/* Account name */}
-                                                {account?.profile_name && (
-                                                    <div className="px-2 text-[11px] font-bold text-zinc-700 truncate">
-                                                        {account.profile_name}
-                                                    </div>
-                                                )}
-                                                {/* Title */}
-                                                <div className="px-2 pt-0.5 pb-1 text-[11px] font-black text-zinc-900 line-clamp-2 leading-snug">
-                                                    {event.title}
-                                                </div>
-                                                {/* Description */}
-                                                {event.description && (
-                                                    <div className="px-2 pb-1.5 text-[10px] text-zinc-500 line-clamp-2 leading-snug">
-                                                        {event.description}
-                                                    </div>
-                                                )}
-                                                {/* Media */}
-                                                {media && (
-                                                    <div className="w-full aspect-video overflow-hidden bg-zinc-100">
-                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                        <img src={media} alt="" className="w-full h-full object-cover" />
-                                                    </div>
-                                                )}
+                                                <PlatformPreview
+                                                    platformKey={platformKey}
+                                                    whenLabel={whenLabel}
+                                                    accountName={account?.profile_name || undefined}
+                                                    accountImage={account?.profile_image}
+                                                    title={event.title}
+                                                    description={event.description}
+                                                    media={media}
+                                                />
                                             </button>
                                         );
                                     })

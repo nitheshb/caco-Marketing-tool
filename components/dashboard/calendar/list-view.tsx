@@ -150,7 +150,7 @@ export function ListView() {
                                         className="rounded-lg border border-zinc-200 bg-white hover:border-zinc-300 transition-colors overflow-hidden cursor-pointer max-w-2xl mx-auto"
                                     >
                                         {/* Card header — pale yellow */}
-                                        <div className="flex items-start justify-between gap-3 px-4 py-3 bg-amber-50/40 border-b border-zinc-100">
+                                        <div className="flex items-start justify-between gap-3 px-4 py-3 bg-yellow-200 border-b border-yellow-200">
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <div className="w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center text-amber-900 font-semibold text-sm shrink-0">
                                                     {account?.profile_name ? getInitials(account.profile_name) : '?'}
@@ -172,7 +172,7 @@ export function ListView() {
                                             </div>
                                         </div>
 
-                                        {/* Centered metadata — Added at, Added by */}
+                                        {/* Centered metadata — Added at */}
                                         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 py-2 bg-zinc-50/80 border-b border-zinc-100 text-center">
                                             {addedAt && (
                                                 <span className="inline-flex items-center gap-1.5 text-xs text-zinc-500">
@@ -180,10 +180,6 @@ export function ListView() {
                                                     Added at {format(addedAt, 'h:mm a')} on {format(addedAt, 'MMM d, yyyy')}
                                                 </span>
                                             )}
-                                            <span className="inline-flex items-center gap-1.5 text-xs text-zinc-500">
-                                                <User className="h-3.5 w-3.5" />
-                                                Added by {addedByName}
-                                            </span>
                                             {event.series?.series_name && (
                                                 <span className="text-xs text-zinc-500">
                                                     Series: {event.series.series_name}
@@ -200,9 +196,26 @@ export function ListView() {
                                                 <div className="text-sm text-zinc-600 mt-1 whitespace-pre-wrap">{event.description}</div>
                                             )}
                                             {media && (
-                                                <div className="mt-3 rounded-lg overflow-hidden bg-zinc-100 aspect-square max-w-[280px] mx-auto">
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img src={media} alt="" className="w-full h-full object-cover" />
+                                                <div className="mt-3 max-w-[280px] mx-auto">
+                                                    <div className="rounded-lg overflow-hidden bg-zinc-100 aspect-square">
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img src={media} alt="" className="w-full h-full object-cover" />
+                                                    </div>
+                                                    {/* Byline under image (Sprout-style) */}
+                                                    <div className="mt-2 flex items-center gap-2 text-xs text-zinc-500">
+                                                        <div className="h-4 min-w-4 px-1 rounded-sm bg-emerald-600 text-white flex items-center justify-center font-semibold text-[10px] leading-none">
+                                                            {getInitials(addedByName)}
+                                                        </div>
+                                                        <span className="truncate">by {addedByName}.</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {!media && (
+                                                <div className="mt-3 flex items-center justify-center gap-2 text-xs text-zinc-500">
+                                                    <div className="h-4 min-w-4 px-1 rounded-sm bg-emerald-600 text-white flex items-center justify-center font-semibold text-[10px] leading-none">
+                                                        {getInitials(addedByName)}
+                                                    </div>
+                                                    <span className="truncate">by {addedByName}.</span>
                                                 </div>
                                             )}
                                         </div>
