@@ -33,8 +33,8 @@ export interface SocialConnection {
 interface CalendarContextType {
     currentDate: Date;
     setCurrentDate: (date: Date) => void;
-    displayMode: 'day' | 'week' | 'month';
-    setDisplayMode: (mode: 'day' | 'week' | 'month') => void;
+    displayMode: 'list' | 'week' | 'month';
+    setDisplayMode: (mode: 'list' | 'week' | 'month') => void;
     events: CalendarEvent[];
     socialConnections: SocialConnection[];
     isLoading: boolean;
@@ -54,7 +54,7 @@ const CalendarContext = createContext<CalendarContextType | undefined>(undefined
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [displayMode, setDisplayMode] = useState<'day' | 'week' | 'month'>('week');
+    const [displayMode, setDisplayMode] = useState<'list' | 'week' | 'month'>('week');
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [socialConnections, setSocialConnections] = useState<SocialConnection[]>([]);
     const [isLoading, setIsLoading] = useState(true);

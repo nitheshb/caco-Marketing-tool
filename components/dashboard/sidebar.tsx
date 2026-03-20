@@ -53,7 +53,7 @@ const sidebarData = [
         icon: Film,
         defaultExpanded: true,
         items: [
-            { name: 'Series', href: '/dashboard' },
+            { name: 'Series', href: '/dashboard/series' },
             { name: 'Gallery', href: '/dashboard/videos' },
             { name: 'Create Content', href: '/dashboard/posters' },
             
@@ -150,7 +150,8 @@ export function Sidebar() {
     const { currentPlan } = usePlanLimits();
     const showUpgrade = false; // All features enabled
 
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    // Sidebar should start collapsed and expand only on hover.
+    const [isCollapsed, setIsCollapsed] = useState(true);
     const [activeSectionName, setActiveSectionName] = useState<string | null>(null);
     const [showSecondary, setShowSecondary] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -203,6 +204,14 @@ export function Sidebar() {
         });
     }, [pathname]);
 
+    // Requirement: on any page navigation, sidebar should auto-collapse.
+    useEffect(() => {
+        setIsCollapsed(true);
+        setShowSecondary(false);
+        setActiveSectionName(null);
+        setSearchTerm("");
+    }, [pathname]);
+
     // Close secondary sidebar when expanding main sidebar
     // useEffect(() => {
     //     if (!isCollapsed) {
@@ -237,6 +246,13 @@ export function Sidebar() {
     return (
         <div className="flex">
             <aside 
+            onMouseEnter={() => setIsCollapsed(false)}
+            onMouseLeave={() => {
+                setIsCollapsed(true);
+                setShowSecondary(false);
+                setActiveSectionName(null);
+                setSearchTerm("");
+            }}
             className={cn(
                 "flex h-screen flex-col border-r border-zinc-200 bg-white transition-all duration-300 overflow-hidden",
                 isCollapsed ? "w-14" : "w-[240px]"
@@ -247,7 +263,7 @@ export function Sidebar() {
         >
             {/* Header / Logo and Toggle */}
             <div className={cn(
-                "flex items-center flex-shrink-0 border-b border-zinc-100",
+                "flex items-center shrink-0 border-b border-zinc-100",
                 isCollapsed ? "flex-col h-auto py-4 space-y-4 px-0 items-center justify-center" : "h-14 justify-between px-4 gap-3"
             )}>
                 <div className={cn(
@@ -386,7 +402,7 @@ export function Sidebar() {
                                                 )}>{item.name}</span>
                                                 {(item as any).badge && (
                                                     <span className={cn(
-                                                        "text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-sm font-semibold flex-shrink-0 ml-2 transition-all duration-300",
+                                                        "text-[10px] uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-sm font-semibold shrink-0 ml-2 transition-all duration-300",
                                                         isCollapsed ? "opacity-0 scale-0 invisible w-0" : "opacity-100 scale-100 visible w-auto"
                                                     )}>
                                                         {(item as any).badge}
@@ -446,7 +462,7 @@ export function Sidebar() {
                     const linkContent = (
                         <>
                             <div className={cn("flex items-center overflow-hidden", isCollapsed ? "gap-0" : "gap-2.5")}>
-                                <Icon className={cn("h-4 w-4 flex-shrink-0 transition-all duration-300", isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-900")} strokeWidth={isActive ? 2.5 : 2} />
+                                <Icon className={cn("h-4 w-4 shrink-0 transition-all duration-300", isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-900")} strokeWidth={isActive ? 2.5 : 2} />
                                 <span className={cn(
                                     "transition-all duration-300 truncate",
                                     isCollapsed ? "opacity-0 invisible w-0 -translate-x-2" : "opacity-100 visible w-auto translate-x-0"
@@ -455,7 +471,7 @@ export function Sidebar() {
                                 </span>
                             </div>
                             <ChevronRight className={cn(
-                                "h-4 w-4 flex-shrink-0 transition-all duration-300",
+                                "h-4 w-4 shrink-0 transition-all duration-300",
                                 (isCollapsed || !section.hasArrow) ? "opacity-0 invisible w-0" : (isActive ? "text-zinc-300 opacity-100" : "text-zinc-400 opacity-0 group-hover:opacity-100")
                             )} />
                         </>
@@ -523,14 +539,14 @@ export function Sidebar() {
                     )}
                 >
                     {/* Secondary Header */}
-                    <div className="h-14 flex items-center px-6 border-b border-zinc-100 flex-shrink-0">
-                        <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-zinc-400">
+                    <div className="h-14 flex items-center px-6 border-b border-zinc-100 shrink-0">
+                        <span className="text-[11px] font-bold uppercase tracking-widest text-zinc-400">
                             {activeSection.name}
                         </span>
                     </div>
 
                     {/* Secondary Search */}
-                    <div className="px-4 py-4 flex-shrink-0">
+                    <div className="px-4 py-4 shrink-0">
                         <div className="relative group">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
                             <input
